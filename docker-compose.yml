@@ -11,6 +11,8 @@ services:
 
   php:
     build: ./Docker/php
+    ports:
+        - "5173:5173"
     volumes:
       - ./src/:/var/www/html
     depends_on:
