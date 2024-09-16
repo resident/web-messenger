@@ -20,6 +20,7 @@ services:
             - "8080:8080"
         volumes:
             - ./src/:/mnt/app
+            - ./Docker/nginx/certs:/mnt/certs
         depends_on:
             - mysql
             - redis

@@ -1,15 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property ?string $email_verified_at
+ * @property string $password
+ * @property string $public_key
+ * @property ?string $remember_token
+ * @property ?string $created_at
+ * @property ?string $updated_at
+ */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +35,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'public_key',
     ];
 
     /**
@@ -43,5 +59,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function chatRooms(): BelongsToMany
+    {
+        return $this->belongsToMany(ChatRoom::class)
+            ->using(ChatRoomUser::class)
+            ->withPivot(['chat_room_key']);
     }
 }
