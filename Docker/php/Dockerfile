@@ -12,6 +12,10 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pecl install redis \
+&& rm -rf /tmp/pear \
+&& docker-php-ext-enable redis
+
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure pcntl --enable-pcntl \
     && docker-php-ext-install gd pdo pdo_mysql mbstring xml opcache pcntl \

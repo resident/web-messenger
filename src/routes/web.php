@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\ChatRoomMessagesController;
+use App\Http\Controllers\ChatRoomsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UsersController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +25,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/chat-rooms', [ChatRoomsController::class, 'index'])->name('chat_rooms.index');
+    Route::get('/chat-rooms/create', [ChatRoomsController::class, 'create'])->name('chat_rooms.create');
+    Route::post('/chat-rooms/store', [ChatRoomsController::class, 'store'])->name('chat_rooms.store');
+
+    Route::get('/chat-rooms/{chatRoomId}', [ChatRoomsController::class, 'show'])
+        ->whereUuid('chatRoomId')
+        ->name('chat_rooms.show');
+
+    Route::get('/chat-rooms/{chatRoom}/messages/{count?}/{startId?}', [ChatRoomMessagesController::class, 'index'])
+        ->whereUuid('chatRoom')
+        ->whereNumber('count')
+        ->whereUuid('startId')
+        ->name('chat_rooms.messages.index');
+
+    Route::post('/chat-rooms/{chatRoom}/messages', [ChatRoomMessagesController::class, 'store'])
+        ->whereUuid('chatRoom')
+        ->name('chat_rooms.messages.store');
+
+
+    Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
