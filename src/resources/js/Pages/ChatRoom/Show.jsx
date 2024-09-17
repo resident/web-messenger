@@ -16,11 +16,18 @@ export default function Show({auth, chatRoom}) {
     const [messages, setMessages] = useState([]);
     const [errors, setErrors] = useState({});
     const [messagesLoading, setMessagesLoading] = useState(false);
+    const [removingMessage, setRemovingMessage] = useState();
+    const [messagesOperation, setMessagesOperation] = useState(null);
 
     const messagesRef = useRef();
     const messageInputRef = useRef();
 
     const aesEncryptor = new AESEncryptor();
+
+    const messagesOperationTypes = Object.freeze({
+        push: 'push',
+        remove: 'remove',
+    });
 
     useEffect(() => {
         (async () => {
@@ -35,6 +42,28 @@ export default function Show({auth, chatRoom}) {
             setChatRoomKey(await rsaEncryptor.decrypt(chatRoom.pivot.chat_room_key));
         })();
     }, []);
+
+    useEffect(() => {
+        if (messagesOperation) {
+            let newMessages = [];
+
+            switch (messagesOperation.type) {
+                case messagesOperationTypes.push: {
+                    newMessages = [...messages, messagesOperation.message];
+                    break;
+                }
+
+                case messagesOperationTypes.remove: {
+                    newMessages = messages.filter(m => m.id !== messagesOperation.message.id);
+                    break;
+                }
+            }
+
+            setMessages(newMessages);
+            setMessagesOperation(null);
+        }
+
+    }, [messages, messagesOperation]);
 
     const decryptMessage = async (message) => {
         await aesEncryptor.importKey(chatRoomKey);
@@ -92,24 +121,29 @@ export default function Show({auth, chatRoom}) {
             });
     };
 
-    useEffect(() => {
-        if (!chatRoomKey) return;
+    const onChatRoomMessageSent = (e) => {
+        (async () => {
+            const decryptedMessage = await decryptMessage(e.message);
 
-        loadMessages();
+            pushMessage(decryptedMessage);
+
+            setTimeout(() => restoreScrollPosition(0), 0);
+        })();
+    };
+
+    const onChatRoomMessageRemoved = (e) => {
+        removeMessage(e.message);
+    };
+
+    useEffect(() => {
+        if (chatRoomKey) {
+            loadMessages();
+
+            Echo.private(`chat-room.${chatRoom.id}`)
+                .listen('ChatRoomMessageSent', onChatRoomMessageSent)
+                .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved);
+        }
     }, [chatRoomKey]);
-
-    useEffect(() => {
-        if (!chatRoomKey) return;
-
-        Echo.private(`chat-room.${chatRoom.id}`)
-            .listen('ChatRoomMessageSent', async (e) => {
-                const decryptedMessage = await decryptMessage(e.message);
-
-                setMessages([...messages, decryptedMessage]);
-
-                setTimeout(() => restoreScrollPosition(0), 0);
-            });
-    }, [chatRoomKey, messages]);
 
     const sendMessage = async (e) => {
         e.preventDefault();
@@ -144,12 +178,30 @@ export default function Show({auth, chatRoom}) {
         });
     };
 
-    const messagesScrollHandler = async (e) => {
+    const messagesScrollHandler = () => {
         if (messagesRef.current.scrollTop === 0) {
             const startId = messages[0].id;
 
             loadMessages(10, startId);
         }
+    };
+
+    const pushMessage = (message) => {
+        setMessagesOperation({
+            type: messagesOperationTypes.push,
+            message: message,
+        });
+    };
+
+    const removeMessage = (message) => {
+        setRemovingMessage(message);
+
+        setTimeout(() => {
+            setMessagesOperation({
+                type: messagesOperationTypes.remove,
+                message: message,
+            });
+        }, 600);
     };
 
     return (
@@ -171,10 +223,14 @@ export default function Show({auth, chatRoom}) {
                                     ref={messagesRef}
                                     onScroll={messagesScrollHandler}
                                 >
-                                    {messages.map((message, i) => (
-                                        <ChatMessage key={i}
-                                                     self={auth.user.id === message.user_id}
-                                                     message={message}
+                                    {messages.map((message) => (
+                                        <ChatMessage
+                                            key={message.id}
+                                            className={(removingMessage && removingMessage.id === message.id)
+                                                ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
+                                            self={auth.user.id === message.user_id}
+                                            message={message}
+                                            onMessageRemoved={() => removeMessage(message)}
                                         />
                                     ))}
                                 </div>
