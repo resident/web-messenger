@@ -33,4 +33,9 @@ final class ChatRoomMessageRepository
     {
         return ChatRoomMessage::unguarded(fn() => ChatRoomMessage::query()->create($chatRoomMessageDto->toArray()));
     }
+
+    public function deleteMessage(ChatRoomMessage $message): ?bool
+    {
+        return $message->delete();
+    }
 }

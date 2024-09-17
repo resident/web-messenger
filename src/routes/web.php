@@ -44,6 +44,11 @@ Route::middleware('auth')->group(function () {
         ->whereUuid('chatRoom')
         ->name('chat_rooms.messages.store');
 
+    Route::delete('/chat-rooms/{chatRoom}/messages/{message}', [ChatRoomMessagesController::class, 'destroy'])
+        ->whereUuid('chatRoom')
+        ->whereUuid('message')
+        ->name('chat_rooms.messages.destroy');
+
 
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 });

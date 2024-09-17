@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dto\ChatRoomMessageDto;
+use App\Events\ChatRoomMessageRemoved;
 use App\Events\ChatRoomMessageSent;
 use App\Http\Requests\StoreChatRoomMessageRequest;
 use App\Http\Requests\UpdateChatRoomMessageRequest;
 use App\Models\ChatRoom;
 use App\Models\ChatRoomMessage;
 use App\Repositories\ChatRoomMessageRepository;
+use Illuminate\Http\JsonResponse;
 
 class ChatRoomMessagesController extends Controller
 {
@@ -62,8 +64,18 @@ class ChatRoomMessagesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ChatRoomMessage $chatRoomMessage)
-    {
-        //
+    public function destroy(
+        ChatRoom $chatRoom,
+        ChatRoomMessage $message,
+        ChatRoomMessageRepository $chatRoomMessageRepository
+    ): JsonResponse {
+        $messageDto = ChatRoomMessageDto::fromArray($message->toArray());
+
+        $isDeleted = $chatRoomMessageRepository->deleteMessage($message);
+
+        if ($isDeleted) {
+            broadcast(new ChatRoomMessageRemoved($messageDto))->toOthers();
+        }
+        return response()->json(compact('isDeleted'));
     }
 }
