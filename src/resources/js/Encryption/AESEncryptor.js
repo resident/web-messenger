@@ -15,36 +15,46 @@ export default class AESEncryptor {
         );
     }
 
-    async encrypt(text) {
-        const encoder = new TextEncoder();
-        const encoded = encoder.encode(text);
-
+    async encryptRaw(data) {
         const iv = crypto.getRandomValues(new Uint8Array(12));
 
         const encrypted = await crypto.subtle.encrypt(
             {
                 name: "AES-GCM",
-                iv: iv
+                iv
             },
             this.key,
-            encoded
+            data
         );
+
+        return {encrypted, iv: iv.toBase64()};
+    }
+
+    async decryptRaw(encrypted, iv) {
+        return await crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: Uint8Array.fromBase64(iv),
+            },
+            this.key,
+            encrypted
+        );
+    }
+
+    async encryptString(text) {
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(text);
+
+        const {encrypted, iv} = await this.encryptRaw(encoded);
 
         return {
             encrypted: encrypted.toBase64(),
-            iv: iv.toBase64()
+            iv
         };
     }
 
-    async decrypt(encrypted, iv) {
-        const decrypted = await crypto.subtle.decrypt(
-            {
-                name: "AES-GCM",
-                iv: Uint8Array.fromBase64(iv)
-            },
-            this.key,
-            ArrayBuffer.fromBase64(encrypted)
-        );
+    async decryptString(encrypted, iv) {
+        const decrypted = await this.decryptRaw(ArrayBuffer.fromBase64(encrypted), iv);
 
         const decoder = new TextDecoder();
 

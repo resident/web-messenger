@@ -21,6 +21,7 @@ services:
         volumes:
             - ./src/:/mnt/app
             - ./Docker/nginx/certs:/mnt/certs
+            - ./Docker/php/php.ini:/usr/local/etc/php/php.ini
         depends_on:
             - mysql
             - redis

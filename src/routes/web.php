@@ -49,6 +49,13 @@ Route::middleware('auth')->group(function () {
         ->whereUuid('message')
         ->name('chat_rooms.messages.destroy');
 
+    Route::get(
+        '/chat-rooms/messages/attachments/{attachment}',
+        [ChatRoomMessagesController::class, 'downloadAttachment']
+    )
+        ->whereUuid('attachment')
+        ->name('chat_rooms.messages.download_attachment');
+
 
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 });
