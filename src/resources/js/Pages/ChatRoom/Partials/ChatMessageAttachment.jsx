@@ -2,8 +2,9 @@ import {useContext, useEffect, useState} from "react";
 import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import ProgressBar from "@/Components/ProgressBar.jsx";
+import Modal from "@/Components/Modal.jsx";
 
-export default function ChatMessageAttachmentAttachment({attachment}) {
+export default function ChatMessageAttachment({attachment}) {
     const {chatRoomKey} = useContext(ChatRoomContext);
 
     const [type, setType] = useState(attachment.mime_type.split('/')[0]);
@@ -12,6 +13,7 @@ export default function ChatMessageAttachmentAttachment({attachment}) {
     const [attachmentUrl, setAttachmentUrl] = useState();
     const [render, setRender] = useState();
     const [loadingProgress, setLoadingProgress] = useState(0);
+    const [showLoadingProgress, setShowLoadingProgress] = useState(false);
     const [manualDownload, setManualDownload] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
@@ -23,8 +25,6 @@ export default function ChatMessageAttachmentAttachment({attachment}) {
 
     useEffect(() => {
         if (manualDownload && attachmentUrl) {
-            console.log('attachmentUrl', attachmentUrl);
-
             const a = document.createElement('a');
             a.href = attachmentUrl;
             a.download = attachment.name;
@@ -34,11 +34,14 @@ export default function ChatMessageAttachmentAttachment({attachment}) {
             document.body.removeChild(a);
 
             setManualDownload(false);
+            setShowLoadingProgress(false);
         }
     }, [manualDownload, attachmentUrl]);
 
 
     const downloadAttachment = () => {
+        if (attachmentContent) return;
+
         axios.get(route('chat_rooms.messages.download_attachment', [attachment.id]), {
             responseType: 'arraybuffer',
             onDownloadProgress: (progressEvent) => {
@@ -81,65 +84,82 @@ export default function ChatMessageAttachmentAttachment({attachment}) {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
     };
 
-    const renderImage = () => {
-        return (
-            <img
-                src={attachmentUrl}
-                alt={attachment.name}
-                onClick={() => {
-                    window.open(attachmentUrl);
-                }}
-            />
-        );
-    };
+    const renderImageModal = () => (
+        <Modal
+            className={`p-3 sm:max-w-fit`}
+            show={showModal}
+            onClose={() => setShowModal(false)}>
 
-    const renderAudio = () => {
-        return (
-            <audio
-                src={attachmentUrl}
-                controls={true}
-            />
-        );
-    };
+            <div className={`flex justify-center`}>
+                <img
+                    className={`w-full`}
+                    src={attachmentUrl}
+                    alt={attachment.name}
+                    onClick={() => setShowModal(false)}
+                />
+            </div>
 
-    const renderVideo = () => {
-        return (
-            <video
-                src={attachmentUrl}
-                controls={true}
-            />
-        );
-    };
+            {renderAttachmentInfo()}
+        </Modal>
+    );
+
+    const renderImage = () => (
+        <img
+            className={`cursor-pointer`}
+            src={attachmentUrl}
+            alt={attachment.name}
+            onClick={() => {
+                setShowModal(true)
+            }}
+        />
+    );
+
+    const renderAudio = () => (
+        <audio
+            src={attachmentUrl}
+            controls={true}
+        />
+    );
+
+    const renderVideo = () => (
+        <video
+            src={attachmentUrl}
+            controls={true}
+        />
+    );
 
     const downloadHandler = () => {
         setManualDownload(true);
+        setShowLoadingProgress(true);
         downloadAttachment();
     };
 
-    const renderDownloadButton = () => {
-        return (
-            <div>
-                <button
-                    className={`text-blue-500 font-bold hover:text-blue-700`}
-                    onClick={downloadHandler}
-                >{attachment.name}</button>
-                <div className={`text-xs`}>{prettySize(attachment.size)}</div>
-            </div>
-        );
+    const renderAttachmentInfo = () => (
 
-    };
+        <div className={`mt-2 text-sm text-gray-500`}>
+            <div
+                className={`cursor-pointer text-blue-500 font-bold hover:text-blue-600`}
+                onClick={downloadHandler}>{attachment.name}</div>
+            <div>{prettySize(attachment.size)}</div>
+        </div>
+    );
 
     const renderAttachment = () => {
+        let jsx;
+
         switch (type) {
             case 'image':
-                return renderImage();
+                jsx = renderImage();
+                break;
             case 'audio':
-                return renderAudio();
+                jsx = renderAudio();
+                break;
             case 'video':
-                return renderVideo();
-            default:
-                return renderDownloadButton();
+                jsx = renderVideo();
+                break;
         }
+
+        return (<>{jsx} {renderAttachmentInfo()}</>);
     };
 
     useEffect(() => {
@@ -147,16 +167,18 @@ export default function ChatMessageAttachmentAttachment({attachment}) {
     }, [attachmentContent]);
 
     return (
-        <div className={`m-1 p-2 bg-blue-100 rounded-md`} onClick={() => setShowModal(true)}>
-            {render}
+        <div className={`m-1 p-2 bg-blue-100 rounded-md`}>
+            {type === 'image' && renderImageModal()}
 
+            {render}
 
             <ProgressBar
                 className={`
                     mt-2
-                    ${loadingProgress === 100 ? 'hidden' : ''}
+                    ${showLoadingProgress || 'hidden'}
                 `}
                 progress={loadingProgress}
             />
-        </div>)
+        </div>
+    )
 }

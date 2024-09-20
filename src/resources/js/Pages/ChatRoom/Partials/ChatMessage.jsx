@@ -1,6 +1,6 @@
 import {forwardRef, useEffect, useRef, useState} from "react";
 import {TrashIcon} from '@heroicons/react/24/solid'
-import ChatMessageAttachmentAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
+import ChatMessageAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
 
 export default forwardRef(function ChatMessage({
                                                    className = '',
@@ -71,9 +71,9 @@ export default forwardRef(function ChatMessage({
             <div>{message.message}</div>
 
             {message.attachments.length > 0 &&
-                <div className={`flex flex-wrap mt-2`}>
+                <div className={`flex flex-wrap my-2`}>
                     {message.attachments.map((attachment, i) => (
-                        <ChatMessageAttachmentAttachment key={i} attachment={attachment}/>
+                        <ChatMessageAttachment key={i} attachment={attachment}/>
                     ))}
                 </div>
             }
