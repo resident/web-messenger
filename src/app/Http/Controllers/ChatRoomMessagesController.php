@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Dto\ChatRoomMessageAttachmentDto;
 use App\Dto\ChatRoomMessageDto;
 use App\Events\ChatRoomMessageRemoved;
 use App\Events\ChatRoomMessageSent;
@@ -11,8 +12,13 @@ use App\Http\Requests\StoreChatRoomMessageRequest;
 use App\Http\Requests\UpdateChatRoomMessageRequest;
 use App\Models\ChatRoom;
 use App\Models\ChatRoomMessage;
+use App\Models\ChatRoomMessageAttachment;
 use App\Repositories\ChatRoomMessageRepository;
+use App\Services\ChatRoomMessageService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatRoomMessagesController extends Controller
 {
@@ -36,17 +42,33 @@ class ChatRoomMessagesController extends Controller
     public function store(
         ChatRoom $chatRoom,
         StoreChatRoomMessageRequest $request,
-        ChatRoomMessageRepository $chatRoomMessageRepository
-    ) {
-        $data = [
-            ...$request->safe(),
+        ChatRoomMessageService $messageService,
+    ): JsonResponse {
+        $messageDto = ChatRoomMessageDto::fromArray([
             'user_id' => $request->user()->id,
             'chat_room_id' => $chatRoom->id,
-        ];
+            ...$request->safe(['message', 'messageIv', 'messageKey', 'messageKeyIv']),
+        ]);
 
-        $message = $chatRoomMessageRepository->createMessage(ChatRoomMessageDto::fromArray($data));
+        $attachments = $request->validated(['attachments'], []);
 
-        $message->load('user');
+        $attachmentsDto = [];
+
+        foreach ($attachments as $attachment) {
+            $file = $attachment['attachment'];
+
+            $filePath = $file->store("attachments/{$request->user()->id}");
+
+            $attachmentsDto[] = ChatRoomMessageAttachmentDto::fromArray([
+                'path' => $filePath,
+                ...$attachment,
+                'size' => (int)$attachment['size'],
+            ]);
+        }
+
+        $message = $messageService->createMessageWithAttachments($messageDto, $attachmentsDto);
+
+        $message->load(['user', 'attachments']);
 
         broadcast(new ChatRoomMessageSent($message))->toOthers();
 
@@ -67,15 +89,22 @@ class ChatRoomMessagesController extends Controller
     public function destroy(
         ChatRoom $chatRoom,
         ChatRoomMessage $message,
-        ChatRoomMessageRepository $chatRoomMessageRepository
+        ChatRoomMessageService $messageService,
     ): JsonResponse {
         $messageDto = ChatRoomMessageDto::fromArray($message->toArray());
 
-        $isDeleted = $chatRoomMessageRepository->deleteMessage($message);
+        $isDeleted = $messageService->deleteMessage($message);
 
         if ($isDeleted) {
             broadcast(new ChatRoomMessageRemoved($messageDto))->toOthers();
         }
         return response()->json(compact('isDeleted'));
+    }
+
+    public function downloadAttachment(ChatRoomMessageAttachment $attachment): StreamedResponse
+    {
+        Gate::authorize('view', $attachment);
+
+        return Storage::download($attachment->path, $attachment->name);
     }
 }

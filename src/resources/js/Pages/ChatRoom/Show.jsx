@@ -9,6 +9,9 @@ import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
+import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
+import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import ProgressBar from "@/Components/ProgressBar.jsx";
 
 export default function Show({auth, chatRoom}) {
     const [chatRoomKey, setChatRoomKey] = useState('');
@@ -18,16 +21,42 @@ export default function Show({auth, chatRoom}) {
     const [messagesLoading, setMessagesLoading] = useState(false);
     const [removingMessage, setRemovingMessage] = useState();
     const [messagesOperation, setMessagesOperation] = useState(null);
+    const [messageAttachments, setMessageAttachments] = useState([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [sendingMessage, setSendingMessage] = useState(false);
+    const [prevMessagesLength, setPrevMessagesLength] = useState(0);
+    const [scrollTo, setScrollTo] = useState(null);
 
     const messagesRef = useRef();
+    const messageRefs = useRef([]);
     const messageInputRef = useRef();
-
-    const aesEncryptor = new AESEncryptor();
 
     const messagesOperationTypes = Object.freeze({
         push: 'push',
         remove: 'remove',
     });
+
+    const scrollToDirection = Object.freeze({
+        top: 'top',
+        bottom: 'bottom',
+    });
+
+    const setMessageRef = (el, index) => {
+        messageRefs.current[index] = el;
+    };
+
+    const scrollToMessage = (index) => {
+        setTimeout(() => {
+            messageRefs.current[index].scrollIntoView({
+                behavior: 'instant',
+                block: 'start',
+            });
+        }, 100);
+
+        setScrollTo(null);
+    };
+
+    const scrollToLastMessage = () => scrollToMessage(messages.length - 1);
 
     useEffect(() => {
         (async () => {
@@ -65,12 +94,28 @@ export default function Show({auth, chatRoom}) {
 
     }, [messages, messagesOperation]);
 
-    const decryptMessage = async (message) => {
+    const encryptMessage = async (message) => {
+        const messageKey = await AESKeyGenerator.generateKey();
+
+        const aesEncryptor = new AESEncryptor();
+        await aesEncryptor.importKey(messageKey);
+        const {iv: messageIv, encrypted: messageEncrypted} = await aesEncryptor.encryptString(message);
+
+        setMessage('');
+
         await aesEncryptor.importKey(chatRoomKey);
-        const messageKey = await aesEncryptor.decrypt(message.message_key, message.message_key_iv);
+        const {iv: messageKeyIv, encrypted: messageKeyEncrypted} = await aesEncryptor.encryptString(messageKey);
+
+        return {messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv};
+    };
+
+    const decryptMessage = async (message) => {
+        const aesEncryptor = new AESEncryptor();
+        await aesEncryptor.importKey(chatRoomKey);
+        const messageKey = await aesEncryptor.decryptString(message.message_key, message.message_key_iv);
 
         await aesEncryptor.importKey(messageKey);
-        message.message = await aesEncryptor.decrypt(message.message, message.message_iv);
+        message.message = await aesEncryptor.decryptString(message.message, message.message_iv);
 
         delete message.message_iv;
         delete message.message_key;
@@ -79,28 +124,70 @@ export default function Show({auth, chatRoom}) {
         return message;
     };
 
-    const saveScrollPosition = () => {
-        if (!messagesRef.current.scrollHeight) return 0;
-
-        const {scrollHeight, scrollTop, clientHeight} = messagesRef.current;
-
-        return scrollHeight - scrollTop - clientHeight;
+    const fileToArrayBuffer = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
     };
 
-    const restoreScrollPosition = (distance) => {
-        if (!messagesRef.current.scrollHeight) return;
+    const encryptAttachment = async (attachment) => {
+        const attachmentKey = await AESKeyGenerator.generateKey();
+        const aesEncryptor = new AESEncryptor();
+        await aesEncryptor.importKey(attachmentKey);
 
-        const {scrollHeight, clientHeight} = messagesRef.current;
+        const attachmentArrayBuffer = await fileToArrayBuffer(attachment);
 
-        messagesRef.current.scrollTop = scrollHeight - clientHeight - distance;
+        const {encrypted: attachmentEncrypted, iv: attachmentIv} = await aesEncryptor.encryptRaw(attachmentArrayBuffer);
+
+        await aesEncryptor.importKey(chatRoomKey);
+
+        const {
+            encrypted: attachmentKeyEncrypted,
+            iv: attachmentKeyIv
+        } = await aesEncryptor.encryptString(attachmentKey);
+
+        return {
+            name: attachment.name,
+            size: attachment.size,
+            mimeType: attachment.type ?? 'application/octet-stream',
+            attachment: attachmentEncrypted,
+            attachmentIv,
+            attachmentKey: attachmentKeyEncrypted,
+            attachmentKeyIv,
+        };
     };
+
+    const encryptAttachments = (attachments) => {
+        const promises = [];
+
+        attachments.forEach((attachment) => {
+            const promise = encryptAttachment(attachment);
+
+            promises.push(promise);
+        });
+
+        return Promise.all(promises);
+    };
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            if (scrollTo === 'bottom') {
+                setPrevMessagesLength(messages.length);
+                scrollToLastMessage();
+            } else if (scrollTo === 'top') {
+                scrollToMessage(prevMessagesLength);
+                setPrevMessagesLength(messages.length - prevMessagesLength);
+            }
+        }
+    }, [messages]);
 
     const loadMessages = (count = null, startId = null) => {
         if (messagesLoading) return;
 
         setMessagesLoading(true);
-
-        const distanceFromBottom = startId ? saveScrollPosition() : 0;
 
         axios.get(route('chat_rooms.messages.index', {chatRoom: chatRoom.id, count, startId}))
             .then(async (response) => {
@@ -117,7 +204,7 @@ export default function Show({auth, chatRoom}) {
             .finally(() => {
                 setMessagesLoading(false);
 
-                setTimeout(() => restoreScrollPosition(distanceFromBottom), 0);
+                setScrollTo(startId ? scrollToDirection.top : scrollToDirection.bottom);
             });
     };
 
@@ -127,7 +214,9 @@ export default function Show({auth, chatRoom}) {
 
             pushMessage(decryptedMessage);
 
-            setTimeout(() => restoreScrollPosition(0), 0);
+            setScrollTo(scrollToDirection.bottom);
+
+            setTimeout(() => scrollToLastMessage(), 0);
         })();
     };
 
@@ -148,34 +237,50 @@ export default function Show({auth, chatRoom}) {
     const sendMessage = async (e) => {
         e.preventDefault();
 
-        const messageKey = await AESKeyGenerator.generateKey();
+        setSendingMessage(true);
+        setErrors({...errors, message: ''});
 
-        await aesEncryptor.importKey(messageKey);
-        const {iv: messageIv, encrypted: messageEncrypted} = await aesEncryptor.encrypt(message);
+        try {
+            const {messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv} = await encryptMessage(message);
 
-        setMessage('');
+            const attachments = await encryptAttachments(messageAttachments);
 
-        await aesEncryptor.importKey(chatRoomKey);
-        const {iv: messageKeyIv, encrypted: messageKeyEncrypted} = await aesEncryptor.encrypt(messageKey);
+            axios.post(route('chat_rooms.messages.store', chatRoom.id), {
+                message: messageEncrypted,
+                messageIv,
+                messageKey: messageKeyEncrypted,
+                messageKeyIv,
+                attachments,
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'X-Socket-ID': Echo.socketId(),
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
+            }).then(async response => {
+                const decryptedMessage = await decryptMessage(response.data);
 
-        axios.post(route('chat_rooms.messages.store', chatRoom.id), {
-            message: messageEncrypted,
-            message_iv: messageIv,
-            message_key: messageKeyEncrypted,
-            message_key_iv: messageKeyIv,
-        }, {
-            headers: {
-                'X-Socket-ID': Echo.socketId(),
+                setMessages([...messages, decryptedMessage]);
+
+                setMessageAttachments([]);
+            }).catch(error => {
+                setErrors({...errors, message: error});
+            }).finally(() => {
+                setUploadProgress(0);
+                setSendingMessage(false);
+                setScrollTo(scrollToDirection.bottom);
+            });
+        } catch (e) {
+            if (e instanceof ProgressEvent) {
+                setErrors({...errors, message: e.target.error.message});
             }
-        }).then(async response => {
-            const decryptedMessage = await decryptMessage(response.data);
 
-            setMessages([...messages, decryptedMessage]);
-
-            setTimeout(() => restoreScrollPosition(0), 0);
-        }).catch(error => {
-            console.log(error);
-        });
+            setSendingMessage(false);
+            setMessageAttachments([]);
+        }
     };
 
     const messagesScrollHandler = () => {
@@ -213,39 +318,56 @@ export default function Show({auth, chatRoom}) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            <div className="w-3/4 m-auto">
-                                <h2 className="font-bold mb-3">{chatRoom.title}</h2>
+                    <div
+                        className="bg-white overflow-hidden shadow-sm sm:rounded-lg outline outline-1 outline-lime-300">
+                        <div className="p-6 0.text-gray-900">
+                            <div className="w-full m-auto">
+                                <h2 className="font-bold mb-3 text-center">{chatRoom.title}</h2>
 
                                 <div
                                     className="h-[calc(100vh-24rem)] overflow-y-auto flex flex-col gap-y-4 p-6 mb-4"
                                     ref={messagesRef}
                                     onScroll={messagesScrollHandler}
                                 >
-                                    {messages.map((message) => (
-                                        <ChatMessage
-                                            key={message.id}
-                                            className={(removingMessage && removingMessage.id === message.id)
-                                                ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
-                                            self={auth.user.id === message.user_id}
-                                            message={message}
-                                            onMessageRemoved={() => removeMessage(message)}
-                                        />
-                                    ))}
+                                    <ChatRoomContextProvider value={{chatRoomKey}}>
+                                        {messages.map((message, i) => (
+                                            <ChatMessage
+                                                key={`${i}:${message.id}`}
+                                                className={(removingMessage && removingMessage.id === message.id)
+                                                    ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
+                                                ref={(el) => setMessageRef(el, i)}
+                                                self={auth.user.id === message.user_id}
+                                                message={message}
+                                                onMessageRemoved={() => removeMessage(message)}
+                                            />
+                                        ))}
+                                    </ChatRoomContextProvider>
                                 </div>
 
                                 <form onSubmit={sendMessage}>
                                     <div className="flex gap-4">
-                                        <TextInput
-                                            ref={messageInputRef}
-                                            value={message}
-                                            onChange={(e) => setMessage(e.target.value)}
-                                            className="w-full"
+                                        <div className={`w-full`}>
+                                            <TextInput
+                                                ref={messageInputRef}
+                                                value={message}
+                                                onChange={(e) => setMessage(e.target.value)}
+                                                className="w-full"
+                                            />
+
+                                            <ProgressBar
+                                                className={`mt-1 ${!sendingMessage ? 'hidden' : ''}`}
+                                                progress={uploadProgress}
+                                            />
+                                        </div>
+
+                                        <SelectAttachments
+                                            selectedFiles={messageAttachments}
+                                            setSelectedFiles={setMessageAttachments}
                                         />
 
                                         <PrimaryButton type="submit"
-                                                       disabled={!message.length}>Send</PrimaryButton>
+                                                       disabled={(!message.length && messageAttachments.length === 0) || sendingMessage}
+                                        >Send</PrimaryButton>
                                     </div>
 
                                     <div>

@@ -15,15 +15,13 @@ trait FromArray
         $reflection = new ReflectionClass(static::class);
         $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
 
-        $defaults = [];
+        $params = [];
 
         foreach ($properties as $property) {
-            if (!$property->hasDefaultValue() && $property->getType()->allowsNull()) {
-                $defaults[$property->getName()] = null;
-            }
+            $params[$property->getName()] = $data[$property->getName()]
+                ?? $data[Str::snake($property->getName())]
+                ?? null;
         }
-
-        $params = [...$defaults, ...array_combine(array_map(Str::camel(...), array_keys($data)), array_values($data))];
 
         return new static(...$params);
     }

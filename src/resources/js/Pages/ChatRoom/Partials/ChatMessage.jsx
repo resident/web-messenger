@@ -1,7 +1,16 @@
-import {useEffect, useState} from "react";
+import {forwardRef, useEffect, useRef, useState} from "react";
 import {TrashIcon} from '@heroicons/react/24/solid'
+import ChatMessageAttachmentAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
 
-export default function ChatMessage({className = '', message, self = false, onMessageRemoved, ...props}) {
+export default forwardRef(function ChatMessage({
+                                                   className = '',
+                                                   message,
+                                                   self = false,
+                                                   onMessageRemoved,
+                                                   ...props
+                                               }, ref) {
+    const messageRef = ref ? ref : useRef();
+
     const [createdAt, setCreatedAt] = useState({});
 
     useEffect(() => {
@@ -40,6 +49,7 @@ export default function ChatMessage({className = '', message, self = false, onMe
                 ${self ? 'bg-lime-300 self-end ' : 'bg-yellow-300 self-start '}
                 ${className}
             `}
+            ref={messageRef}
         >
             <div className={`flex justify-between`}>
                 <div className={`
@@ -50,7 +60,7 @@ export default function ChatMessage({className = '', message, self = false, onMe
                 <div>
                     <TrashIcon
                         className={`
-                            size-4 opacity-0 group-hover:opacity-100
+                            size-4 opacity-0 group-hover:opacity-100 cursor-pointer
                             ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
                         `}
                         onClick={removeMessage}
@@ -59,6 +69,14 @@ export default function ChatMessage({className = '', message, self = false, onMe
             </div>
 
             <div>{message.message}</div>
+
+            {message.attachments.length > 0 &&
+                <div className={`flex flex-wrap mt-2`}>
+                    {message.attachments.map((attachment, i) => (
+                        <ChatMessageAttachmentAttachment key={i} attachment={attachment}/>
+                    ))}
+                </div>
+            }
 
             <div className={`
                     text-xs font-light text-right
@@ -69,4 +87,4 @@ export default function ChatMessage({className = '', message, self = false, onMe
             </div>
         </div>
     )
-}
+});

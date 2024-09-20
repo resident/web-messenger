@@ -25,9 +25,17 @@ class StoreChatRoomMessageRequest extends FormRequest
     {
         return [
             'message' => 'required|string',
-            'message_iv' => 'required|string',
-            'message_key' => 'required|string',
-            'message_key_iv' => 'required|string',
+            'messageIv' => 'required|string',
+            'messageKey' => 'required|string',
+            'messageKeyIv' => 'required|string',
+            'attachments' => 'sometimes|array',
+            'attachments.*.name' => 'required_with:attachments|string',
+            'attachments.*.mimeType' => 'required_with:attachments|string',
+            'attachments.*.size' => 'required_with:attachments|integer',
+            'attachments.*.attachment' => 'required_with:attachments|file',
+            'attachments.*.attachmentIv' => 'required_with:attachments|string',
+            'attachments.*.attachmentKey' => 'required_with:attachments|string',
+            'attachments.*.attachmentKeyIv' => 'required_with:attachments|string',
         ];
     }
 }
