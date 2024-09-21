@@ -34,6 +34,9 @@ Route::middleware('auth')->group(function () {
         ->whereUuid('chatRoomId')
         ->name('chat_rooms.show');
 
+    Route::put('/chat-rooms/{chatRoom}', [ChatRoomsController::class, 'update'])
+        ->whereUuid('chatRoom')->name('chat_rooms.update');
+
     Route::get('/chat-rooms/{chatRoom}/messages/{count?}/{startId?}', [ChatRoomMessagesController::class, 'index'])
         ->whereUuid('chatRoom')
         ->whereNumber('count')

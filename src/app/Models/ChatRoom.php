@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property string $id
- * @property string $name
+ * @property string $title
+ * @property int $auto_remove_timeout
  * @property string $created_at
  * @property string $updated_at
  */
@@ -23,6 +24,7 @@ class ChatRoom extends Model
     protected $fillable = [
         'id',
         'title',
+        'auto_remove_timeout',
         'created_at',
         'updated_at',
     ];

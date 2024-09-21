@@ -35,6 +35,7 @@ services:
             MYSQL_DATABASE: web_messenger
             MYSQL_USER: user
             MYSQL_PASSWORD: user_password
+            TZ: "UTC"
         volumes:
             - ./Docker/mysql/data:/var/lib/mysql
 
