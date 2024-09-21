@@ -24,7 +24,8 @@ class UpdateChatRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'sometimes|string|min:1|max:255',
+            'auto_remove_timeout' => 'sometimes|nullable|integer|min:1',
         ];
     }
 }

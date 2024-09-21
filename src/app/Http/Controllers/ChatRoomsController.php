@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dto\ChatRoomDto;
+use App\Events\ChatRoomUpdated;
 use App\Http\Requests\StoreChatRoomRequest;
 use App\Http\Requests\UpdateChatRoomRequest;
 use App\Models\ChatRoom;
 use App\Services\ChatRoomService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class ChatRoomsController extends Controller
@@ -75,9 +77,19 @@ class ChatRoomsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateChatRoomRequest $request, ChatRoom $chatRoom)
-    {
-        //
+    public function update(
+        UpdateChatRoomRequest $request,
+        ChatRoom $chatRoom,
+        ChatRoomService $chatRoomService
+    ): JsonResponse {
+        $chatRoomService->repository->updateChatRoom($chatRoom, $request->validated()) or abort(
+            500,
+            'Unable to update chat room'
+        );
+
+        broadcast(new ChatRoomUpdated($chatRoom))->toOthers();
+
+        return response()->json($chatRoom);
     }
 
     /**

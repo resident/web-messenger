@@ -94,10 +94,11 @@ export default function SelectAttachments({selectedFiles, setSelectedFiles}) {
                 className={`
                     flex gap-2 bg-gray-200 hover:bg-indigo-600 hover:text-white cursor-pointer p-3 rounded-full
                     ${showSelectedFiles ? 'bg-indigo-500 hover:bg-indigo-600 text-white' : ''}
-                `}>
+                `}
+                onClick={openModal}
+            >
                 <PaperClipIcon
                     className={`size-6`}
-                    onClick={openModal}
                 />
 
                 <div className={`${showSelectedFiles ? 'pr-1' : 'hidden'}`}>{selectedFiles.length}</div>

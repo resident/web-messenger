@@ -13,4 +13,14 @@ final class ChatRoomRepository
     {
         return ChatRoom::create($chatRoomDto->toArray());
     }
+
+    /**
+     * @param ChatRoom $chatRoom
+     * @param array<string, string> $values
+     * @return bool
+     */
+    public function updateChatRoom(ChatRoom $chatRoom, array $values): bool
+    {
+        return $chatRoom->update($values);
+    }
 }

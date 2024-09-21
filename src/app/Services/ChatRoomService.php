@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 final readonly class ChatRoomService
 {
     public function __construct(
-        private ChatRoomRepository $chatRoomRepository,
+        public ChatRoomRepository $repository,
     ) {
     }
 
@@ -24,7 +24,7 @@ final readonly class ChatRoomService
     public function createChatRoom(ChatRoomDto $chatRoomDto, array $usersWithKeys): ChatRoom
     {
         return DB::transaction(function () use ($chatRoomDto, $usersWithKeys) {
-            $chatRoom = $this->chatRoomRepository->createChatRoom($chatRoomDto);
+            $chatRoom = $this->repository->createChatRoom($chatRoomDto);
 
             $chatRoom->users()->sync($usersWithKeys);
 

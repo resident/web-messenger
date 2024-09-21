@@ -1,7 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {Head} from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import TextInput from "@/Components/TextInput.jsx";
 import ChatMessage from "@/Pages/ChatRoom/Partials/ChatMessage.jsx";
 import {useEffect, useRef, useState} from "react";
 import InputError from "@/Components/InputError.jsx";
@@ -12,8 +11,11 @@ import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import ProgressBar from "@/Components/ProgressBar.jsx";
+import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
+import TextArea from "@/Components/TextArea.jsx";
 
-export default function Show({auth, chatRoom}) {
+export default function Show({auth, ...props}) {
+    const [chatRoom, setChatRoom] = useState(props.chatRoom);
     const [chatRoomKey, setChatRoomKey] = useState('');
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
@@ -224,19 +226,22 @@ export default function Show({auth, chatRoom}) {
         removeMessage(e.message);
     };
 
+    const onChatRoomUpdated = (e) => {
+        setChatRoom({...chatRoom, ...e.chatRoom});
+    };
+
     useEffect(() => {
         if (chatRoomKey) {
             loadMessages();
 
             Echo.private(`chat-room.${chatRoom.id}`)
                 .listen('ChatRoomMessageSent', onChatRoomMessageSent)
-                .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved);
+                .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
+                .listen('ChatRoomUpdated', onChatRoomUpdated);
         }
     }, [chatRoomKey]);
 
-    const sendMessage = async (e) => {
-        e.preventDefault();
-
+    const sendMessage = async () => {
         setSendingMessage(true);
         setErrors({...errors, message: ''});
 
@@ -309,6 +314,28 @@ export default function Show({auth, chatRoom}) {
         }, 600);
     };
 
+    const availableToSendMessage = () => {
+        return (message.trim().length || messageAttachments.length) && !sendingMessage;
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.ctrlKey && e.key === 'Enter') {
+            if (availableToSendMessage()) {
+                sendMessage();
+            }
+        }
+    };
+
+    useEffect(() => {
+        const linesCount = message.split('\n').length - 1;
+
+        if (linesCount < 10) {
+            const style = messageInputRef.current.style;
+
+            style.height = `${3.5 + linesCount}rem`;
+        }
+    }, [message]);
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -324,12 +351,13 @@ export default function Show({auth, chatRoom}) {
                             <div className="w-full m-auto">
                                 <h2 className="font-bold mb-3 text-center">{chatRoom.title}</h2>
 
-                                <div
-                                    className="h-[calc(100vh-24rem)] overflow-y-auto flex flex-col gap-y-4 p-6 mb-4"
-                                    ref={messagesRef}
-                                    onScroll={messagesScrollHandler}
-                                >
-                                    <ChatRoomContextProvider value={{chatRoomKey}}>
+                                <ChatRoomContextProvider value={{chatRoom, chatRoomKey}}>
+                                    <div
+                                        className="h-[calc(100vh-24rem)] overflow-y-auto flex flex-col gap-y-4 p-6 mb-4"
+                                        ref={messagesRef}
+                                        onScroll={messagesScrollHandler}
+                                    >
+
                                         {messages.map((message, i) => (
                                             <ChatMessage
                                                 key={`${i}:${message.id}`}
@@ -341,17 +369,18 @@ export default function Show({auth, chatRoom}) {
                                                 onMessageRemoved={() => removeMessage(message)}
                                             />
                                         ))}
-                                    </ChatRoomContextProvider>
-                                </div>
 
-                                <form onSubmit={sendMessage}>
+                                    </div>
+
                                     <div className="flex gap-4">
                                         <div className={`w-full`}>
-                                            <TextInput
+                                            <TextArea
+                                                className="w-full h-14"
                                                 ref={messageInputRef}
                                                 value={message}
                                                 onChange={(e) => setMessage(e.target.value)}
-                                                className="w-full"
+                                                onKeyDown={handleKeyDown}
+                                                placeholder="Message"
                                             />
 
                                             <ProgressBar
@@ -360,20 +389,30 @@ export default function Show({auth, chatRoom}) {
                                             />
                                         </div>
 
-                                        <SelectAttachments
-                                            selectedFiles={messageAttachments}
-                                            setSelectedFiles={setMessageAttachments}
-                                        />
+                                        <div className={`self-end mb-2`}>
+                                            <div className={`text-xs text-center text-gray-500`}>Ctrl+Enter</div>
 
-                                        <PrimaryButton type="submit"
-                                                       disabled={(!message.length && messageAttachments.length === 0) || sendingMessage}
-                                        >Send</PrimaryButton>
+                                            <PrimaryButton
+                                                onClick={() => sendMessage()}
+                                                disabled={!availableToSendMessage()}
+                                            >Send</PrimaryButton>
+
+                                        </div>
                                     </div>
 
                                     <div>
                                         <InputError message={errors.message} className="mt-2"/>
                                     </div>
-                                </form>
+
+                                    <div className={`flex gap-3 justify-center mt-2`}>
+                                        <SelectAttachments
+                                            selectedFiles={messageAttachments}
+                                            setSelectedFiles={setMessageAttachments}
+                                        />
+
+                                        <AutoDeleteSettings/>
+                                    </div>
+                                </ChatRoomContextProvider>
                             </div>
                         </div>
                     </div>
