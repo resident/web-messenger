@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {Head, Link, router} from '@inertiajs/react';
+import {Head, router} from '@inertiajs/react';
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
+import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 
-export default function List({auth, chatRooms}) {
-
+export default function List({auth}) {
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -22,13 +22,7 @@ export default function List({auth, chatRooms}) {
                                 >+</PrimaryButton>
                             </div>
 
-                            <div>
-                                {chatRooms.map((room) => (
-                                    <div key={room.id} className="p-1">
-                                        <Link href={route('chat_rooms.show', room.id)}>{room.title}</Link>
-                                    </div>
-                                ))}
-                            </div>
+                            <ChatRooms/>
                         </div>
                     </div>
                 </div>
