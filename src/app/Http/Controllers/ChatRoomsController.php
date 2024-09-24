@@ -9,6 +9,7 @@ use App\Events\ChatRoomUpdated;
 use App\Http\Requests\StoreChatRoomRequest;
 use App\Http\Requests\UpdateChatRoomRequest;
 use App\Models\ChatRoom;
+use App\Repositories\ChatRoomRepository;
 use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,10 +21,14 @@ class ChatRoomsController extends Controller
      */
     public function index(): \Inertia\Response
     {
-        $user = request()->user();
-        $chatRooms = $user->chatRooms()->orderByDesc('id')->get();
+        return inertia('ChatRoom/List');
+    }
 
-        return inertia('ChatRoom/List', compact('chatRooms'));
+    public function list(ChatRoomRepository $repository): JsonResponse
+    {
+        $chatRooms = $repository->getUserChatRoomsDesc(request()->user());
+
+        return response()->json($chatRooms);
     }
 
     /**

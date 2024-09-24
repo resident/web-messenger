@@ -7,6 +7,7 @@ import {Head, Link, useForm} from '@inertiajs/react';
 import RSAKeysGenerator from '@/Encryption/RSAKeysGenerator.js';
 import {useEffect, useState} from "react";
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
+import UserPassword from "@/Common/UserPassword.js";
 
 export default function Register() {
     const {data, setData, post, processing, errors, reset} = useForm({
@@ -24,22 +25,14 @@ export default function Register() {
 
     useEffect(() => {
         (async () => {
-            let publicKey, privateKey;
+            const rsaGenerator = new RSAKeysGenerator();
+            await rsaGenerator.generateKeys();
 
-            if (!userRsaKeysStorage.hasKeysInSessionStorage()) {
-                const rsaGenerator = new RSAKeysGenerator();
-                await rsaGenerator.generateKeys();
-
-                publicKey = await rsaGenerator.exportPublicKey();
-                privateKey = await rsaGenerator.exportPrivateKey();
-            } else {
-                ({publicKey, privateKey} = userRsaKeysStorage.getKeysFromSession());
-            }
+            const publicKey = await rsaGenerator.exportPublicKey();
+            const privateKey = await rsaGenerator.exportPrivateKey();
 
             setPublicKey(publicKey);
             setPrivateKey(privateKey);
-
-            userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
 
             setData('public_key', publicKey);
         })();
@@ -50,6 +43,8 @@ export default function Register() {
         e.preventDefault();
 
         (async () => {
+            userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
+            await UserPassword.saveToSession(data.password, publicKey);
             await userRsaKeysStorage.saveKeysToLocalStorage(data.password, publicKey, privateKey);
         })().then(() => {
             post(route('register'), {

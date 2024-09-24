@@ -4,6 +4,7 @@ import InputLabel from "@/Components/InputLabel.jsx";
 import TextInput from "@/Components/TextInput.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import InputError from "@/Components/InputError.jsx";
+import UserPassword from "@/Common/UserPassword.js";
 
 export default function loadUserRsaKeys() {
     const userRsaKeysStorage = new UserRsaKeysStorage();
@@ -19,6 +20,8 @@ export default function loadUserRsaKeys() {
         (async () => {
             try {
                 const {publicKey, privateKey} = await userRsaKeysStorage.getKeysFromLocalStorage(userPassword);
+
+                await UserPassword.saveToSession(userPassword, publicKey);
 
                 userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
 
