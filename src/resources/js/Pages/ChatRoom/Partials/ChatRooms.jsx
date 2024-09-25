@@ -1,9 +1,31 @@
 import {Link} from "@inertiajs/react";
-import {useContext} from "react";
+import {useContext, useEffect, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 
 export default function ChatRooms() {
-    const {chatRooms} = useContext(ApplicationContext);
+    const {
+        chatRooms, setChatRooms,
+        sessionLocked,
+    } = useContext(ApplicationContext);
+
+    const [chatRoomsLoaded, setChatRoomsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!sessionLocked) {
+            setChatRoomsLoaded(false);
+
+            axios.get(route('chat_rooms.list')).then((response) => {
+                setChatRooms(response.data);
+                setChatRoomsLoaded(true);
+            });
+        }
+    }, [sessionLocked]);
+
+    useEffect(() => {
+        if (sessionLocked && chatRoomsLoaded) {
+            setChatRooms([])
+        }
+    }, [sessionLocked, chatRoomsLoaded]);
 
     return (
         <div>

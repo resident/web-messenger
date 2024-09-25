@@ -18,6 +18,14 @@ export default class UserRsaKeysStorage {
         const publicKey = sessionStorage.getItem('userPublicKey');
         const privateKey = sessionStorage.getItem('userPrivateKey');
 
+        if (!publicKey) {
+            throw new Error('User public key not found!');
+        }
+
+        if (!privateKey) {
+            throw new Error('User private key not found!');
+        }
+
         return {publicKey, privateKey};
     }
 
