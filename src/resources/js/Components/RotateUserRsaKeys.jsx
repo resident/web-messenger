@@ -6,11 +6,14 @@ import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 import UserPassword from "@/Common/UserPassword.js";
 
 export default function RotateUserRsaKeys({}) {
-    const {chatRooms, setChatRooms} = useContext(ApplicationContext);
+    const {
+        userPrivateKey,
+        chatRooms, setChatRooms,
+    } = useContext(ApplicationContext);
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
 
-    const rotationTimeout = import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT;
+    const rotationTimeout = (import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT ?? 604800) * 1000;
 
     const isNeedRotation = () => {
         if (!localStorage.getItem('userKeysRotatedAt')) {
@@ -26,16 +29,15 @@ export default function RotateUserRsaKeys({}) {
     const rotateKeys = async () => {
         const rsaKeysGenerator = new RSAKeysGenerator();
         const rsaEncryptor = new RSAEncryptor();
-        const {privateKey} = userRsaKeysStorage.getKeysFromSession();
 
-        const userPassword = await UserPassword.getFromSession(privateKey);
+        const userPassword = await UserPassword.getFromSession(userPrivateKey);
 
         await rsaKeysGenerator.generateKeys();
         const newPublicKey = await rsaKeysGenerator.exportPublicKey();
         const newPrivateKey = await rsaKeysGenerator.exportPrivateKey();
 
         await rsaEncryptor.importPublicKey(newPublicKey);
-        await rsaEncryptor.importPrivateKey(privateKey);
+        await rsaEncryptor.importPrivateKey(userPrivateKey);
 
 
         const newChatRoomKeys = [];
@@ -68,9 +70,12 @@ export default function RotateUserRsaKeys({}) {
     };
 
     useEffect(() => {
-        const intervalId = setInterval(() => {
+        const intervalId = setInterval(async () => {
             if (chatRooms.length && isNeedRotation()) {
-                rotateKeys();
+                try {
+                    await rotateKeys();
+                } catch (e) {
+                }
             }
         }, 1000);
 

@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -7,22 +7,29 @@ import LoadUserRsaKeys from '@/Components/LoadUserRsaKeys';
 import {Link} from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
 import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
+import InactivityTracker from "@/Components/InactivityTracker.jsx";
 
 export default function Authenticated({user, header, children}) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
-
-    useEffect(() => {
-        axios.get(route('chat_rooms.list')).then((response) => {
-            setChatRooms(response.data);
-        });
-    }, []);
+    const [userPublicKey, setUserPublicKey] = useState(null);
+    const [userPrivateKey, setUserPrivateKey] = useState(null);
+    const [isInactive, setIsInactive] = useState(false);
+    const [sessionLocked, setSessionLocked] = useState(false);
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <ApplicationContextProvider value={{chatRooms, setChatRooms}}>
+            <ApplicationContextProvider value={{
+                user,
+                chatRooms, setChatRooms,
+                userPublicKey, setUserPublicKey,
+                userPrivateKey, setUserPrivateKey,
+                isInactive, setIsInactive,
+                sessionLocked, setSessionLocked,
+            }}>
                 <LoadUserRsaKeys/>
                 <RotateUserRsaKeys/>
+                <InactivityTracker/>
 
                 <nav className="bg-white border-b border-gray-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

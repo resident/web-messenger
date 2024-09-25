@@ -1,18 +1,53 @@
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
-import {useRef, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import InputLabel from "@/Components/InputLabel.jsx";
 import TextInput from "@/Components/TextInput.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import InputError from "@/Components/InputError.jsx";
 import UserPassword from "@/Common/UserPassword.js";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 
 export default function loadUserRsaKeys() {
+    const {
+        userPublicKey, setUserPublicKey,
+        userPrivateKey, setUserPrivateKey,
+        sessionLocked, setSessionLocked,
+    } = useContext(ApplicationContext);
+
     const userRsaKeysStorage = new UserRsaKeysStorage();
+
     const [keysLoaded, setKeysLoaded] = useState(userRsaKeysStorage.hasKeysInSessionStorage());
     const [keysAvailable, setKeysAvailable] = useState(userRsaKeysStorage.hasKeysInLocalStorage());
     const [userPassword, setUserPassword] = useState('');
     const [error, setError] = useState('');
+
     const passwordInput = useRef();
+
+    useEffect(() => {
+        setSessionLocked(!keysLoaded);
+    }, [keysLoaded]);
+
+    useEffect(() => {
+        try {
+            if (!userPublicKey || !userPrivateKey) {
+                const userRsaKeysStorage = new UserRsaKeysStorage();
+
+                const {publicKey, privateKey} = userRsaKeysStorage.getKeysFromSession();
+
+                setUserPublicKey(publicKey);
+                setUserPrivateKey(privateKey);
+
+                if (publicKey && privateKey) {
+                    setKeysLoaded(true);
+                }
+            } else {
+                setKeysLoaded(true);
+            }
+        } catch (e) {
+            setKeysLoaded(false);
+        }
+
+    }, [userPublicKey, userPrivateKey]);
 
     const unlock = () => {
         if (!keysAvailable) return;
@@ -26,10 +61,15 @@ export default function loadUserRsaKeys() {
                 userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
 
                 setKeysLoaded(true);
+
+                setUserPublicKey(publicKey);
+                setUserPrivateKey(privateKey);
             } catch (e) {
                 setError('Invalid password, try again');
-                passwordInput.current.value = '';
                 passwordInput.current.focus();
+            } finally {
+                passwordInput.current.value = '';
+                setUserPassword('');
             }
         })();
     };
@@ -37,7 +77,7 @@ export default function loadUserRsaKeys() {
     return (
         <div
             className={`
-                fixed z-50 inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center
+                fixed z-60 inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center
                 ${keysLoaded ? 'hidden' : ''}
             `}
         >
@@ -51,6 +91,7 @@ export default function loadUserRsaKeys() {
                         id="password"
                         ref={passwordInput}
                         onChange={(e) => setUserPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && unlock()}
                         type="password"
                         className="mt-1 block w-full"
                     />
