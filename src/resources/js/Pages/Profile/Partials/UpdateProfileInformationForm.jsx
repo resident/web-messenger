@@ -4,12 +4,17 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import TextInputEdit from "@/Components/TextInputEdit.jsx";
+import { useRef } from 'react';
+import { CameraIcon } from '@heroicons/react/24/solid';
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
     const user = usePage().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
+        last_name: '',
+        username: '',
         email: user.email,
     });
 
@@ -20,47 +25,75 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
     };
 
     return (
-        <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+        <section className={`flex flex-col items-center  min-h-screen ${className}`}>
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
-                </p>
+            <h2 className="text-lg font-medium text-gray-900">Edit Profile</h2>
+            <header className="text-center">
+
+            <div className="relative w-32 h-32 overflow-hidden rounded-full mx-auto">
+                <img 
+                    src="https://i.scdn.co/image/ab6761610000517456d2d8d16ddedbf61b1c74f0" 
+                    alt="Rounded Image" 
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <CameraIcon className="w-8 h-8 text-white" />
+                </div>
+            </div>
+
             </header>
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
+            <form onSubmit={submit} className="mt-6 space-y-6 w-full max-w-md">
+                
+                <div className='space-y-6'>
+                    <div>
+                        <TextInputEdit
+                            id="name"
+                            title="First name (required)"
+                            className="mt-1 block w-full"
+                            value={data.name}
+                            onChange={(e) => {
+                                setData('name', e.target.value);
+                            }}
+                            required
+                            isFocused
+                            autoComplete="name"
+                        />
 
-                    <TextInput
-                        id="name"
+                        <InputError className="mt-2" message={errors.name}/>
+                    </div>
+
+                    <div>
+                        <TextInputEdit
+                            id="last-name"
+                            title="Last name (optional)"
+                            className="mt-1 block w-full"
+                            value={data.last_name}
+                            onChange={(e) => setData('last_name', e.target.value)}
+                            isFocused
+                            autoComplete="name"
+                        />
+
+                        <InputError className="mt-2" message={errors.name}/>
+                    </div>
+                </div>
+                
+                
+                <div className='space-y-4'>
+                    <h4>Username</h4>
+                    <TextInputEdit
+                        id="username"
+                        title="Username"
                         className="mt-1 block w-full"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
+                        value={data.username}
+                        onChange={(e) => setData('username', e.target.value)}
                         isFocused
                         autoComplete="name"
                     />
 
-                    <InputError className="mt-2" message={errors.name} />
+                    <InputError className="mt-2" message={errors.name}/>
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
-
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
@@ -84,7 +117,7 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                     </div>
                 )}
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center gap-4">
                     <PrimaryButton disabled={processing}>Save</PrimaryButton>
 
                     <Transition
