@@ -12,8 +12,6 @@ services:
             - ./src:/mnt/app
         depends_on:
             - php
-        command: /bin/bash -c "ls -l /docker-entrypoint.d/ && chmod +x /docker-entrypoint.d/01-generate-certs.sh && /docker-entrypoint.d/01-generate-certs.sh && nginx -g 'daemon off;'"
-
 
     php:
         build: ./Docker/php
