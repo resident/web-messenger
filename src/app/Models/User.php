@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
@@ -16,6 +17,9 @@ use Illuminate\Notifications\Notifiable;
  * @property string $email
  * @property ?string $email_verified_at
  * @property string $password
+ * @property string $two_factor_secret
+ * @property string $two_factor_recovery_codes
+ * @property string $two_factor_confirmed_at
  * @property string $public_key
  * @property ?string $remember_token
  * @property ?string $created_at
@@ -25,6 +29,7 @@ class User extends Authenticatable
 {
     use HasFactory;
     use Notifiable;
+    use TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -46,6 +51,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
