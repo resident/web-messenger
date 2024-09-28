@@ -34,6 +34,8 @@ export default function ChatRoomMessages(props) {
     const [sendingMessage, setSendingMessage] = useState(false);
     const [prevMessagesLength, setPrevMessagesLength] = useState(0);
     const [scrollTo, setScrollTo] = useState(null);
+    const [messageSelectionStart, setMessageSelectionStart] = useState(0);
+    const [messageSelectionEnd, setMessageSelectionEnd] = useState(0);
 
     const messagesRef = useRef();
     const messageRefs = useRef([]);
@@ -344,21 +346,36 @@ export default function ChatRoomMessages(props) {
         return (message.trim().length || messageAttachments.length) && !sendingMessage;
     };
 
+    const saveMessageInputSelectionState = () => {
+        setMessageSelectionStart(messageInputRef.current.selectionStart);
+        setMessageSelectionEnd(messageInputRef.current.selectionEnd);
+    };
+
     const handleKeyDown = (e) => {
         if (e.ctrlKey && e.key === 'Enter') {
             if (availableToSendMessage()) {
                 sendMessage();
             }
         }
+
+        saveMessageInputSelectionState();
     };
 
-    const insertSmile = (emoji) => {
-        const input = messageInputRef.current;
-        const startPos = input.selectionStart;
-        const endPos = input.selectionEnd;
+    const handleChange = (e) => {
+        setMessage(e.target.value);
+        saveMessageInputSelectionState();
+    }
 
-        const newMessage = message.slice(0, startPos) + emoji + message.slice(endPos);
+    const handleClick = (e) => {
+        saveMessageInputSelectionState();
+    };
 
+    const insertEmoji = (emoji) => {
+        const newMessage = message.slice(0, messageSelectionStart) + emoji + message.slice(messageSelectionEnd);
+        const newSelectionPos = messageSelectionStart + emoji.length;
+
+        setMessageSelectionStart(newSelectionPos);
+        setMessageSelectionEnd(newSelectionPos);
         setMessage(newMessage);
     };
 
@@ -400,8 +417,9 @@ export default function ChatRoomMessages(props) {
                         className="w-full h-14"
                         ref={messageInputRef}
                         value={message}
-                        onChange={(e) => setMessage(e.target.value)}
+                        onChange={handleChange}
                         onKeyDown={handleKeyDown}
+                        onClick={handleClick}
                         placeholder="Message"
                     />
 
@@ -427,7 +445,7 @@ export default function ChatRoomMessages(props) {
             </div>
 
             <div className={`flex gap-3 justify-center mt-2`}>
-                <Emojis onSmileSelected={insertSmile}/>
+                <Emojis onSmileSelected={insertEmoji}/>
 
                 <SelectAttachments
                     selectedFiles={messageAttachments}
