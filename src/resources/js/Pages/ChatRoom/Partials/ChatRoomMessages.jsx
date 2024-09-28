@@ -11,6 +11,7 @@ import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import AESEncryptor from "@/Encryption/AESEncryptor.js";
+import Emojis from "@/Components/Emojis.jsx";
 
 export default function ChatRoomMessages(props) {
     const {
@@ -351,6 +352,16 @@ export default function ChatRoomMessages(props) {
         }
     };
 
+    const insertSmile = (emoji) => {
+        const input = messageInputRef.current;
+        const startPos = input.selectionStart;
+        const endPos = input.selectionEnd;
+
+        const newMessage = message.slice(0, startPos) + emoji + message.slice(endPos);
+
+        setMessage(newMessage);
+    };
+
     useEffect(() => {
         const linesCount = message.split('\n').length - 1;
 
@@ -416,6 +427,8 @@ export default function ChatRoomMessages(props) {
             </div>
 
             <div className={`flex gap-3 justify-center mt-2`}>
+                <Emojis onSmileSelected={insertSmile}/>
+
                 <SelectAttachments
                     selectedFiles={messageAttachments}
                     setSelectedFiles={setMessageAttachments}
