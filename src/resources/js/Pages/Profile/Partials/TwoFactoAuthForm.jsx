@@ -102,11 +102,11 @@ export default function TwoFactoAuthForm({className, ...props}) {
         setProcessing(true);
 
         try {
+            await passwordConfirm();
             await axios.delete(route('two-factor.disable'));
 
-            isEnabled(false);
+            setIsEnabled(false);
         } catch (e) {
-            setErrors({...errors, password: [e.response.data.message]});
         }
 
         setProcessing(false);
