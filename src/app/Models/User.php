@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -25,10 +26,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property ?string $created_at
  * @property ?string $updated_at
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
     use HasFactory;
     use Notifiable;
+    use MustVerifyEmail;
     use TwoFactorAuthenticatable;
 
     /**
