@@ -6,6 +6,8 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import InputError from "@/Components/InputError.jsx";
 import UserPassword from "@/Common/UserPassword.js";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import {router} from "@inertiajs/react";
+import SecondaryButton from "@/Components/SecondaryButton.jsx";
 
 export default function loadUserRsaKeys() {
     const {
@@ -49,8 +51,17 @@ export default function loadUserRsaKeys() {
 
     }, [userPublicKey, userPrivateKey]);
 
+    useEffect(() => {
+        setError('');
+    }, [userPassword]);
+
     const unlock = () => {
-        if (!keysAvailable) return;
+
+
+        if (!keysAvailable) {
+            setError(`You don't have keys on this device`);
+            return;
+        }
 
         (async () => {
             try {
@@ -86,17 +97,18 @@ export default function loadUserRsaKeys() {
 
                 <InputLabel htmlFor="password" value="Password"/>
 
-                <div className="flex gap-3 justify-center items-center">
+                <div className="flex gap-3 justify-start items-center">
                     <TextInput
                         id="password"
                         ref={passwordInput}
                         onChange={(e) => setUserPassword(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && unlock()}
                         type="password"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-1/2"
                     />
 
                     <PrimaryButton onClick={unlock} disabled={userPassword.length === 0}>Unlock</PrimaryButton>
+                    <SecondaryButton onClick={() => router.post(route('logout'))}>Log Out</SecondaryButton>
                 </div>
 
                 <InputError message={error} className="mt-2"/>
