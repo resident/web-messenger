@@ -8,6 +8,7 @@ import {Link} from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
 import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
+import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
 
 export default function Authenticated({user, header, children}) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -30,6 +31,7 @@ export default function Authenticated({user, header, children}) {
                 <LoadUserRsaKeys/>
                 <RotateUserRsaKeys/>
                 <InactivityTracker/>
+                <VisibilityTracker/>
 
                 <nav className="bg-white border-b border-gray-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
