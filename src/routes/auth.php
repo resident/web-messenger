@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,4 +15,9 @@ Route::middleware('guest')->group(function () {
 
     Route::get('two-factor-challenge', [AuthenticatedSessionController::class, 'twoFactorLogin'])
         ->name('two-factor.login');
+
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+
+    Route::get('reset-password/{token}', [PasswordResetController::class, 'create'])
+        ->name('password.reset');
 });
