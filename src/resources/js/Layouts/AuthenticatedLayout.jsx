@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
@@ -17,6 +17,10 @@ export default function Authenticated({user, header, children}) {
     const [userPrivateKey, setUserPrivateKey] = useState(null);
     const [isInactive, setIsInactive] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
+
+    useEffect(() => {
+        Echo.registerAxiosRequestInterceptor();
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-100">

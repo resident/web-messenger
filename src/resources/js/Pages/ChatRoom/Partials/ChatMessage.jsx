@@ -14,12 +14,11 @@ export default forwardRef(function ChatMessage({
     const [createdAt, setCreatedAt] = useState({});
 
     useEffect(() => {
-        const [date, time] = message.created_at.split(' ');
-        const [hours, minutes] = time.split(':');
+        const date = new Date(message.created_at);
 
         setCreatedAt({
-            date,
-            time: `${hours}:${minutes}`,
+            date: date.toLocaleDateString(),
+            time: date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
         });
     }, []);
 
