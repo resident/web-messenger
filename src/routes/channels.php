@@ -12,3 +12,7 @@ Broadcast::channel('App.Models.User.{id}', function (User $user, int $id): bool 
 Broadcast::channel('chat-room.{chatRoomId}', function (User $user, string $chatRoomId): bool {
     return $user->chatRooms()->find($chatRoomId) !== null;
 });
+
+Broadcast::channel('chat-rooms.{userId}', function (User $user, int $userId): bool {
+    return $user->id === $userId;
+});

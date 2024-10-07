@@ -7,7 +7,6 @@ namespace App\Models;
 use App\Dto\ChatRoomMessageDto;
 use App\Events\ChatRoomMessageRemoved;
 use App\Services\ChatRoomMessageAttachmentService;
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,11 +32,6 @@ class ChatRoomMessage extends Model
     use HasFactory;
     use HasUuids;
     use Prunable;
-
-    protected function serializeDate(DateTimeInterface $date): string
-    {
-        return $date->format('Y-m-d H:i:s');
-    }
 
     public function user(): BelongsTo
     {

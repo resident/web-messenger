@@ -1,9 +1,10 @@
-import {Link} from "@inertiajs/react";
 import {useContext, useEffect, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 
 export default function ChatRooms() {
     const {
+        user,
         chatRooms, setChatRooms,
         sessionLocked,
     } = useContext(ApplicationContext);
@@ -27,12 +28,25 @@ export default function ChatRooms() {
         }
     }, [sessionLocked, chatRoomsLoaded]);
 
+    const onChatRoomCreated = (e) => {
+        setChatRooms(rooms => [e.chatRoom, ...rooms]);
+    };
+
+    useEffect(() => {
+        const channel = `chat-rooms.${user.id}`;
+
+        Echo.private(channel)
+            .listen('ChatRoomCreated', onChatRoomCreated);
+
+        return () => {
+            Echo.leave(channel);
+        };
+    }, []);
+
     return (
         <div>
-            {chatRooms.map((room) => (
-                <div key={room.id} className="p-1">
-                    <Link href={route('chat_rooms.show', room.id)}>{room.title}</Link>
-                </div>
+            {chatRooms.map((chatRoom) => (
+                <ChatRoom key={chatRoom.id} chatRoom={chatRoom}/>
             ))}
         </div>
     )

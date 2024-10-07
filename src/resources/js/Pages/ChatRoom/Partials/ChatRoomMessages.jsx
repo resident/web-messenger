@@ -8,10 +8,11 @@ import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx
 import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import {useContext, useEffect, useRef, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
-import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import Emojis from "@/Components/Emojis.jsx";
+import ChatRoom from "@/Common/ChatRoom.js";
+import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 
 export default function ChatRoomMessages(props) {
     const {
@@ -68,19 +69,10 @@ export default function ChatRoomMessages(props) {
 
     const scrollToLastMessage = () => scrollToMessage(messages.length - 1);
 
-    const decryptChatRoomKey = async () => {
-        const rsaEncryptor = new RSAEncryptor();
-
-        await rsaEncryptor.importPublicKey(userPublicKey);
-        await rsaEncryptor.importPrivateKey(userPrivateKey);
-
-        return await rsaEncryptor.decrypt(chatRoom.pivot.chat_room_key);
-    };
-
     useEffect(() => {
         if (userPublicKey && userPrivateKey) {
             (async () => {
-                setChatRoomKey(await decryptChatRoomKey());
+                setChatRoomKey(await ChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key));
             })();
         } else {
             setChatRoomKey(null);
@@ -108,36 +100,6 @@ export default function ChatRoomMessages(props) {
         }
 
     }, [messages, messagesOperation]);
-
-    const encryptMessage = async (message) => {
-        const messageKey = await AESKeyGenerator.generateKey();
-
-        const aesEncryptor = new AESEncryptor();
-        await aesEncryptor.importKey(messageKey);
-        const {iv: messageIv, encrypted: messageEncrypted} = await aesEncryptor.encryptString(message);
-
-        setMessage('');
-
-        await aesEncryptor.importKey(chatRoomKey);
-        const {iv: messageKeyIv, encrypted: messageKeyEncrypted} = await aesEncryptor.encryptString(messageKey);
-
-        return {messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv};
-    };
-
-    const decryptMessage = async (message) => {
-        const aesEncryptor = new AESEncryptor();
-        await aesEncryptor.importKey(chatRoomKey);
-        const messageKey = await aesEncryptor.decryptString(message.message_key, message.message_key_iv);
-
-        await aesEncryptor.importKey(messageKey);
-        message.message = await aesEncryptor.decryptString(message.message, message.message_iv);
-
-        delete message.message_iv;
-        delete message.message_key;
-        delete message.message_key_iv;
-
-        return message;
-    };
 
     const fileToArrayBuffer = (file) => {
         return new Promise((resolve, reject) => {
@@ -213,7 +175,7 @@ export default function ChatRoomMessages(props) {
                 const loadedMessages = [];
 
                 for (const message of response.data) {
-                    const decryptedMessage = await decryptMessage(message);
+                    const decryptedMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, message);
 
                     loadedMessages.push(decryptedMessage);
                 }
@@ -231,7 +193,7 @@ export default function ChatRoomMessages(props) {
 
     const onChatRoomMessageSent = (e) => {
         (async () => {
-            const decryptedMessage = await decryptMessage(e.message);
+            const decryptedMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, e.message);
 
             pushMessage(decryptedMessage);
 
@@ -253,8 +215,6 @@ export default function ChatRoomMessages(props) {
         if (chatRoomKey) {
             loadMessages();
 
-            Echo.registerAxiosRequestInterceptor();
-
             Echo.private(channel)
                 .listen('ChatRoomMessageSent', onChatRoomMessageSent)
                 .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
@@ -274,7 +234,14 @@ export default function ChatRoomMessages(props) {
         setErrors({...errors, message: ''});
 
         try {
-            const {messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv} = await encryptMessage(message);
+            const {
+                messageEncrypted,
+                messageIv,
+                messageKeyEncrypted,
+                messageKeyIv
+            } = await ChatRoomMessage.encryptMessage(chatRoomKey, message);
+
+            setMessage('');
 
             const attachments = await encryptAttachments(messageAttachments);
 
@@ -294,7 +261,7 @@ export default function ChatRoomMessages(props) {
                     setUploadProgress(percentCompleted);
                 }
             }).then(async response => {
-                const decryptedMessage = await decryptMessage(response.data);
+                const decryptedMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, response.data);
 
                 setMessages([...messages, decryptedMessage]);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Dto\ChatRoomDto;
+use App\Events\ChatRoomCreated;
 use App\Events\ChatRoomUpdated;
 use App\Http\Requests\StoreChatRoomRequest;
 use App\Http\Requests\UpdateChatRoomRequest;
@@ -53,6 +54,8 @@ class ChatRoomsController extends Controller
         })->toArray();
 
         $chatRoom = $chatRoomService->createChatRoom($chatRoomDto, $usersWithChatRoomKey);
+
+        broadcast(new ChatRoomCreated($chatRoom))->toOthers();
 
         return response()->redirectToRoute('chat_rooms.show', [$chatRoom->id]);
     }

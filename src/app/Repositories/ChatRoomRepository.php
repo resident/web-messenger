@@ -22,7 +22,10 @@ final class ChatRoomRepository
      */
     public function getUserChatRoomsDesc(User $user): Collection
     {
-        return $user->chatRooms()->with('users')->orderByDesc('id')->get();
+        return $user->chatRooms()
+            ->with(['users', 'messages' => fn($q) => $q->latest()->take(1)])
+            ->orderByDesc('id')
+            ->get();
     }
 
     /**
