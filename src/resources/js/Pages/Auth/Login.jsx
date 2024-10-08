@@ -5,6 +5,8 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import {Head, Link, useForm} from '@inertiajs/react';
+import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
+import UserPassword from "@/Common/UserPassword.js";
 
 export default function Login({status, canResetPassword, canRegister}) {
     const {data, setData, post, processing, errors, reset} = useForm({
@@ -17,9 +19,26 @@ export default function Login({status, canResetPassword, canRegister}) {
         e.preventDefault();
 
         post(route('login'), {
+            onSuccess: () => {
+                sessionStorage.setItem('userKeysLoading', '1');
+
+                (async () => {
+                    const keysStorage = new UserRsaKeysStorage();
+                    const keys = await keysStorage.getKeysFromBackend(data.password);
+
+                    keysStorage.saveKeysToSessionStorage(keys.publicKey, keys.privateKey);
+
+                    await Promise.all([
+                        UserPassword.saveToSession(data.password, keys.publicKey),
+                        keysStorage.saveKeysToLocalStorage(data.password, keys),
+                    ]);
+                })();
+            },
+
             onFinish: () => reset('password'),
         });
     };
+
 
     return (
         <GuestLayout>

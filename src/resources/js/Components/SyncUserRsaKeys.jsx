@@ -7,21 +7,17 @@ export default function SyncUserRsaKeys() {
     const [syncedAt, setSyncedAt] = useState(null);
 
     useEffect(() => {
-        const syncedAt = localStorage.getItem('userRsaKeysSyncedAt');
+        const syncProvider = new SyncProvider([
+            new LocalStorageDriver(),
+            new BackendDriver()
+        ]);
+
+        const syncedAt = syncProvider.getSyncedAt('userRsaKeys');
 
         if (syncedAt) {
             setSyncedAt(new Date(syncedAt));
         } else {
-            const syncProvider = new SyncProvider([
-                new LocalStorageDriver(),
-                new BackendDriver()
-            ]);
-
-            syncProvider.sync('userRsaKeys').then(() => {
-                const syncedAt = new Date();
-
-                localStorage.setItem('userRsaKeysSyncedAt', syncedAt.toISOString());
-
+            syncProvider.sync('userRsaKeys').then(({syncedAt}) => {
                 setSyncedAt(syncedAt);
             });
         }

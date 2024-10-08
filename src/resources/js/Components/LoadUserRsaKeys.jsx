@@ -23,18 +23,59 @@ export default function loadUserRsaKeys() {
 
     const [keysLoaded, setKeysLoaded] = useState(userRsaKeysStorage.hasKeysInSessionStorage());
     const [keysAvailable, setKeysAvailable] = useState(userRsaKeysStorage.hasKeysInLocalStorage());
+    const [userKeysLoading, setUserKeysLoading] = useState(!!sessionStorage.getItem('userKeysLoading'));
+    const [keysSynced, setKeysSynced] = useState(false);
     const [userPassword, setUserPassword] = useState('');
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const passwordInput = useRef();
 
+
     useEffect(() => {
-        setSessionLocked(!keysLoaded);
-    }, [keysLoaded]);
+        let intervalId = null;
+
+        if (userKeysLoading) {
+            intervalId = setInterval(() => {
+                const keysLoaded = userRsaKeysStorage.hasKeysInSessionStorage();
+                const keysAvailable = userRsaKeysStorage.hasKeysInLocalStorage();
+
+                if (keysLoaded && keysAvailable) {
+                    setUserKeysLoading(false);
+                    sessionStorage.removeItem('userKeysLoading');
+
+                    setKeysLoaded(keysLoaded);
+                    setKeysAvailable(keysAvailable);
+
+                    clearInterval(intervalId);
+                }
+            }, 100);
+        }
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!userKeysLoading) {
+            setSessionLocked(!keysLoaded);
+
+            if (!keysLoaded && !keysSynced) {
+                syncUserRsaKeys().then(() => {
+                    if (userRsaKeysStorage.hasKeysInLocalStorage()) {
+                        setKeysAvailable(true);
+                        setKeysSynced(true);
+                    }
+                });
+            }
+        }
+    }, [keysLoaded, userKeysLoading]);
+
 
     const syncUserRsaKeys = async () => {
-        setLoading(true);
+        setUserKeysLoading(true);
 
         const syncProvider = new SyncProvider([
             new LocalStorageDriver(),
@@ -43,11 +84,11 @@ export default function loadUserRsaKeys() {
 
         await syncProvider.sync('userRsaKeys');
 
-        setLoading(false);
+        setUserKeysLoading(false);
     };
 
     useEffect(() => {
-        if (!keysAvailable) {
+        if (!keysAvailable && !userKeysLoading) {
             syncUserRsaKeys().then(() => {
                 if (userRsaKeysStorage.hasKeysInLocalStorage()) {
                     setKeysAvailable(true);
@@ -84,7 +125,12 @@ export default function loadUserRsaKeys() {
 
     const unlock = () => {
         if (!keysAvailable) {
-            setError(`You don't have keys on this device`);
+            if (userKeysLoading) {
+                setError(`Keys loading, please wait...`);
+            } else {
+                setError(`You don't have keys on this device`);
+            }
+
             return;
         }
 
@@ -113,7 +159,7 @@ export default function loadUserRsaKeys() {
         <div
             className={`
                 fixed z-60 inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center
-                ${keysLoaded ? 'hidden' : ''}
+                ${keysLoaded || userKeysLoading ? 'hidden' : ''}
             `}
         >
             <div className="bg-white m-5 p-6 rounded-lg shadow-lg max-w-lg w-full">

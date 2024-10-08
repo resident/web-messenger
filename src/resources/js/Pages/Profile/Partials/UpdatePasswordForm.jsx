@@ -5,6 +5,11 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import {useForm} from '@inertiajs/react';
 import {Transition} from '@headlessui/react';
+import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
+import UserPassword from "@/Common/UserPassword.js";
+import SyncProvider from "@/Sync/SyncProvider.js";
+import LocalStorageDriver from "@/Sync/Drivers/LocalStorageDriver.js";
+import BackendDriver from "@/Sync/Drivers/BackendDriver.js";
 
 export default function UpdatePasswordForm({className = ''}) {
     const passwordInput = useRef();
@@ -16,12 +21,31 @@ export default function UpdatePasswordForm({className = ''}) {
         password_confirmation: '',
     });
 
+    const onPasswordUpdated = async (newPassword) => {
+        const keyStorage = new UserRsaKeysStorage();
+        const keys = keyStorage.getKeysFromSession();
+
+        await Promise.all([
+            UserPassword.saveToSession(newPassword, keys.publicKey),
+            keyStorage.saveKeysToLocalStorage(newPassword, keys),
+        ]);
+
+        const syncProvider = new SyncProvider([
+            new LocalStorageDriver(),
+            new BackendDriver(),
+        ]);
+
+        await syncProvider.sync('userRsaKeys');
+
+        reset();
+    };
+
     const updatePassword = (e) => {
         e.preventDefault();
 
         put(route('user-password.update'), {
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => onPasswordUpdated(data.password),
             onError: (errors) => {
                 if (errors.password) {
                     reset('password', 'password_confirmation');
