@@ -45,7 +45,7 @@ export default function Register() {
         (async () => {
             userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
             await UserPassword.saveToSession(data.password, publicKey);
-            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, publicKey, privateKey);
+            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, {publicKey, privateKey});
         })().then(() => {
             post(route('register'), {
                 onFinish: () => reset('password', 'password_confirmation'),
