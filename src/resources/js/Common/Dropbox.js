@@ -55,4 +55,8 @@ export default class Dropbox {
 
         this.setSetting("accessToken", JSON.stringify(accessTokenEncrypted));
     }
+
+    removeAccessToken(){
+        this.removeSetting('accessToken')
+    }
 }
