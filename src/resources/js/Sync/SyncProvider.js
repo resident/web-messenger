@@ -27,6 +27,10 @@ export default class SyncProvider {
         return this.#process((driver) => driver.delete(key));
     }
 
+    getSyncedAt(key) {
+        return localStorage.getItem(`${key}SyncedAt`);
+    }
+
     async sync(key) {
         const items = await this.get(key);
 
@@ -56,5 +60,12 @@ export default class SyncProvider {
             await this.set(key, freshValue);
         }
 
+        const syncedAt = new Date();
+
+        localStorage.setItem(`${key}SyncedAt`, syncedAt.toISOString());
+
+        return {
+            syncedAt,
+        };
     }
 }
