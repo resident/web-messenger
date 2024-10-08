@@ -5,6 +5,7 @@ use App\Http\Controllers\ChatRoomsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\UserStorageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -64,6 +65,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 
     Route::put('/rotate-keys', [RotateKeysController::class, 'update'])->name('rotate-keys.update');
+
+    Route::apiResource('backend-storage', UserStorageController::class);
+    Route::group(['prefix' => 'backend-storage', 'as' => 'backend-storage.'], function () {
+        Route::get('/key/{key}', [UserStorageController::class, 'showByKey'])->name('show-key');
+        Route::put('/key/{key}', [UserStorageController::class, 'updateByKey'])->name('update-key');
+        Route::delete('/key/{key}', [UserStorageController::class, 'destroyByKey'])->name('destroy-key');
+    });
 });
 
 require __DIR__ . '/auth.php';

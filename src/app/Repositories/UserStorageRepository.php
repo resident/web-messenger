@@ -6,9 +6,15 @@ namespace App\Repositories;
 
 use App\Dto\UserStorageDto;
 use App\Models\UserStorage;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 final class UserStorageRepository
 {
+    public function getAll(int $userId): EloquentCollection
+    {
+        return UserStorage::query()->where('user_id', $userId)->get();
+    }
+
     public function create(UserStorageDto $userStorageDto): UserStorage
     {
         return UserStorage::unguarded(fn() => UserStorage::query()->create($userStorageDto->toArray()));
@@ -27,22 +33,30 @@ final class UserStorageRepository
             ->first();
     }
 
-    public function setById(string $id, mixed $value): bool
+    public function setByModel(UserStorage $userStorage, mixed $value): bool
     {
-        $userStorage = $this->getById($id);
-
         $userStorage->value = $value;
 
         return $userStorage->save();
     }
 
+    public function setById(string $id, mixed $value): bool
+    {
+        $userStorage = $this->getById($id);
+
+        return $this->setByModel($userStorage, $value);
+    }
+
     public function setByKey(int $userId, string $key, mixed $value): bool
     {
-        $userStorage = $this->getByKey($userId, $key);
+        $userStorage = $this->getByKey($userId, $key) ?? new UserStorage();
 
-        $userStorage->value = $value;
+        return $this->setByModel($userStorage, $value);
+    }
 
-        return $userStorage->save();
+    public function deleteByModel(UserStorage $userStorage): bool
+    {
+        return $userStorage->delete();
     }
 
     public function deleteById(string $id): ?bool

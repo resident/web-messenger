@@ -8,6 +8,9 @@ import UserPassword from "@/Common/UserPassword.js";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import {router} from "@inertiajs/react";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
+import SyncProvider from "@/Sync/SyncProvider.js";
+import LocalStorageDriver from "@/Sync/Drivers/LocalStorageDriver.js";
+import BackendDriver from "@/Sync/Drivers/BackendDriver.js";
 
 export default function loadUserRsaKeys() {
     const {
@@ -21,6 +24,7 @@ export default function loadUserRsaKeys() {
     const [keysLoaded, setKeysLoaded] = useState(userRsaKeysStorage.hasKeysInSessionStorage());
     const [keysAvailable, setKeysAvailable] = useState(userRsaKeysStorage.hasKeysInLocalStorage());
     const [userPassword, setUserPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const passwordInput = useRef();
@@ -28,6 +32,29 @@ export default function loadUserRsaKeys() {
     useEffect(() => {
         setSessionLocked(!keysLoaded);
     }, [keysLoaded]);
+
+    const syncUserRsaKeys = async () => {
+        setLoading(true);
+
+        const syncProvider = new SyncProvider([
+            new LocalStorageDriver(),
+            new BackendDriver()
+        ]);
+
+        await syncProvider.sync('userRsaKeys');
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        if (!keysAvailable) {
+            syncUserRsaKeys().then(() => {
+                if (userRsaKeysStorage.hasKeysInLocalStorage()) {
+                    setKeysAvailable(true);
+                }
+            });
+        }
+    }, [keysAvailable]);
 
     useEffect(() => {
         try {

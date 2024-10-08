@@ -43,25 +43,16 @@ export default class Dropbox {
 
         const pbkdf2 = new PBKDF2();
         const userPassword = await Utils.getUserPassword();
-        const {encrypted, salt, iv} = accessTokenEncrypted;
 
-        return await pbkdf2.decrypt(userPassword,
-            ArrayBuffer.fromBase64(encrypted),
-            Uint8Array.fromBase64(salt),
-            Uint8Array.fromBase64(iv),
-        );
+        return await pbkdf2.decrypt(userPassword, accessTokenEncrypted);
     }
 
     async setAccessToken(accessToken) {
         const pbkdf2 = new PBKDF2();
         const userPassword = await Utils.getUserPassword();
 
-        const {encrypted, salt, iv} = await pbkdf2.encrypt(userPassword, accessToken);
+        const accessTokenEncrypted = await pbkdf2.encrypt(userPassword, accessToken);
 
-        this.setSetting("accessToken", JSON.stringify({
-            encrypted: encrypted.toBase64(),
-            salt: salt.toBase64(),
-            iv: iv.toBase64(),
-        }));
+        this.setSetting("accessToken", JSON.stringify(accessTokenEncrypted));
     }
 }
