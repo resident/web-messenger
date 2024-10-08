@@ -1,4 +1,5 @@
 import PBKDF2 from "@/Encryption/PBKDF2.js";
+import BackendStorage from "@/Common/BackendStorage.js";
 
 export default class UserRsaKeysStorage {
     hasKeysInSessionStorage() {
@@ -6,7 +7,7 @@ export default class UserRsaKeysStorage {
     }
 
     hasKeysInLocalStorage() {
-        return null !== (localStorage.getItem('userPublicKey') && localStorage.getItem('userPrivateKey'));
+        return null !== localStorage.getItem('userRsaKeys');
     }
 
     saveKeysToSessionStorage(publicKey, privateKey) {
@@ -29,46 +30,61 @@ export default class UserRsaKeysStorage {
         return {publicKey, privateKey};
     }
 
-    async saveKeysToLocalStorage(password, publicKey, privateKey) {
+    async encryptKeys(password, {publicKey, privateKey}) {
         const pbkdf2 = new PBKDF2();
 
         const encryptedPublicKey = await pbkdf2.encrypt(password, publicKey);
-
-        localStorage.setItem('userPublicKey', JSON.stringify({
-            encrypted: encryptedPublicKey.encrypted.toBase64(),
-            salt: encryptedPublicKey.salt.toBase64(),
-            iv: encryptedPublicKey.iv.toBase64(),
-        }));
-
         const encryptedPrivateKey = await pbkdf2.encrypt(password, privateKey);
 
-        localStorage.setItem('userPrivateKey', JSON.stringify({
-            encrypted: encryptedPrivateKey.encrypted.toBase64(),
-            salt: encryptedPrivateKey.salt.toBase64(),
-            iv: encryptedPrivateKey.iv.toBase64(),
-        }));
+        return {encryptedPublicKey, encryptedPrivateKey};
+    }
+
+    async decryptKeys(password, {encryptedPublicKey, encryptedPrivateKey}) {
+        const pbkdf2 = new PBKDF2();
+
+        const publicKey = await pbkdf2.decrypt(password, encryptedPublicKey);
+        const privateKey = await pbkdf2.decrypt(password, encryptedPrivateKey);
+
+        return {publicKey, privateKey};
+    }
+
+    async saveKeysToLocalStorage(password, {publicKey, privateKey}) {
+        const currentDate = new Date();
+
+        const userRsaKeys = {
+            value: await this.encryptKeys(password, {publicKey, privateKey}),
+            created_at: currentDate.toISOString(),
+            updated_at: currentDate.toISOString(),
+        };
+
+        localStorage.setItem('userRsaKeys', JSON.stringify(userRsaKeys));
     }
 
     async getKeysFromLocalStorage(password) {
-        const pbkdf2 = new PBKDF2();
+        const userRsaKeys = JSON.parse(localStorage.getItem('userRsaKeys'));
 
-        const encryptedPublicKey = JSON.parse(localStorage.getItem('userPublicKey'));
-        const encryptedPrivateKey = JSON.parse(localStorage.getItem('userPrivateKey'));
+        return await this.decryptKeys(password, {
+            encryptedPublicKey: userRsaKeys.value.encryptedPublicKey,
+            encryptedPrivateKey: userRsaKeys.value.encryptedPrivateKey,
+        });
 
-        const publicKey = await pbkdf2.decrypt(
-            password,
-            ArrayBuffer.fromBase64(encryptedPublicKey.encrypted),
-            Uint8Array.fromBase64(encryptedPublicKey.salt),
-            Uint8Array.fromBase64(encryptedPublicKey.iv),
+    }
+
+    async saveKeysToBackend(password, {publicKey, privateKey}) {
+        const bs = new BackendStorage();
+
+        return bs.setByKey('userRsaKeys', JSON.stringify(
+            await this.encryptKeys(password, {publicKey, privateKey}))
         );
+    }
 
-        const privateKey = await pbkdf2.decrypt(
-            password,
-            ArrayBuffer.fromBase64(encryptedPrivateKey.encrypted),
-            Uint8Array.fromBase64(encryptedPrivateKey.salt),
-            Uint8Array.fromBase64(encryptedPrivateKey.iv),
-        );
+    async getKeysFromBackend(password) {
+        const bs = new BackendStorage();
 
-        return {publicKey, privateKey};
+        const response = await bs.getByKey('userRsaKeys');
+
+        const encryptedKeys = response.data.value;
+
+        return this.decryptKeys(password, encryptedKeys);
     }
 }

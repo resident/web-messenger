@@ -18,6 +18,14 @@ final class UserStoragePolicy
     }
 
     /**
+     * Determine whether the user can view own models.
+     */
+    public function viewOwn(User $user): bool
+    {
+        return true;
+    }
+
+    /**
      * Determine whether the user can view the model.
      */
     public function view(User $user, UserStorage $userStorage): bool

@@ -9,6 +9,7 @@ import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
 import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
 import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
+import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 
 export default function Authenticated({user, header, children}) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -32,6 +33,7 @@ export default function Authenticated({user, header, children}) {
                 isInactive, setIsInactive,
                 sessionLocked, setSessionLocked,
             }}>
+                <SyncUserRsaKeys/>
                 <LoadUserRsaKeys/>
                 <RotateUserRsaKeys/>
                 <InactivityTracker/>

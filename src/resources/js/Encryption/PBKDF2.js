@@ -43,19 +43,23 @@ export default class PBKDF2 {
             encoded
         );
 
-        return {encrypted, salt, iv};
+        return {
+            encrypted: encrypted.toBase64(),
+            salt: salt.toBase64(),
+            iv: iv.toBase64(),
+        };
     }
 
-    async decrypt(password, encrypted, salt, iv) {
-        const key = await this.deriveKey(password, salt);
+    async decrypt(password, {encrypted, salt, iv}) {
+        const key = await this.deriveKey(password, Uint8Array.fromBase64(salt));
 
         const decrypted = await crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
-                iv: iv
+                iv: Uint8Array.fromBase64(iv),
             },
             key,
-            encrypted
+            ArrayBuffer.fromBase64(encrypted)
         );
 
         return new TextDecoder().decode(decrypted);
