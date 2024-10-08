@@ -83,8 +83,6 @@ export default function loadUserRsaKeys() {
     }, [userPassword]);
 
     const unlock = () => {
-
-
         if (!keysAvailable) {
             setError(`You don't have keys on this device`);
             return;
@@ -107,7 +105,6 @@ export default function loadUserRsaKeys() {
                 passwordInput.current.focus();
             } finally {
                 passwordInput.current.value = '';
-                setUserPassword('');
             }
         })();
     };
