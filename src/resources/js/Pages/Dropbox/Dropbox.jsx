@@ -8,7 +8,7 @@ export default function Dropbox({ auth }) {
     const [accessToken, setAccessToken] = useState(null)
     const [authError, setAuthError] = useState(null)
 
-    const clientId = 'ak7n1xcwor288r3';
+    const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
     const dropbox = new DropboxClient({clientId: clientId});
    
     useEffect(() =>{
@@ -28,8 +28,10 @@ export default function Dropbox({ auth }) {
                     window.location.href = url;
                 }
                 
-                await dropbox.setAccessToken(token);
-                setAccessToken(token)
+                if(token !== undefined){
+                    await dropbox.setAccessToken(token);
+                    setAccessToken(token)
+                }
             }
         })(); 
     }, []);

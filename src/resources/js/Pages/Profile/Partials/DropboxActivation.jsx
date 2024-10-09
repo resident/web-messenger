@@ -3,11 +3,13 @@ import { Link } from '@inertiajs/react';
 import DropboxClient from "@/Common/Dropbox.js";
 import DangerButton from '@/Components/DangerButton';
 
-export default function DropboxSyncSection() {
+export default function DropboxActivation() {
 
     const [accessToken, setAccessToken] = useState(null);
-    const clientId = 'ak7n1xcwor288r3';
+    const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
     const dropbox = new DropboxClient({ clientId: clientId });
+    
+
 
     useEffect(() => {
         (async () => {
