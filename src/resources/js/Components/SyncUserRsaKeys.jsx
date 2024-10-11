@@ -8,11 +8,18 @@ export default function SyncUserRsaKeys() {
     const [syncedAt, setSyncedAt] = useState(null);
 
     useEffect(() => {
-        const syncProvider = new SyncProvider([
+        const dropboxAccessToken = localStorage.getItem('dropbox_accessToken');
+        
+        const drivers = [
             new LocalStorageDriver(),
             new BackendDriver(),
-            new DropboxDriver()
-        ]);
+        ];
+
+        if (dropboxAccessToken) {
+            drivers.push(new DropboxDriver());
+        }
+
+        const syncProvider = new SyncProvider(drivers);
 
         const syncedAt = syncProvider.getSyncedAt('userRsaKeys');
 

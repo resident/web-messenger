@@ -6,18 +6,11 @@ export default class DropboxDriver extends DriverBase{
 
     async get(key) {
         const dropbox = await this.#getDropboxClient();
-        console.log(dropbox)
         const result = new Promise((resolve) => {
             dropbox.filesDownload({ path: '/' + key + '.txt' })
             .then(async (response) => {
                 const fileText = await response.result.fileBlob.text();
-
-                try {
-                    resolve(JSON.parse(fileText));
-                } catch (jsonError) {
-                    reject(new Error('Error parsing file content as JSON'));
-                    
-                }
+                resolve(JSON.parse(fileText));   
             })
             .catch(error => {
                 console.error('Download error -> ', error)
@@ -30,9 +23,10 @@ export default class DropboxDriver extends DriverBase{
 
     async set(key, value) {
         const dropbox = await this.#getDropboxClient();
+        const currentItem = JSON.parse(localStorage.getItem(key)) ?? (await this.get(key)).result;
+        
         const result = new Promise((resolve) => {
-            const currentItem = JSON.parse(localStorage.getItem(key));
-
+            
             const currentDate = new Date();
 
             const item = {
@@ -40,7 +34,7 @@ export default class DropboxDriver extends DriverBase{
                 created_at: currentItem?.created_at ?? currentDate.toISOString(),
                 updated_at: currentDate.toISOString(),
             };
-
+            
             const itemString = JSON.stringify(item);
 
             dropbox.filesUpload({
@@ -49,7 +43,6 @@ export default class DropboxDriver extends DriverBase{
                 mode: { ".tag": "overwrite" },
             })
             .then(response => {
-                console.log('File uploaded successfully:', response);
                 resolve(true);
             })
             .catch(error => {
@@ -79,7 +72,7 @@ export default class DropboxDriver extends DriverBase{
 
     async #getDropboxClient(){
         const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
-        const dropbox = new DropboxClient({clientId: clientId});
+        const dropbox = new DropboxClient(clientId);
         const accessToken = await dropbox.getAccessToken();
         return new DropboxClient({accessToken: accessToken}).client;
     }
