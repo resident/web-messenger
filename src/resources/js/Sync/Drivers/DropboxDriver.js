@@ -3,9 +3,15 @@ import DropboxClient from "@/Common/Dropbox.js";
 
 export default class DropboxDriver extends DriverBase{
     name = "DropboxDriver";
+    #dropboxClient;
+
+    constructor() {
+        super();
+        this.#dropboxClient = this.#getDropboxClient();
+    }
 
     async get(key) {
-        const dropbox = await this.#getDropboxClient();
+        const dropbox = await this.#dropboxClient;
         const result = new Promise((resolve) => {
             dropbox.filesDownload({ path: '/' + key + '.txt' })
             .then(async (response) => {
@@ -22,7 +28,7 @@ export default class DropboxDriver extends DriverBase{
     }
 
     async set(key, value) {
-        const dropbox = await this.#getDropboxClient();
+        const dropbox = await this.#dropboxClient;
         const currentItem = JSON.parse(localStorage.getItem(key)) ?? (await this.get(key)).result;
         
         const result = new Promise((resolve) => {
@@ -56,7 +62,7 @@ export default class DropboxDriver extends DriverBase{
     }
 
     async delete(key) {
-        const dropbox = await this.#getDropboxClient();
+        const dropbox = await this.#dropboxClient;
         const result = new Promise((resolve) => {
             dropbox.filesDeleteV2({ path: '/' + key + '.txt' })
                 .then(response => {
@@ -73,7 +79,7 @@ export default class DropboxDriver extends DriverBase{
     async #getDropboxClient(){
         const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
         const dropbox = new DropboxClient(clientId);
-        const accessToken = await dropbox.getAccessToken();
-        return new DropboxClient({accessToken: accessToken}).client;
+        dropbox.client.auth.accessToken = await dropbox.getAccessToken();
+        return dropbox.client;
     }
 }
