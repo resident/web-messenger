@@ -44,45 +44,52 @@ export default forwardRef(function ChatMessage({
     return (
         <div
             className={`
-                first:mt-auto max-w-xl rounded-md p-3 break-words group
-                ${self ? 'bg-lime-300 self-end ' : 'bg-yellow-300 self-start '}
+                first:mt-auto flex items-end max-w-xl group
+                ${self ? 'self-end' : 'self-start'}
                 ${className}
             `}
             ref={messageRef}
         >
-            <div className={`flex justify-between`}>
-                <div className={`
+            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
+
+            <div className={`
+                rounded-md p-3 break-words
+                ${self ? 'bg-lime-300' : 'bg-yellow-300'}
+            `}>
+                <div className={`flex justify-between`}>
+                    <div className={`
                     font-bold
                     ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
                 `}>{message.user.name}</div>
 
-                <div>
-                    <TrashIcon
-                        className={`
+                    <div>
+                        <TrashIcon
+                            className={`
                             size-4 opacity-0 group-hover:opacity-100 cursor-pointer
                             ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
                         `}
-                        onClick={removeMessage}
-                    />
+                            onClick={removeMessage}
+                        />
+                    </div>
                 </div>
-            </div>
 
-            <div>{message.message}</div>
+                <div>{message.message}</div>
 
-            {message.attachments.length > 0 &&
-                <div className={`flex flex-wrap my-2`}>
-                    {message.attachments.map((attachment, i) => (
-                        <ChatMessageAttachment key={i} attachment={attachment}/>
-                    ))}
-                </div>
-            }
+                {message.attachments.length > 0 &&
+                    <div className={`flex flex-wrap my-2`}>
+                        {message.attachments.map((attachment, i) => (
+                            <ChatMessageAttachment key={i} attachment={attachment}/>
+                        ))}
+                    </div>
+                }
 
-            <div className={`
+                <div className={`
                     text-xs font-light text-right
                     ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
                 `}>
-                <span className={`opacity-0 group-hover:opacity-100 mr-1`}>{createdAt.date}</span>
-                <span>{createdAt.time}</span>
+                    <span className={`opacity-0 group-hover:opacity-100 mr-1`}>{createdAt.date}</span>
+                    <span>{createdAt.time}</span>
+                </div>
             </div>
         </div>
     )
