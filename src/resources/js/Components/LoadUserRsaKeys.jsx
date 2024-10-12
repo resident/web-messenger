@@ -8,15 +8,12 @@ import UserPassword from "@/Common/UserPassword.js";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import {router} from "@inertiajs/react";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
-import SyncProvider from "@/Sync/SyncProvider.js";
-import LocalStorageDriver from "@/Sync/Drivers/LocalStorageDriver.js";
-import BackendDriver from "@/Sync/Drivers/BackendDriver.js";
 
 export default function loadUserRsaKeys() {
     const {
         userPublicKey, setUserPublicKey,
         userPrivateKey, setUserPrivateKey,
-        sessionLocked, setSessionLocked,
+        setSessionLocked,
     } = useContext(ApplicationContext);
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
@@ -24,7 +21,6 @@ export default function loadUserRsaKeys() {
     const [keysLoaded, setKeysLoaded] = useState(userRsaKeysStorage.hasKeysInSessionStorage());
     const [keysAvailable, setKeysAvailable] = useState(userRsaKeysStorage.hasKeysInLocalStorage());
     const [userKeysLoading, setUserKeysLoading] = useState(!!sessionStorage.getItem('userKeysLoading'));
-    const [keysSynced, setKeysSynced] = useState(false);
     const [userPassword, setUserPassword] = useState('');
     const [error, setError] = useState('');
 
@@ -61,41 +57,8 @@ export default function loadUserRsaKeys() {
     useEffect(() => {
         if (!userKeysLoading) {
             setSessionLocked(!keysLoaded);
-
-            if (!keysLoaded && !keysSynced) {
-                syncUserRsaKeys().then(() => {
-                    if (userRsaKeysStorage.hasKeysInLocalStorage()) {
-                        setKeysAvailable(true);
-                        setKeysSynced(true);
-                    }
-                });
-            }
         }
     }, [keysLoaded, userKeysLoading]);
-
-
-    const syncUserRsaKeys = async () => {
-        setUserKeysLoading(true);
-
-        const syncProvider = new SyncProvider([
-            new LocalStorageDriver(),
-            new BackendDriver()
-        ]);
-
-        await syncProvider.sync('userRsaKeys');
-
-        setUserKeysLoading(false);
-    };
-
-    useEffect(() => {
-        if (!keysAvailable && !userKeysLoading) {
-            syncUserRsaKeys().then(() => {
-                if (userRsaKeysStorage.hasKeysInLocalStorage()) {
-                    setKeysAvailable(true);
-                }
-            });
-        }
-    }, [keysAvailable]);
 
     useEffect(() => {
         try {

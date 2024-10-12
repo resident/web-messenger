@@ -19,8 +19,12 @@ export default class SyncProvider {
         return this.#process((driver) => driver.get(key));
     }
 
-    async set(key, value) {
-        return this.#process((driver) => driver.set(key, value));
+    async set(key, value, except = []) {
+        return this.#process((driver) => {
+            if (!except.length || !except.includes(driver.name)) {
+                driver.set(key, value);
+            }
+        });
     }
 
     async delete(key) {
@@ -31,10 +35,14 @@ export default class SyncProvider {
         return localStorage.getItem(`${key}SyncedAt`);
     }
 
+    setSyncedAt(key, date = null) {
+        localStorage.setItem(`${key}SyncedAt`, (date ?? new Date()).toISOString());
+    }
+
     async sync(key) {
         const items = await this.get(key);
 
-        let freshValue = null;
+        let freshItem = null;
         let maxUpdatedAt = null;
 
         for (const item of items) {
@@ -46,23 +54,23 @@ export default class SyncProvider {
 
             if (maxUpdatedAt === null) {
                 maxUpdatedAt = updatedAt;
-                freshValue = item.result.value;
+                freshItem = item;
                 continue;
             }
 
             if (updatedAt > maxUpdatedAt) {
                 maxUpdatedAt = updatedAt;
-                freshValue = item.result.value;
+                freshItem = item;
             }
         }
 
         if (maxUpdatedAt !== null) {
-            await this.set(key, freshValue);
+            await this.set(key, freshItem.result.value, [freshItem.driverName]);
         }
 
         const syncedAt = new Date();
 
-        localStorage.setItem(`${key}SyncedAt`, syncedAt.toISOString());
+        this.setSyncedAt(key, syncedAt);
 
         return {
             syncedAt,
