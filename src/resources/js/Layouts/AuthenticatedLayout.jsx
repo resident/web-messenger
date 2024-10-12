@@ -3,7 +3,6 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import LoadUserRsaKeys from '@/Components/LoadUserRsaKeys';
 import {Link} from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
 import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
@@ -34,7 +33,6 @@ export default function Authenticated({user, header, children}) {
                 sessionLocked, setSessionLocked,
             }}>
                 <SyncUserRsaKeys/>
-                <LoadUserRsaKeys/>
                 <RotateUserRsaKeys/>
                 <InactivityTracker/>
                 <VisibilityTracker/>
