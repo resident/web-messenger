@@ -18,7 +18,6 @@ final class ProfileRepository
      */
     public function createProfile(int $userId): Profile
     {
-
         return Profile::create([
             'user_id' => $userId,
             'last_seen_at' => null,
@@ -43,12 +42,12 @@ final class ProfileRepository
     {
         $profile = $this->getProfileByUserId($userId);
         if (!$profile) {
-            throw new \Exception("Profile not found for user ID: {$userId}");
+            return null;
         }
         return new UserStatusDto(
             user_id: $userId,
             is_online: $profile->is_online,
-            last_seen_at: $profile->last_seen_at,
+            last_seen_at: $profile->last_seen_at?->toDateTimeString(),
         );
     }
 

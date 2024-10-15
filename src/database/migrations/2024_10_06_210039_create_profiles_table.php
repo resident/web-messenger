@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained();
+            $table->foreignIdFor(User::class)->unique()->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->boolean('is_online')->default(false);
             $table->dateTime('last_seen_at')->nullable();
             $table->timestamp('created_at')->useCurrent();

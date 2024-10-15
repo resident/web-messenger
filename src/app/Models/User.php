@@ -97,4 +97,14 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->hasOne(UserSettings::class);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($user) {
+            $user->profile()->create();
+            $user->userSettings()->create();
+        });
+    }
 }
