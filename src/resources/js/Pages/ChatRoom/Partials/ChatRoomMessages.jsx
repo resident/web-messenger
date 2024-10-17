@@ -13,6 +13,7 @@ import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
+import RecordAudioMessage from "./RecordAudioMessage";
 
 export default function ChatRoomMessages(props) {
     const {
@@ -420,6 +421,10 @@ export default function ChatRoomMessages(props) {
                 />
 
                 <AutoDeleteSettings/>
+                <RecordAudioMessage
+                    selectedFiles={messageAttachments}
+                    setSelectedFiles={setMessageAttachments}
+                />
             </div>
         </ChatRoomContextProvider>
     );
