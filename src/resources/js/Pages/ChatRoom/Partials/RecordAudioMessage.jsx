@@ -55,7 +55,7 @@ export default function RecordAudioMessage({selectedFiles, setSelectedFiles}) {
                                 onClick={() => setIsRecording(!isRecording)}/>
                 <TrashIcon title='Click to delete' onClick={() => setSelectedFiles([])}
                            className={`${selectedFiles.length > 0
-                               ? 'size-6 cursor-pointer' : 'hidden'}`}>{selectedFiles.length}</TrashIcon>
+                               ? 'size-6 cursor-pointer' : 'hidden'}`}/>
             </div>
         </div>
     );
