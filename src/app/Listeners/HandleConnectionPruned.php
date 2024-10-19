@@ -8,7 +8,6 @@ use App\Services\ProfileService;
 use Laravel\Reverb\Events\ConnectionPruned;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
 
 final class HandleConnectionPruned
 {
@@ -27,7 +26,6 @@ final class HandleConnectionPruned
     public function handle(ConnectionPruned $event): void
     {
         // userId...?
-        Log::info("Handle Connection Pruned");
         $channelName = $event->connection->data('channel');
 
         if (!$channelName) {
@@ -38,7 +36,6 @@ final class HandleConnectionPruned
             $userId = (int) $matches[1];
 
             $this->profileService->updateUserStatus($userId, false);
-            Log::info("Channel $channelName removed - 1");
         }
     }
 }

@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/user-status/{userId}', [UserStatusController::class, 'getUserStatus'])->name('user-status.get');
+    Route::post('/users-status', [UserStatusController::class, 'getUsersStatus'])->name('users-status.get');
 });
 
 require __DIR__ . '/auth.php';

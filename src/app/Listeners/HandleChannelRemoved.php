@@ -8,7 +8,6 @@ use App\Services\ProfileService;
 use Laravel\Reverb\Events\ChannelRemoved;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
 
 final class HandleChannelRemoved
 {
@@ -26,14 +25,12 @@ final class HandleChannelRemoved
      */
     public function handle(ChannelRemoved $event): void
     {
-        Log::info("Handle Channel Remove");
         $channelName = $event->channel->name();
 
         if (preg_match('/^private-user-status\.(\d+)$/', $channelName, $matches)) {
             $userId = (int) $matches[1];
 
             $this->profileService->updateUserStatus($userId, false);
-            Log::info("Channel $channelName removed - 1");
         }
     }
 }

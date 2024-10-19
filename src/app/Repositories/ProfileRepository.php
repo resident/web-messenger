@@ -51,6 +51,22 @@ final class ProfileRepository
         );
     }
 
+    public function getUsersStatus(array $userIds): array
+    {
+        $profiles = Profile::whereIn('user_id', $userIds)->get();
+
+        $statuses = [];
+        foreach ($profiles as $profile) {
+            $statuses[$profile->user_id] = new UserStatusDto(
+                user_id: $profile->user_id,
+                is_online: $profile->is_online,
+                last_seen_at: $profile->last_seen_at?->toDateTimeString(),
+            );
+        }
+
+        return $statuses;
+    }
+
     /**
      * Update Last Seen At Time
      * 
