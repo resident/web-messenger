@@ -10,8 +10,6 @@ use App\Dto\UserStatusDto;
 use App\Enums\VisibilityPrivacyEnum;
 use App\Models\User;
 use App\Repositories\UserSettingsRepository;
-use Exception;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
@@ -28,7 +26,7 @@ final class ProfileService
             $this->profileRepository->updateLastSeenAt($userId, $isOnline);
             $userStatus = $this->profileRepository->getUserStatus($userId);
             if (!$userStatus) {
-                throw new Exception("User status not found for user ID: {$userId}");
+                throw new \Exception("User status not found for user ID: {$userId}");
             }
 
             $this->updateRedisUserStatus($userStatus);
@@ -40,15 +38,12 @@ final class ProfileService
     protected function updateRedisUserStatus(UserStatusDto $userStatus): void
     {
         $redisKey = "user_status:{$userStatus->user_id}";
-        Log::info("Update Redis User Status: {$userStatus->user_id}");
 
         $redisCache = Cache::store('redis');
 
         if ($userStatus->is_online) {
-            Log::info("Update Redis User Status: {$userStatus->user_id} - put key");
             $redisCache->put($redisKey, $userStatus->toArray(), 600);
         } else if ($redisCache->has($redisKey) && !$userStatus->is_online) {
-            Log::info("Update Redis User Status: {$userStatus->user_id} - remove key");
             $redisCache->forget($redisKey);
         }
     }
@@ -65,7 +60,6 @@ final class ProfileService
         $cachedStatus = $redisCache->get($redisKey);
 
         if ($cachedStatus) {
-            Log::info("Get User Status {$userId} - Cached Status");
             return UserStatusDto::fromArray($cachedStatus);
         }
 
@@ -76,8 +70,51 @@ final class ProfileService
         return $userStatus;
     }
 
+    public function getUsersStatus(User $authUser, array $userIds): array
+    {
+        $visibleUserIds = array_filter($userIds, function ($userId) use ($authUser) {
+            return is_int($userId) && $this->canSeeStatus($authUser, $userId);
+        });
+        if (empty($visibleUserIds)) {
+            return [];
+        }
+
+        $redisKeys = array_map(function ($userId) {
+            return "user_status:{$userId}";
+        }, $visibleUserIds);
+        $redisCache = Cache::store('redis');
+        $cachedStatuses = $redisCache->getMultiple($redisKeys);
+
+        $statuses = [];
+        $missingUserIds = [];
+        foreach ($visibleUserIds as $userId) {
+            $cachedStatus = $cachedStatuses["user_status:{$userId}"] ?? null;
+            if ($cachedStatus) {
+                $statuses[$userId] = UserStatusDto::fromArray($cachedStatus);
+            } else {
+                $missingUserIds[] = $userId;
+            }
+        }
+
+        if (!empty($missingUserIds)) {
+            $databaseStatuses = $this->profileRepository->getUsersStatus($missingUserIds);
+            foreach ($databaseStatuses as $userStatus) {
+                $statuses[$userStatus->user_id] = $userStatus;
+                if ($userStatus->is_online) {
+                    $redisCache->put("user_status:{$userStatus->user_id}", $userStatus->toArray(), 600);
+                }
+            }
+        }
+
+        return $statuses;
+    }
+
     public function canSeeStatus(User $currentUser, int $targetUserId): bool
     {
+        if ($currentUser->id === $targetUserId) {
+            return true;
+        }
+
         $settings = $this->userSettingsRepository->getUserSettingsByUserId($targetUserId);
         if (!$settings) {
             return false;

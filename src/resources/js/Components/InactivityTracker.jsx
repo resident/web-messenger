@@ -43,11 +43,9 @@ export default function InactivityTracker() {
 
         if (shouldBeOnline && !isConnectedRef.current) {
             Echo.private(`user-status.${userId}`);
-            console.log(`Connected to user-status.${userId}`);
             isConnectedRef.current = true;
         } else if (!shouldBeOnline && isConnectedRef.current) {
             Echo.leave(`user-status.${userId}`);
-            console.log(`Disconnected from user-status.${userId}`);
             isConnectedRef.current = false;
         }
 

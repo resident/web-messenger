@@ -5,27 +5,27 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\ProfileService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class UserStatusController extends Controller
 {
-    public function __construct(
-        public ProfileService $profileService,
-    ) {}
-
-    public function getUserStatus(Request $request, int $userId)
+    public function getUserStatus(Request $request, int $userId, ProfileService $profileService): JsonResponse
     {
-        try {
-            $authUser = $request->user();
-            $userStatus = $this->profileService->getUserStatus($authUser, $userId);
+        $authUser = $request->user();
+        $userStatus = $profileService->getUserStatus($authUser, $userId)
+            or abort(403, 'Access to the user status is forbidden');
 
-            if (!$userStatus) {
-                return response()->json(['error' => 'Access to the user status is forbidden']);
-            }
+        return response()->json($userStatus->toArray());
+    }
 
-            return response()->json($userStatus->toArray());
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage(), 500]);
-        }
+    public function getUsersStatus(Request $request, ProfileService $profileService)
+    {
+        $authUser = $request->user();
+        $userIds = $request->input('user_ids', []);
+        $userIds = array_map('intval', $userIds);
+        $statuses = $profileService->getUsersStatus($authUser, $userIds);
+
+        return response()->json($statuses);
     }
 }
