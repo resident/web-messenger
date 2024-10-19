@@ -16,8 +16,9 @@ class UserOnlineStatusChanged implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public readonly UserStatusDto $userStatus;
+    public $connection = 'sync';
 
+    public UserStatusDto $userStatus;
     protected UserRepository $userRepository;
     protected UserSettingsRepository $userSettingsRepository;
 
