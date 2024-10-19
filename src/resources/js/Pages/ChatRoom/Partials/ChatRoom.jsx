@@ -18,11 +18,20 @@ export default function ChatRoom({ className, chatRoom, onClickHandler = chatRoo
 
     useEffect(() => {
         if (userPrivateKey) {
+            console.log("ChatRoom chatRoom:", chatRoom);
             (async () => {
-                setChatRoomKey(await CommonChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key));
+                try {
+                    console.log("Starting decryption of chat_room_key...");
+                    setChatRoomKey(await CommonChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key));
+                    console.log("Decryption successful. Decrypted Key:", decryptedKey);
+                } catch (error) {
+                    console.error("Error during chat_room_key decryption:", error);
+                }
             })();
         } else {
             setChatRoomKey(null);
+            if (!userPrivateKey) console.error("userPrivateKey is not set.");
+            if (!chatRoom?.pivot?.chat_room_key) console.error("chatRoom.pivot.chat_room_key is missing.");
         }
     }, [userPrivateKey]);
 
