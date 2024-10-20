@@ -22,7 +22,9 @@ export default function List({auth}) {
                                 >+</PrimaryButton>
                             </div>
 
-                            <ChatRooms/>
+                            <ChatRooms onChatRoomClick={chatRoom => {
+                                router.visit(route('chat_rooms.show', chatRoom.id));
+                            }}/>
                         </div>
                     </div>
                 </div>

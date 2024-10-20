@@ -20,6 +20,7 @@ export default function ChatRoomMessages(props) {
         user,
         userPublicKey,
         userPrivateKey,
+        chatRooms,
     } = useContext(ApplicationContext);
 
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
@@ -53,6 +54,17 @@ export default function ChatRoomMessages(props) {
         bottom: 'bottom',
     });
 
+    useEffect(() => {
+        const freshChatRoom = chatRooms.find(item => item.id === chatRoom.id);
+
+        if (freshChatRoom) {
+            setChatRoom(freshChatRoom);
+        } else {
+            //todo exit from this room
+        }
+
+    }, [chatRooms]);
+
     const setMessageRef = (el, index) => {
         messageRefs.current[index] = el;
     };
@@ -71,14 +83,14 @@ export default function ChatRoomMessages(props) {
     const scrollToLastMessage = () => scrollToMessage(messages.length - 1);
 
     useEffect(() => {
-        if (userPublicKey && userPrivateKey) {
-            (async () => {
-                setChatRoomKey(await ChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key));
-            })();
+        if (userPrivateKey) {
+            ChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key).then(chatRoomKey => {
+                setChatRoomKey(chatRoomKey);
+            });
         } else {
             setChatRoomKey(null);
         }
-    }, [userPublicKey, userPrivateKey]);
+    }, [chatRoom]);
 
     useEffect(() => {
         if (messagesOperation) {

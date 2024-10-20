@@ -1,10 +1,9 @@
-import {router} from "@inertiajs/react";
 import {useContext, useEffect, useRef, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 
-export default function ChatRoom({chatRoom}) {
+export default function ChatRoom({className, chatRoom, onClickHandler = chatRoom => null}) {
     const {
         userPrivateKey,
     } = useContext(ApplicationContext);
@@ -51,10 +50,6 @@ export default function ChatRoom({chatRoom}) {
         };
     }, []);
 
-    const showChatRoom = () => {
-        router.visit(route('chat_rooms.show', chatRoom.id));
-    };
-
     const truncate = (str, maxLength) => {
         if (str && str.length > maxLength) {
             return str.slice(0, maxLength - 3) + '...';
@@ -86,8 +81,8 @@ export default function ChatRoom({chatRoom}) {
 
     return (
         <div
-            className="flex min-w-min p-2 hover:bg-gray-100 cursor-pointer"
-            onClick={showChatRoom}
+            className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer ${className}`}
+            onClick={onClickHandler}
         >
             <div className={`w-12 h-12 mr-3 bg-lime-300 rounded-full`}></div>
 

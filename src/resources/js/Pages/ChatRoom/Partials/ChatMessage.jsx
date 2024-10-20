@@ -1,6 +1,11 @@
 import {forwardRef, useEffect, useRef, useState} from "react";
-import {TrashIcon} from '@heroicons/react/24/solid'
+import {ArrowUturnRightIcon, TrashIcon} from '@heroicons/react/24/solid'
 import ChatMessageAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
+import Modal from "@/Components/Modal.jsx";
+import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
+import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
+import PrimaryButton from "@/Components/PrimaryButton.jsx";
+import SecondaryButton from "@/Components/SecondaryButton.jsx";
 
 export default forwardRef(function ChatMessage({
                                                    className = '',
@@ -12,6 +17,8 @@ export default forwardRef(function ChatMessage({
     const messageRef = ref ? ref : useRef();
 
     const [createdAt, setCreatedAt] = useState({});
+    const [showForwardingModal, setShowForwardingModal] = useState(false);
+    const [forwardToChatRoom, setForwardToChatRoom] = useState(null);
 
     useEffect(() => {
         const date = new Date(message.created_at);
@@ -41,6 +48,18 @@ export default forwardRef(function ChatMessage({
         });
     };
 
+    const forwardMessage = (toChatRoom) => {
+        //todo Implement message forwarding
+
+        closeMessageForwardingModal();
+    };
+
+    const closeMessageForwardingModal = () => {
+        setShowForwardingModal(false);
+
+        setTimeout(() => setForwardToChatRoom(null), 300);
+    };
+
     return (
         <div
             className={`
@@ -50,6 +69,27 @@ export default forwardRef(function ChatMessage({
             `}
             ref={messageRef}
         >
+            <Modal
+                className={`p-3`}
+                maxWidth="md"
+                show={showForwardingModal}
+                onClose={closeMessageForwardingModal}
+            >
+                {forwardToChatRoom && <div>
+                    <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom}/>
+
+                    <div className={`flex gap-2`}>
+                        <PrimaryButton onClick={() => forwardMessage(forwardToChatRoom)}>Forward</PrimaryButton>
+
+                        <SecondaryButton onClick={closeMessageForwardingModal}>Cancel</SecondaryButton>
+                    </div>
+                </div> || <ChatRooms
+                    onChatRoomClick={chatRoom => {
+                        setForwardToChatRoom(chatRoom);
+                    }}/>
+                }
+            </Modal>
+
             <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
 
             <div className={`
@@ -62,7 +102,14 @@ export default forwardRef(function ChatMessage({
                     ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
                 `}>{message.user.name}</div>
 
-                    <div>
+                    <div className={`flex gap-0.5`}>
+                        <ArrowUturnRightIcon
+                            className={`
+                            size-4 opacity-0 group-hover:opacity-100 cursor-pointer
+                            ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
+                        `}
+                            onClick={() => setShowForwardingModal(true)}
+                        />
                         <TrashIcon
                             className={`
                             size-4 opacity-0 group-hover:opacity-100 cursor-pointer
