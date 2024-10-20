@@ -7,7 +7,8 @@ import UserPassword from "@/Common/UserPassword.js";
 
 export default function RotateUserRsaKeys({}) {
     const {
-        userPrivateKey,
+        setUserPublicKey,
+        userPrivateKey, setUserPrivateKey,
         chatRooms, setChatRooms,
     } = useContext(ApplicationContext);
 
@@ -33,12 +34,14 @@ export default function RotateUserRsaKeys({}) {
         const userPassword = await UserPassword.getFromSession(userPrivateKey);
 
         await rsaKeysGenerator.generateKeys();
-        const newPublicKey = await rsaKeysGenerator.exportPublicKey();
-        const newPrivateKey = await rsaKeysGenerator.exportPrivateKey();
 
-        await rsaEncryptor.importPublicKey(newPublicKey);
+        const newUserRsaKeys = {
+            publicKey: await rsaKeysGenerator.exportPublicKey(),
+            privateKey: await rsaKeysGenerator.exportPrivateKey(),
+        };
+
+        await rsaEncryptor.importPublicKey(newUserRsaKeys.publicKey);
         await rsaEncryptor.importPrivateKey(userPrivateKey);
-
 
         const newChatRoomKeys = [];
 
@@ -53,14 +56,17 @@ export default function RotateUserRsaKeys({}) {
         }
 
         axios.put(route('rotate-keys.update'), {
-            public_key: newPublicKey,
+            public_key: newUserRsaKeys.publicKey,
             keys: newChatRoomKeys
         }).then((response) => {
             if (response.status === 200) {
-                userRsaKeysStorage.saveKeysToLocalStorage(userPassword, newPublicKey, newPrivateKey);
-                userRsaKeysStorage.saveKeysToSessionStorage(newPublicKey, newPrivateKey);
+                userRsaKeysStorage.saveKeysToLocalStorage(userPassword, newUserRsaKeys);
+                userRsaKeysStorage.saveKeysToSessionStorage(newUserRsaKeys.publicKey, newUserRsaKeys.privateKey);
 
-                UserPassword.saveToSession(userPassword, newPublicKey);
+                UserPassword.saveToSession(userPassword, newUserRsaKeys.publicKey);
+
+                setUserPublicKey(newUserRsaKeys.publicKey);
+                setUserPrivateKey(newUserRsaKeys.privateKey);
 
                 setChatRooms(response.data.chatRooms);
 
