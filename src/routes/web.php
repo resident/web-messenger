@@ -37,18 +37,20 @@ Route::middleware('auth')->group(function () {
         ->whereUuid('chatRoom')->name('chat_rooms.update');
 
     Route::get('/chat-rooms/{chatRoom}/messages/{count?}/{startId?}', [ChatRoomMessagesController::class, 'index'])
-        ->whereUuid('chatRoom')
+        ->whereUuid(['chatRoom', 'startId'])
         ->whereNumber('count')
-        ->whereUuid('startId')
         ->name('chat_rooms.messages.index');
 
     Route::post('/chat-rooms/{chatRoom}/messages', [ChatRoomMessagesController::class, 'store'])
         ->whereUuid('chatRoom')
         ->name('chat_rooms.messages.store');
 
+    Route::post('/chat-rooms/{chatRoom}/messages/forward/{message}', [ChatRoomMessagesController::class, 'forward'])
+        ->whereUuid(['chatRoom', 'message'])
+        ->name('chat_rooms.messages.forward');
+
     Route::delete('/chat-rooms/{chatRoom}/messages/{message}', [ChatRoomMessagesController::class, 'destroy'])
-        ->whereUuid('chatRoom')
-        ->whereUuid('message')
+        ->whereUuid(['chatRoom', 'message'])
         ->name('chat_rooms.messages.destroy');
 
     Route::get(

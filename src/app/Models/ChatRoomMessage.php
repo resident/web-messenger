@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\DB;
 /**
  * @property string $id
  * @property string $chat_room_id
- * @property string $user_id
+ * @property int $user_id
+ * @property int $original_user_id
  * @property string $message
  * @property string $message_iv
  * @property string $message_key

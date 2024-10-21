@@ -14,13 +14,14 @@ use App\Repositories\ChatRoomRepository;
 use App\Services\ChatRoomService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Response as InertiaResponse;
 
 class ChatRoomsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): \Inertia\Response
+    public function index(): InertiaResponse
     {
         return inertia('ChatRoom/List');
     }
@@ -35,7 +36,7 @@ class ChatRoomsController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): InertiaResponse
     {
         return inertia('ChatRoom/Create');
     }

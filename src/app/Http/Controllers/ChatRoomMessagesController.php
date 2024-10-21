@@ -8,6 +8,7 @@ use App\Dto\ChatRoomMessageAttachmentDto;
 use App\Dto\ChatRoomMessageDto;
 use App\Events\ChatRoomMessageRemoved;
 use App\Events\ChatRoomMessageSent;
+use App\Http\Requests\ForwardChatRoomMessageRequest;
 use App\Http\Requests\StoreChatRoomMessageRequest;
 use App\Http\Requests\UpdateChatRoomMessageRequest;
 use App\Models\ChatRoom;
@@ -46,6 +47,7 @@ class ChatRoomMessagesController extends Controller
     ): JsonResponse {
         $messageDto = ChatRoomMessageDto::fromArray([
             'user_id' => $request->user()->id,
+            'original_user_id' => $request->user()->id,
             'chat_room_id' => $chatRoom->id,
             ...$request->safe(['message', 'messageIv', 'messageKey', 'messageKeyIv']),
         ]);
@@ -73,6 +75,48 @@ class ChatRoomMessagesController extends Controller
         broadcast(new ChatRoomMessageSent($message))->toOthers();
 
         return response()->json($message);
+    }
+
+    public function forward(
+        ChatRoom $chatRoom,
+        ChatRoomMessage $message,
+        ForwardChatRoomMessageRequest $request,
+        ChatRoomMessageService $messageService,
+    ): JsonResponse {
+        $messageDto = ChatRoomMessageDto::fromArray([
+            'user_id' => $request->user()->id,
+            'original_user_id' => $message->original_user_id,
+            'chat_room_id' => $chatRoom->id,
+            ...$request->safe(['message', 'messageIv', 'messageKey', 'messageKeyIv']),
+        ]);
+
+        $attachments = collect($request->validated(['attachments'], []));
+
+        $message->load('attachments');
+
+        $attachmentsDto = [];
+
+        foreach ($message->attachments as $attachment) {
+            $attachmentDto = ChatRoomMessageAttachmentDto::fromArray(
+                collect([
+                    ...collect($attachment)->except(['attachment_key', 'attachment_key_iv']),
+                    ...$attachments->where('id', $attachment->id)->collapse()->only([
+                        'attachmentKey',
+                        'attachmentKeyIv'
+                    ]),
+                ])->except(['id', 'chat_room_message_id'])->toArray()
+            );
+
+            $attachmentsDto[] = $attachmentDto;
+        }
+
+        $newMessage = $messageService->createMessageWithAttachments($messageDto, $attachmentsDto);
+
+        $newMessage->load(['user', 'attachments']);
+
+        broadcast(new ChatRoomMessageSent($newMessage));
+
+        return response()->json($newMessage);
     }
 
     /**

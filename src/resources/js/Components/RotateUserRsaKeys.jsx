@@ -14,7 +14,8 @@ export default function RotateUserRsaKeys({}) {
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
 
-    const rotationTimeout = (import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT ?? 604800) * 1000;
+    const oneWeek = 604800;
+    const rotationTimeout = (import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT ?? oneWeek) * 1000;
 
     const isNeedRotation = () => {
         if (!localStorage.getItem('userKeysRotatedAt')) {
