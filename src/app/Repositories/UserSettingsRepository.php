@@ -21,9 +21,9 @@ final class UserSettingsRepository
         ]);
     }
 
-    public function getUserSettingsByUserId(int $userId): ?UserSettings
+    public function getUserSettingsByUserId(int $userId): UserSettings
     {
-        return UserSettings::where('user_id', $userId)->first();
+        return UserSettings::firstOrCreate(['user_id' => $userId]);
     }
 
     /**
@@ -36,9 +36,6 @@ final class UserSettingsRepository
     public function updateStatusVisibility(int $userId, string $visibility): bool
     {
         $settings = $this->getUserSettingsByUserId($userId);
-        if (!$settings) {
-            return false;
-        }
         if (!in_array($visibility, VisibilityPrivacyEnum::casesAsValues(), true)) {
             $visibility = VisibilityPrivacyEnum::EVERYONE->value;
         }

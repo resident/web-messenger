@@ -16,8 +16,6 @@ class UserOnlineStatusChanged implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $connection = 'sync';
-
     public UserStatusDto $userStatus;
     protected UserRepository $userRepository;
     protected UserSettingsRepository $userSettingsRepository;
@@ -46,9 +44,6 @@ class UserOnlineStatusChanged implements ShouldBroadcast
         }
 
         $userSettings = $this->userSettingsRepository->getUserSettingsByUserId($userId);
-        if (!$userSettings) {
-            return [];
-        }
 
         $visibility = $userSettings->status_visibility;
 

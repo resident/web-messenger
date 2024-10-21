@@ -25,9 +25,6 @@ final class ProfileService
         DB::transaction(function () use ($userId, $isOnline) {
             $this->profileRepository->updateLastSeenAt($userId, $isOnline);
             $userStatus = $this->profileRepository->getUserStatus($userId);
-            if (!$userStatus) {
-                throw new \Exception("User status not found for user ID: {$userId}");
-            }
 
             $this->updateRedisUserStatus($userStatus);
 
@@ -116,9 +113,6 @@ final class ProfileService
         }
 
         $settings = $this->userSettingsRepository->getUserSettingsByUserId($targetUserId);
-        if (!$settings) {
-            return false;
-        }
 
         switch ($settings->status_visibility) {
             case VisibilityPrivacyEnum::EVERYONE->value:

@@ -1,17 +1,18 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import {Link} from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
-import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
+import { ApplicationContextProvider } from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
 import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
+import UserStatusTracker from "@/Components/UserStatusTracker.jsx";
 import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 import LoadChatRooms from "@/Components/LoadChatRooms.jsx";
 
-export default function Authenticated({user, header, children}) {
+export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
     const [userPublicKey, setUserPublicKey] = useState(null);
@@ -33,11 +34,12 @@ export default function Authenticated({user, header, children}) {
                 isInactive, setIsInactive,
                 sessionLocked, setSessionLocked,
             }}>
-                <SyncUserRsaKeys/>
-                <LoadChatRooms/>
-                <RotateUserRsaKeys/>
-                <InactivityTracker/>
-                <VisibilityTracker/>
+                <SyncUserRsaKeys />
+                <LoadChatRooms />
+                <RotateUserRsaKeys />
+                <InactivityTracker />
+                <VisibilityTracker />
+                <UserStatusTracker />
 
                 <nav className="bg-white border-b border-gray-100">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +47,7 @@ export default function Authenticated({user, header, children}) {
                             <div className="flex">
                                 <div className="shrink-0 flex items-center">
                                     <Link href="/">
-                                        <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800"/>
+                                        <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
                                     </Link>
                                 </div>
 
@@ -55,7 +57,7 @@ export default function Authenticated({user, header, children}) {
                                     </NavLink>
 
                                     <NavLink href={route('chat_rooms.index')}
-                                             active={route().current('chat_rooms.index')}>
+                                        active={route().current('chat_rooms.index')}>
                                         Chat Rooms
                                     </NavLink>
                                 </div>
@@ -65,27 +67,27 @@ export default function Authenticated({user, header, children}) {
                                 <div className="ms-3 relative">
                                     <Dropdown>
                                         <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="ms-2 -me-0.5 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
+                                            <span className="inline-flex rounded-md">
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                                 >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
+                                                    {user.name}
+
+                                                    <svg
+                                                        className="ms-2 -me-0.5 h-4 w-4"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </span>
                                         </Dropdown.Trigger>
 
                                         <Dropdown.Content>
@@ -131,7 +133,7 @@ export default function Authenticated({user, header, children}) {
                             </ResponsiveNavLink>
 
                             <ResponsiveNavLink href={route('chat_rooms.index')}
-                                               active={route().current('chat_rooms.index')}>
+                                active={route().current('chat_rooms.index')}>
                                 Chat Rooms
                             </ResponsiveNavLink>
                         </div>
