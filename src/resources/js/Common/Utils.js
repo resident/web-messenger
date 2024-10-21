@@ -51,4 +51,13 @@ export default class Utils {
         const {publicKey} = userRsaKeysStorage.getKeysFromSession();
         return await UserPassword.saveToSession(userPassword, publicKey);
     }
+
+    static fileToArrayBuffer(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
 }

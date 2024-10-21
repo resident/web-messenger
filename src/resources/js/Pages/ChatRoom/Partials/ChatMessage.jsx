@@ -1,4 +1,4 @@
-import {forwardRef, useEffect, useRef, useState} from "react";
+import {forwardRef, useContext, useEffect, useRef, useState} from "react";
 import {ArrowUturnRightIcon, TrashIcon} from '@heroicons/react/24/solid'
 import ChatMessageAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
 import Modal from "@/Components/Modal.jsx";
@@ -6,19 +6,30 @@ import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
+import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
+import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import InputError from "@/Components/InputError.jsx";
 
 export default forwardRef(function ChatMessage({
                                                    className = '',
                                                    message,
                                                    self = false,
-                                                   onMessageRemoved,
+                                                   onMessageRemoved = () => null,
                                                    ...props
                                                }, ref) {
+    const {userPrivateKey} = useContext(ApplicationContext);
+    const {chatRoomKey} = useContext(ChatRoomContext);
+
     const messageRef = ref ? ref : useRef();
 
     const [createdAt, setCreatedAt] = useState({});
     const [showForwardingModal, setShowForwardingModal] = useState(false);
     const [forwardToChatRoom, setForwardToChatRoom] = useState(null);
+    const [messageForwarding, setMessageForwarding] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
     useEffect(() => {
         const date = new Date(message.created_at);
@@ -48,16 +59,34 @@ export default forwardRef(function ChatMessage({
         });
     };
 
-    const forwardMessage = (toChatRoom) => {
-        //todo Implement message forwarding
+    const forwardMessage = async (toChatRoom) => {
+        setMessageForwarding(true);
 
-        closeMessageForwardingModal();
+        try {
+            const toChatRoomKey = await CommonChatRoom.decryptChatRoomKey(userPrivateKey, toChatRoom.pivot.chat_room_key);
+
+            ChatRoomMessage.forwardMessage(message, toChatRoom, chatRoomKey, toChatRoomKey).then(message => {
+                setSuccess('Message forwarded');
+
+                setTimeout(() => closeMessageForwardingModal(), 2000);
+            }).catch(error => {
+                setError(error.message);
+            });
+        } catch (error) {
+            setError(error.message);
+        }
+
+        setMessageForwarding(false);
     };
 
     const closeMessageForwardingModal = () => {
         setShowForwardingModal(false);
 
-        setTimeout(() => setForwardToChatRoom(null), 300);
+        setTimeout(() => {
+            setError(null);
+            setSuccess(null);
+            setForwardToChatRoom(null);
+        }, 300);
     };
 
     return (
@@ -78,11 +107,17 @@ export default forwardRef(function ChatMessage({
                 {forwardToChatRoom && <div>
                     <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom}/>
 
+                    <InputError message={error} className="my-2"/>
+
                     <div className={`flex gap-2`}>
-                        <PrimaryButton onClick={() => forwardMessage(forwardToChatRoom)}>Forward</PrimaryButton>
+                        <PrimaryButton disabled={messageForwarding}
+                                       onClick={() => forwardMessage(forwardToChatRoom)}
+                        >Forward</PrimaryButton>
 
                         <SecondaryButton onClick={closeMessageForwardingModal}>Cancel</SecondaryButton>
                     </div>
+
+                    {success && <div className={`mt-2 text-green-600`}>{success}</div>}
                 </div> || <ChatRooms
                     onChatRoomClick={chatRoom => {
                         setForwardToChatRoom(chatRoom);
@@ -90,7 +125,7 @@ export default forwardRef(function ChatMessage({
                 }
             </Modal>
 
-            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
+            <div className={`min-w-12 min-h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
 
             <div className={`
                 rounded-md p-3 break-words

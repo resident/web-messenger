@@ -16,6 +16,7 @@ final class ChatRoomMessageDto
         public ?string $id,
         public ?string $chatRoomId,
         public int $userId,
+        public int $originalUserId,
         public string $message,
         public string $messageIv,
         public string $messageKey,

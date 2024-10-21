@@ -8,8 +8,6 @@ import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx
 import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import {useContext, useEffect, useRef, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
-import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
-import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
@@ -114,54 +112,6 @@ export default function ChatRoomMessages(props) {
 
     }, [messages, messagesOperation]);
 
-    const fileToArrayBuffer = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(file);
-        });
-    };
-
-    const encryptAttachment = async (attachment) => {
-        const attachmentKey = await AESKeyGenerator.generateKey();
-        const aesEncryptor = new AESEncryptor();
-        await aesEncryptor.importKey(attachmentKey);
-
-        const attachmentArrayBuffer = await fileToArrayBuffer(attachment);
-
-        const {encrypted: attachmentEncrypted, iv: attachmentIv} = await aesEncryptor.encryptRaw(attachmentArrayBuffer);
-
-        await aesEncryptor.importKey(chatRoomKey);
-
-        const {
-            encrypted: attachmentKeyEncrypted,
-            iv: attachmentKeyIv
-        } = await aesEncryptor.encryptString(attachmentKey);
-
-        return {
-            name: attachment.name,
-            size: attachment.size,
-            mimeType: attachment.type ?? 'application/octet-stream',
-            attachment: attachmentEncrypted,
-            attachmentIv,
-            attachmentKey: attachmentKeyEncrypted,
-            attachmentKeyIv,
-        };
-    };
-
-    const encryptAttachments = (attachments) => {
-        const promises = [];
-
-        attachments.forEach((attachment) => {
-            const promise = encryptAttachment(attachment);
-
-            promises.push(promise);
-        });
-
-        return Promise.all(promises);
-    };
-
     useEffect(() => {
         if (messages.length > 0) {
             setHasMessages(true);
@@ -247,35 +197,12 @@ export default function ChatRoomMessages(props) {
         setErrors({...errors, message: ''});
 
         try {
-            const {
-                messageEncrypted,
-                messageIv,
-                messageKeyEncrypted,
-                messageKeyIv
-            } = await ChatRoomMessage.encryptMessage(chatRoomKey, message);
-
-            setMessage('');
-
-            const attachments = await encryptAttachments(messageAttachments);
-
-            axios.post(route('chat_rooms.messages.store', chatRoom.id), {
-                message: messageEncrypted,
-                messageIv,
-                messageKey: messageKeyEncrypted,
-                messageKeyIv,
-                attachments,
-            }, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'X-Socket-ID': Echo.socketId(),
-                },
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setUploadProgress(percentCompleted);
-                }
+            ChatRoomMessage.sendMessage(message, chatRoom, chatRoomKey, messageAttachments, progress => {
+                setUploadProgress(progress)
             }).then(async response => {
                 const decryptedMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, response.data);
 
+                setMessage('');
                 setMessages([...messages, decryptedMessage]);
 
                 setMessageAttachments([]);
