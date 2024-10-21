@@ -80,7 +80,7 @@ export default function Show({ auth, chatRoom }) {
                 } else if (diffDays === 1) {
                     lastSeenText = `Last seen yesterday at ${lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                 } else {
-                    lastSeenText = `Last seen on ${lastSeenDate.toLocaleDateString}`;
+                    lastSeenText = `Last seen on ${lastSeenDate.toLocaleDateString()}`;
                 }
 
                 return <span className="text-gray-500 text-sm">{lastSeenText}</span>;

@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\Models\Profile;
 use App\Dto\UserStatusDto;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 final class ProfileRepository
 {
@@ -72,10 +73,14 @@ final class ProfileRepository
      */
     public function updateLastSeenAt(int $userId, bool $isOnline): bool
     {
-        $profile = $this->getProfileByUserId($userId);
-        $profile->is_online = $isOnline;
-        $profile->last_seen_at = Carbon::now()->toDateTimeString();
+        return DB::transaction(
+            function () use ($userId, $isOnline) {
+                $profile = $this->getProfileByUserId($userId);
+                $profile->is_online = $isOnline;
+                $profile->last_seen_at = Carbon::now()->toDateTimeString();
 
-        return $profile->save();
+                return $profile->save();
+            }
+        );
     }
 }

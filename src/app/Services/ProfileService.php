@@ -10,7 +10,6 @@ use App\Dto\UserStatusDto;
 use App\Enums\VisibilityPrivacyEnum;
 use App\Models\User;
 use App\Repositories\UserSettingsRepository;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
 final class ProfileService
@@ -22,14 +21,11 @@ final class ProfileService
 
     public function updateUserStatus(int $userId, bool $isOnline): void
     {
-        DB::transaction(function () use ($userId, $isOnline) {
-            $this->profileRepository->updateLastSeenAt($userId, $isOnline);
-            $userStatus = $this->profileRepository->getUserStatus($userId);
 
-            $this->updateRedisUserStatus($userStatus);
-
-            broadcast(new UserOnlineStatusChanged($userStatus))->toOthers();
-        });
+        $this->profileRepository->updateLastSeenAt($userId, $isOnline);
+        $userStatus = $this->profileRepository->getUserStatus($userId);
+        $this->updateRedisUserStatus($userStatus);
+        broadcast(new UserOnlineStatusChanged($userStatus))->toOthers();
     }
 
     protected function updateRedisUserStatus(UserStatusDto $userStatus): void
