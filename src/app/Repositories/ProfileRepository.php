@@ -25,9 +25,9 @@ final class ProfileRepository
         ]);
     }
 
-    public function getProfileByUserId(int $userId): ?Profile
+    public function getProfileByUserId(int $userId): Profile
     {
-        return Profile::where('user_id', $userId)->first();
+        return Profile::firstOrCreate(['user_id' => $userId]);
     }
 
     /**
@@ -38,12 +38,9 @@ final class ProfileRepository
      * @param int $userId
      * @return \App\Dto\UserStatusDto
      */
-    public function getUserStatus(int $userId): ?UserStatusDto
+    public function getUserStatus(int $userId): UserStatusDto
     {
         $profile = $this->getProfileByUserId($userId);
-        if (!$profile) {
-            return null;
-        }
         return new UserStatusDto(
             user_id: $userId,
             is_online: $profile->is_online,
@@ -76,9 +73,6 @@ final class ProfileRepository
     public function updateLastSeenAt(int $userId, bool $isOnline): bool
     {
         $profile = $this->getProfileByUserId($userId);
-        if (!$profile) {
-            throw new \Exception("Profile not found for user ID: {$userId}");
-        }
         $profile->is_online = $isOnline;
         $profile->last_seen_at = Carbon::now()->toDateTimeString();
 
