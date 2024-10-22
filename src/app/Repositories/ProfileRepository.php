@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Models\Profile;
 use App\Dto\UserStatusDto;
+use App\Models\Profile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +13,7 @@ final class ProfileRepository
 {
     /**
      * Create 'Profile' of 'User'
-     * 
+     *
      * @param int $userId
      * @return \App\Models\Profile
      */
@@ -35,7 +35,7 @@ final class ProfileRepository
      * Get user status (online/offline, time)
      * - Used by Relevant Users (e.g. contact of user 'A', when 'A' has status_visibility = contacts)
      * -- UserStatusDto to pass only time, without other info...
-     * 
+     *
      * @param int $userId
      * @return \App\Dto\UserStatusDto
      */
@@ -67,8 +67,9 @@ final class ProfileRepository
 
     /**
      * Update Last Seen At Time
-     * 
+     *
      * @param int $userId
+     * @param bool $isOnline
      * @return bool
      */
     public function updateLastSeenAt(int $userId, bool $isOnline): bool

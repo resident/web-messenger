@@ -7,7 +7,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property bool $is_online
+ * @property ?Carbon $last_seen_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 final class Profile extends Model
 {
     use HasFactory;
@@ -20,7 +29,7 @@ final class Profile extends Model
 
     /**
      * Get the attributes that should be cast.
-     * 
+     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -33,7 +42,7 @@ final class Profile extends Model
 
     /**
      * Connection with 'User'
-     * 
+     *
      * @return BelongsTo
      */
     public function user(): BelongsTo
