@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Repositories\UserSettingsRepository;
 use Illuminate\Support\Facades\Cache;
 
+
 final class ProfileService
 {
     public function __construct(
@@ -98,7 +99,6 @@ final class ProfileService
                 }
             }
         }
-
         return $statuses;
     }
 
@@ -111,12 +111,12 @@ final class ProfileService
         $settings = $this->userSettingsRepository->getUserSettingsByUserId($targetUserId);
 
         switch ($settings->status_visibility) {
-            case VisibilityPrivacyEnum::EVERYONE->value:
+            case VisibilityPrivacyEnum::EVERYONE:
                 return true;
-            case VisibilityPrivacyEnum::CONTACTS->value:
+            case VisibilityPrivacyEnum::CONTACTS:
                 // return {contacts logic}
                 return true;
-            case VisibilityPrivacyEnum::NOBODY->value:
+            case VisibilityPrivacyEnum::NOBODY:
                 return false;
             default:
                 return false;
