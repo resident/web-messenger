@@ -1,27 +1,12 @@
-import {useEffect, useState} from "react";
-import SyncProvider from "@/Sync/SyncProvider.js";
-import LocalStorageDriver from "@/Sync/Drivers/LocalStorageDriver.js";
-import BackendDriver from "@/Sync/Drivers/BackendDriver.js";
-import DropboxDriver from "@/Sync/Drivers/DropboxDriver";
+import {useContext, useEffect, useState} from "react";
 import LoadUserRsaKeys from "@/Components/LoadUserRsaKeys.jsx";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 
 export default function SyncUserRsaKeys() {
+    const {syncProvider} = useContext(ApplicationContext);
     const [syncedAt, setSyncedAt] = useState(null);
 
     useEffect(() => {
-        const dropboxAccessToken = localStorage.getItem('dropbox_accessToken');
-
-        const drivers = [
-            new LocalStorageDriver(),
-            new BackendDriver(),
-        ];
-
-        if (dropboxAccessToken) {
-            drivers.push(new DropboxDriver());
-        }
-
-        const syncProvider = new SyncProvider(drivers);
-
         const syncedAt = syncProvider.getSyncedAt('userRsaKeys');
 
         if (syncedAt) {

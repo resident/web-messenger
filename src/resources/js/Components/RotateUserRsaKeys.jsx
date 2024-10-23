@@ -10,6 +10,7 @@ export default function RotateUserRsaKeys({}) {
         setUserPublicKey,
         userPrivateKey, setUserPrivateKey,
         chatRooms, setChatRooms,
+        syncProvider,
     } = useContext(ApplicationContext);
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
@@ -63,8 +64,9 @@ export default function RotateUserRsaKeys({}) {
             if (response.status === 200) {
                 userRsaKeysStorage.saveKeysToLocalStorage(userPassword, newUserRsaKeys);
                 userRsaKeysStorage.saveKeysToSessionStorage(newUserRsaKeys.publicKey, newUserRsaKeys.privateKey);
-
                 UserPassword.saveToSession(userPassword, newUserRsaKeys.publicKey);
+
+                syncProvider.sync('userRsaKeys');
 
                 setUserPublicKey(newUserRsaKeys.publicKey);
                 setUserPrivateKey(newUserRsaKeys.privateKey);
