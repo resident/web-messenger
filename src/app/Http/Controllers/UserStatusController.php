@@ -13,8 +13,10 @@ final class UserStatusController extends Controller
     public function getUserStatus(Request $request, int $userId, ProfileService $profileService): JsonResponse
     {
         $authUser = $request->user();
-        $userStatus = $profileService->getUserStatus($authUser, $userId)
-            or abort(403, 'Access to the user status is forbidden');
+        $userStatus = $profileService->getUserStatus($authUser, $userId);
+        if (!$userStatus) {
+            abort(403, 'Access to the user status is forbidden');
+        }
 
         return response()->json($userStatus->toArray());
     }

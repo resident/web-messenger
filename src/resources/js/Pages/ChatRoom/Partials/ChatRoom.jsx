@@ -12,7 +12,7 @@ export default function ChatRoom({ className, chatRoom, onClickHandler = chatRoo
     const [chatRoomKey, setChatRoomKey] = useState(null);
     const [message, setMessage] = useState(null);
 
-    const [isOnline, setIsOnline] = useState(chatRoom.is_online || false);
+    const [isOnline, setIsOnline] = useState(chatRoom.is_online);
 
     const chatRoomKeyRef = useRef(chatRoomKey);
 
@@ -41,6 +41,10 @@ export default function ChatRoom({ className, chatRoom, onClickHandler = chatRoo
             }
         }
     }, [chatRoomKey]);
+
+    useEffect(() => {
+        setIsOnline(chatRoom.is_online);
+    }, [chatRoom.is_online]);
 
     const onChatRoomMessageSent = (e) => {
         ChatRoomMessage.decryptMessage(chatRoomKeyRef.current, e.message).then((message) => {

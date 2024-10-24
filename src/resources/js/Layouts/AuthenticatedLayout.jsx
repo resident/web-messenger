@@ -18,6 +18,7 @@ export default function Authenticated({ user, header, children }) {
     const [userPublicKey, setUserPublicKey] = useState(null);
     const [userPrivateKey, setUserPrivateKey] = useState(null);
     const [isInactive, setIsInactive] = useState(false);
+    const [isInactiveNow, setIsInactiveNow] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
 
     useEffect(() => {
@@ -32,6 +33,7 @@ export default function Authenticated({ user, header, children }) {
                 userPublicKey, setUserPublicKey,
                 userPrivateKey, setUserPrivateKey,
                 isInactive, setIsInactive,
+                isInactiveNow, setIsInactiveNow,
                 sessionLocked, setSessionLocked,
             }}>
                 <SyncUserRsaKeys />

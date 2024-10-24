@@ -17,21 +17,22 @@ export default function LoadChatRooms({ }) {
     };
 
     const fetchUserStatuses = async () => {
-        const userIds = [];
-        chatRooms.forEach(chatRoom => {
-            chatRoom.users.forEach(user => {
-                if (!userIds.includes(user.id)) {
-                    userIds.push(user.id);
-                }
-            });
-        });
+        const currentUserId = user.id;
+        const twoUserChatRooms = chatRooms.filter(chatRoom => chatRoom.users.length === 2);
+        const userIds = [...new Set(
+            twoUserChatRooms.flatMap(chatRoom =>
+                chatRoom.users
+                    .filter(u => u.id !== currentUserId)
+                    .map(u => u.id)
+            )
+        )];
 
         const statusResponse = await axios.post(route('users-status.get'), { user_ids: userIds });
         const statuses = statusResponse.data;
 
         const updatedChatRooms = chatRooms.map(chatRoom => {
             if (chatRoom.users.length === 2) {
-                const otherUser = chatRoom.users.find(u => u.id !== user.id);
+                const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
                 const status = statuses[otherUser.id];
 
                 return {

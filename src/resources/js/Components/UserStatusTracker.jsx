@@ -5,6 +5,7 @@ import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 export default function UserStatusTracker() {
     const {
         isInactive,
+        isInactiveNow,
         sessionLocked,
         pageIsHidden,
     } = useContext(ApplicationContext);
@@ -14,7 +15,7 @@ export default function UserStatusTracker() {
     const isConnectedRef = useRef(false);
 
     useEffect(() => {
-        const shouldBeOnline = !isInactive && !sessionLocked && !pageIsHidden;
+        const shouldBeOnline = !isInactive && !sessionLocked && !pageIsHidden && !isInactiveNow;
         if (shouldBeOnline && !isConnectedRef.current) {
             Echo.private(`user-status.${userId}`);
             isConnectedRef.current = true;
@@ -22,5 +23,5 @@ export default function UserStatusTracker() {
             Echo.leave(`user-status.${userId}`);
             isConnectedRef.current = false;
         }
-    }, [isInactive, sessionLocked, pageIsHidden]);
+    }, [isInactive, sessionLocked, pageIsHidden, isInactiveNow]);
 }

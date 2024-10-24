@@ -78,7 +78,7 @@ final class ProfileRepository
             function () use ($userId, $isOnline) {
                 $profile = $this->getProfileByUserId($userId);
                 $profile->is_online = $isOnline;
-                $profile->last_seen_at = Carbon::now()->toDateTimeString();
+                $profile->last_seen_at = Carbon::now();
 
                 return $profile->save();
             }

@@ -173,12 +173,13 @@ export default function ChatRoomMessages(props) {
     };
 
     useEffect(() => {
-        const channel = `chat-room.${chatRoom.id}`;
+        const channelName = `chat-room.${chatRoom.id}`;
+        const channel = Echo.private(channelName);
 
         if (chatRoomKey) {
             loadMessages();
 
-            Echo.private(channel)
+            channel
                 .listen('ChatRoomMessageSent', onChatRoomMessageSent)
                 .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
                 .listen('ChatRoomUpdated', onChatRoomUpdated);
@@ -187,7 +188,7 @@ export default function ChatRoomMessages(props) {
         }
 
         return () => {
-            Echo.private(channel)
+            channel
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
                 .stopListening('ChatRoomUpdated');
