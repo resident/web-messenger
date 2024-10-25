@@ -18,14 +18,6 @@ use Inertia\Response as InertiaResponse;
 
 class ChatRoomsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): InertiaResponse
-    {
-        return inertia('ChatRoom/List');
-    }
-
     public function list(ChatRoomRepository $repository): JsonResponse
     {
         $chatRooms = $repository->getUserChatRoomsDesc(request()->user());
@@ -58,21 +50,7 @@ class ChatRoomsController extends Controller
 
         broadcast(new ChatRoomCreated($chatRoom))->toOthers();
 
-        return response()->redirectToRoute('chat_rooms.show', [$chatRoom->id]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $chatRoomId)
-    {
-        $chatRoom = request()->user()->chatRooms()->where('chat_room_id', $chatRoomId)->first();
-
-        if (!$chatRoom) {
-            abort(404);
-        }
-
-        return inertia('ChatRoom/Show', ['chatRoom' => $chatRoom]);
+        return response()->redirectToRoute('main', [$chatRoom->id]);
     }
 
     /**
@@ -104,8 +82,8 @@ class ChatRoomsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ChatRoom $chatRoom)
+    public function destroy(ChatRoom $chatRoom, ChatRoomService $service): JsonResponse
     {
-        //
+        return response()->json($service->deleteChatRoom($chatRoom));
     }
 }

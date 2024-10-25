@@ -2,8 +2,10 @@ import {useContext, useEffect, useRef, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
+import {TrashIcon} from "@heroicons/react/24/solid/index.js";
+import {router} from "@inertiajs/react";
 
-export default function ChatRoom({className, chatRoom, onClickHandler = chatRoom => null}) {
+export default function ChatRoom({className = '', chatRoom, onClickHandler = chatRoom => null}) {
     const {
         userPrivateKey,
     } = useContext(ApplicationContext);
@@ -85,18 +87,38 @@ export default function ChatRoom({className, chatRoom, onClickHandler = chatRoom
         return formatDate(inputDate);
     }
 
+    const removeChatRoom = async (e) => {
+        e.stopPropagation();
+
+        await axios.delete(route('chat_rooms.destroy', chatRoom.id));
+
+        router.visit(route('main'));
+    };
+
     return (
         <div
-            className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer ${className}`}
+            className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
-            <div className={`w-12 h-12 mr-3 bg-lime-300 rounded-full`}></div>
+            <div className={`min-w-12 min-h-12 mr-3 bg-lime-300 rounded-full`}></div>
 
-            <div>
-                <div className={`flex gap-1 text-nowrap`}>
-                    <span className={`font-bold `}>{truncate(chatRoom.title, 15)}</span>
+            <div className={`w-full`}>
+                <div className={`flex justify-between`}>
+                    <div className={`flex gap-1 text-nowrap`}>
+                        <span className={`font-bold `}>{truncate(chatRoom.title, 15)}</span>
 
-                    {message && (<span className={`text-sm`}>{prettyCreatedAt(message.created_at)}</span>)}
+                        {message && (<span className={`text-sm`}>{prettyCreatedAt(message.created_at)}</span>)}
+                    </div>
+
+                    <div className={`flex gap-0.5`}>
+                        <TrashIcon
+                            className={`
+                            size-4 opacity-0 group-hover:opacity-100 cursor-pointer
+                            ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
+                        `}
+                            onClick={removeChatRoom}
+                        />
+                    </div>
                 </div>
 
                 {message && (

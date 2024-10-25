@@ -1,4 +1,4 @@
-import {useRef} from 'react';
+import {useContext, useRef} from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -7,11 +7,10 @@ import {useForm} from '@inertiajs/react';
 import {Transition} from '@headlessui/react';
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
 import UserPassword from "@/Common/UserPassword.js";
-import SyncProvider from "@/Sync/SyncProvider.js";
-import LocalStorageDriver from "@/Sync/Drivers/LocalStorageDriver.js";
-import BackendDriver from "@/Sync/Drivers/BackendDriver.js";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 
 export default function UpdatePasswordForm({className = ''}) {
+    const {syncProvider} = useContext(ApplicationContext);
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
@@ -28,11 +27,6 @@ export default function UpdatePasswordForm({className = ''}) {
         await Promise.all([
             UserPassword.saveToSession(newPassword, keys.publicKey),
             keyStorage.saveKeysToLocalStorage(newPassword, keys),
-        ]);
-
-        const syncProvider = new SyncProvider([
-            new LocalStorageDriver(),
-            new BackendDriver(),
         ]);
 
         await syncProvider.sync('userRsaKeys');
