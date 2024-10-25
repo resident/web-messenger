@@ -6,6 +6,7 @@ import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
 import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
 import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
+import UserStatusTracker from "@/Components/UserStatusTracker.jsx";
 import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 import LoadChatRooms from "@/Components/LoadChatRooms.jsx";
 
@@ -15,6 +16,7 @@ export default function Authenticated({user, header, children}) {
     const [userPublicKey, setUserPublicKey] = useState(null);
     const [userPrivateKey, setUserPrivateKey] = useState(null);
     const [isInactive, setIsInactive] = useState(false);
+    const [isInactiveNow, setIsInactiveNow] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
 
     useEffect(() => {
@@ -29,13 +31,15 @@ export default function Authenticated({user, header, children}) {
                 userPublicKey, setUserPublicKey,
                 userPrivateKey, setUserPrivateKey,
                 isInactive, setIsInactive,
+                isInactiveNow, setIsInactiveNow,
                 sessionLocked, setSessionLocked,
             }}>
-                <SyncUserRsaKeys/>
-                <LoadChatRooms/>
-                <RotateUserRsaKeys/>
-                <InactivityTracker/>
-                <VisibilityTracker/>
+                <SyncUserRsaKeys />
+                <LoadChatRooms />
+                <RotateUserRsaKeys />
+                <InactivityTracker />
+                <VisibilityTracker />
+                <UserStatusTracker />
 
                 <div className="max-w-7xl mx-auto text-gray-900">
                     <div

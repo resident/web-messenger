@@ -5,6 +5,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\UserStorageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,6 +33,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/key/{key}', [UserStorageController::class, 'updateByKey'])->name('update-key');
         Route::delete('/key/{key}', [UserStorageController::class, 'destroyByKey'])->name('destroy-key');
     });
+
+    Route::get('/user-status/{userId}', [UserStatusController::class, 'getUserStatus'])->name('user-status.get');
+    Route::post('/users-status', [UserStatusController::class, 'getUsersStatus'])->name('users-status.get');
 });
 
 require __DIR__ . '/auth.php';

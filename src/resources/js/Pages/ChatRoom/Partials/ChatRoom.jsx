@@ -8,10 +8,13 @@ import {router} from "@inertiajs/react";
 export default function ChatRoom({className = '', chatRoom, onClickHandler = chatRoom => null}) {
     const {
         userPrivateKey,
+        user,
     } = useContext(ApplicationContext);
 
     const [chatRoomKey, setChatRoomKey] = useState(null);
     const [message, setMessage] = useState(null);
+
+    const [isOnline, setIsOnline] = useState(chatRoom.is_online);
 
     const chatRoomKeyRef = useRef(chatRoomKey);
 
@@ -41,17 +44,30 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
         }
     }, [chatRoomKey]);
 
+    useEffect(() => {
+        setIsOnline(chatRoom.is_online);
+    }, [chatRoom.is_online]);
+
     const onChatRoomMessageSent = (e) => {
         ChatRoomMessage.decryptMessage(chatRoomKeyRef.current, e.message).then((message) => {
             setMessage(message);
         });
     };
 
+    const onUserOnlineStatusChanged = (e) => {
+        const { user_id, is_online, last_seen_at } = e;
+        const otherUser = chatRoom.users.find(u => u.id !== user.id);
+        if (otherUser && otherUser.id === user_id) {
+            setIsOnline(is_online);
+        }
+    }
+
     useEffect(() => {
         const channel = `chat-room.${chatRoom.id}`;
 
         Echo.private(channel)
             .listen('ChatRoomMessageSent', onChatRoomMessageSent)
+            .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
 
         return () => {
             Echo.leave(channel);
@@ -100,7 +116,12 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
             className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
-            <div className={`min-w-12 min-h-12 mr-3 bg-lime-300 rounded-full`}></div>
+            <div className={`min-w-12 min-h-12 mr-3 bg-lime-300 rounded-full relative`}>
+            {chatRoom.users.length === 2 && (
+                <span
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+            )}
+            </div>
 
             <div className={`w-full`}>
                 <div className={`flex justify-between`}>
