@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
 use App\Http\Controllers\UsersController;
@@ -9,11 +10,9 @@ use App\Http\Controllers\UserStorageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn() => Route::respondWithRoute(request()->user() ? 'dashboard' : 'login'));
+Route::get('/', fn() => Route::respondWithRoute(request()->user() ? 'main' : 'login'));
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/main/{chatRoom?}', [MainController::class, 'index'])->middleware(['auth', 'verified'])->name('main');
 
 Route::get('/dropbox', function () {
     return Inertia::render('Dropbox/Dropbox');
