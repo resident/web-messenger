@@ -14,7 +14,7 @@ export default function VerifyEmail({auth, status}) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Email Verification</h2>}
+            header="Email Verification"
         >
             <Head title="Email Verification"/>
 

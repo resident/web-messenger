@@ -24,7 +24,7 @@ export default function ChatRooms({onChatRoomClick = chatRoom => null}) {
     }, []);
 
     return (
-        <div>
+        <div className={`mb-3`}>
             {chatRooms.map((chatRoom) => (
                 <ChatRoom
                     key={chatRoom.id}

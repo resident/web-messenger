@@ -41,7 +41,7 @@ export default function Dropbox({ auth }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Dropbox</h2>}
+            header="Dropbox"
         >
            <div className="flex justify-center">
                 <div className="bg-white m-5 p-6 rounded-lg shadow-lg max-w-lg w-full">

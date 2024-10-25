@@ -13,7 +13,7 @@ import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import RecordAudioMessage from "./RecordAudioMessage";
 
-export default function ChatRoomMessages(props) {
+export default function ChatRoomMessages({...props}) {
     const {
         user,
         userPublicKey,
@@ -176,7 +176,7 @@ export default function ChatRoomMessages(props) {
         const channel = `chat-room.${chatRoom.id}`;
 
         if (chatRoomKey) {
-            loadMessages();
+            loadMessages(20);
 
             Echo.private(channel)
                 .listen('ChatRoomMessageSent', onChatRoomMessageSent)
@@ -298,72 +298,79 @@ export default function ChatRoomMessages(props) {
 
     return (
         <ChatRoomContextProvider value={{chatRoom, chatRoomKey}}>
-            <div
-                className="h-[calc(100vh-24rem)] overflow-y-auto flex flex-col gap-y-4 p-6 mb-4"
-                ref={messagesRef}
-                onScroll={messagesScrollHandler}
-            >
+            <div className={``}>
+                <div
+                    className={`
+                        h-[calc(100dvh-15rem)] sm:h-[calc(100dvh-19rem)]
+                        overflow-y-auto
+                        flex flex-col gap-y-4 p-6
+                    `}
+                    ref={messagesRef}
+                    onScroll={messagesScrollHandler}
+                >
 
-                {messages.map((message, i) => (
-                    <ChatMessage
-                        key={`${i}:${message.id}`}
-                        className={(removingMessage && removingMessage.id === message.id)
-                            ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
-                        ref={(el) => setMessageRef(el, i)}
-                        self={user.id === message.user_id}
-                        message={message}
-                        onMessageRemoved={() => removeMessage(message)}
-                    />
-                ))}
-
-            </div>
-
-            <div className="flex gap-4">
-                <div className={`w-full`}>
-                    <TextArea
-                        className="w-full h-14"
-                        ref={messageInputRef}
-                        value={message}
-                        onChange={handleChange}
-                        onKeyDown={handleKeyDown}
-                        onClick={handleClick}
-                        placeholder="Message"
-                    />
-
-                    <ProgressBar
-                        className={`mt-1 ${!sendingMessage ? 'hidden' : ''}`}
-                        progress={uploadProgress}
-                    />
-                </div>
-
-                <div className={`self-end mb-2`}>
-                    <div className={`text-xs text-center text-gray-500`}>Ctrl+Enter</div>
-
-                    <PrimaryButton
-                        onClick={() => sendMessage()}
-                        disabled={!availableToSendMessage()}
-                    >Send</PrimaryButton>
+                    {messages.map((message, i) => (
+                        <ChatMessage
+                            key={`${i}:${message.id}`}
+                            className={(removingMessage && removingMessage.id === message.id)
+                                ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
+                            ref={(el) => setMessageRef(el, i)}
+                            self={user.id === message.user_id}
+                            message={message}
+                            onMessageRemoved={() => removeMessage(message)}
+                        />
+                    ))}
 
                 </div>
-            </div>
 
-            <div>
-                <InputError message={errors.message} className="mt-2"/>
-            </div>
+                <div className={`pt-2 px-3 bg-gray-200`}>
+                    <div className="flex gap-4">
+                        <div className={`w-full`}>
+                            <TextArea
+                                className="w-full h-14"
+                                ref={messageInputRef}
+                                value={message}
+                                onChange={handleChange}
+                                onKeyDown={handleKeyDown}
+                                onClick={handleClick}
+                                placeholder="Message"
+                            />
 
-            <div className={`flex gap-3 justify-center mt-2`}>
-                <Emojis onSmileSelected={insertEmoji}/>
+                            <ProgressBar
+                                className={`mt-1 ${!sendingMessage ? 'hidden' : ''}`}
+                                progress={uploadProgress}
+                            />
+                        </div>
 
-                <SelectAttachments
-                    selectedFiles={messageAttachments}
-                    setSelectedFiles={setMessageAttachments}
-                />
+                        <div className={`self-end mb-2`}>
+                            <div className={`text-xs text-center text-gray-500`}>Ctrl+Enter</div>
 
-                <AutoDeleteSettings/>
-                <RecordAudioMessage
-                    selectedFiles={messageAttachments}
-                    setSelectedFiles={setMessageAttachments}
-                />
+                            <PrimaryButton
+                                onClick={() => sendMessage()}
+                                disabled={!availableToSendMessage()}
+                            >Send</PrimaryButton>
+                        </div>
+                    </div>
+
+                    <div>
+                        <InputError message={errors.message} className="mt-2"/>
+                    </div>
+
+                    <div className={`flex gap-3 justify-center pb-2`}>
+                        <Emojis onSmileSelected={insertEmoji}/>
+
+                        <SelectAttachments
+                            selectedFiles={messageAttachments}
+                            setSelectedFiles={setMessageAttachments}
+                        />
+
+                        <AutoDeleteSettings/>
+                        <RecordAudioMessage
+                            selectedFiles={messageAttachments}
+                            setSelectedFiles={setMessageAttachments}
+                        />
+                    </div>
+                </div>
             </div>
         </ChatRoomContextProvider>
     );

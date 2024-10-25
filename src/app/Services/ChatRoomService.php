@@ -8,6 +8,7 @@ use App\Dto\ChatRoomDto;
 use App\Models\ChatRoom;
 use App\Repositories\ChatRoomRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 final readonly class ChatRoomService
 {
@@ -30,5 +31,18 @@ final readonly class ChatRoomService
 
             return $chatRoom;
         });
+    }
+
+    public function deleteChatRoom(ChatRoom $chatRoom): ?bool
+    {
+        $refsDiff = $this->repository->getAttachmentRefsDiff($chatRoom);
+
+        foreach ($refsDiff as $path => $count) {
+            if ($count == 0) {
+                Storage::delete($path);
+            }
+        }
+
+        return $this->repository->deleteChatRoom($chatRoom);
     }
 }
