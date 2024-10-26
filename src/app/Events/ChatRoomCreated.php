@@ -22,7 +22,7 @@ final class ChatRoomCreated implements ShouldBroadcast
      */
     public function __construct(public readonly ChatRoom $chatRoom)
     {
-        //
+        $this->chatRoom->loadMissing(['users', 'messages' => fn($q) => $q->latest()->take(1)]);
     }
 
     /**
