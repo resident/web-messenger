@@ -5,15 +5,15 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import InputError from "@/Components/InputError.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
-import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import {useContext, useEffect, useRef, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { useContext, useEffect, useRef, useState } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import RecordAudioMessage from "./RecordAudioMessage";
 
-export default function ChatRoomMessages({...props}) {
+export default function ChatRoomMessages({ ...props }) {
     const {
         user,
         userPublicKey,
@@ -133,7 +133,7 @@ export default function ChatRoomMessages({...props}) {
 
         setPrevMessagesLength(messages.length);
 
-        axios.get(route('chat_rooms.messages.index', {chatRoom: chatRoom.id, count, startId}))
+        axios.get(route('chat_rooms.messages.index', { chatRoom: chatRoom.id, count, startId }))
             .then(async (response) => {
                 const loadedMessages = [];
 
@@ -169,7 +169,7 @@ export default function ChatRoomMessages({...props}) {
     };
 
     const onChatRoomUpdated = (e) => {
-        setChatRoom({...chatRoom, ...e.chatRoom});
+        setChatRoom({ ...chatRoom, ...e.chatRoom });
     };
 
     useEffect(() => {
@@ -189,7 +189,6 @@ export default function ChatRoomMessages({...props}) {
 
         return () => {
             channel
-                .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
                 .stopListening('ChatRoomUpdated');
         };
@@ -197,7 +196,7 @@ export default function ChatRoomMessages({...props}) {
 
     const sendMessage = async () => {
         setSendingMessage(true);
-        setErrors({...errors, message: ''});
+        setErrors({ ...errors, message: '' });
 
         try {
             ChatRoomMessage.sendMessage(message, chatRoom, chatRoomKey, messageAttachments, progress => {
@@ -210,7 +209,7 @@ export default function ChatRoomMessages({...props}) {
 
                 setMessageAttachments([]);
             }).catch(error => {
-                setErrors({...errors, message: error});
+                setErrors({ ...errors, message: error });
             }).finally(() => {
                 setUploadProgress(0);
                 setSendingMessage(false);
@@ -218,7 +217,7 @@ export default function ChatRoomMessages({...props}) {
             });
         } catch (e) {
             if (e instanceof ProgressEvent) {
-                setErrors({...errors, message: e.target.error.message});
+                setErrors({ ...errors, message: e.target.error.message });
             }
 
             setSendingMessage(false);
@@ -356,18 +355,18 @@ export default function ChatRoomMessages({...props}) {
                     </div>
 
                     <div>
-                        <InputError message={errors.message} className="mt-2"/>
+                        <InputError message={errors.message} className="mt-2" />
                     </div>
 
                     <div className={`flex gap-3 justify-center pb-2`}>
-                        <Emojis onSmileSelected={insertEmoji}/>
+                        <Emojis onSmileSelected={insertEmoji} />
 
                         <SelectAttachments
                             selectedFiles={messageAttachments}
                             setSelectedFiles={setMessageAttachments}
                         />
 
-                        <AutoDeleteSettings/>
+                        <AutoDeleteSettings />
                         <RecordAudioMessage
                             selectedFiles={messageAttachments}
                             setSelectedFiles={setMessageAttachments}
