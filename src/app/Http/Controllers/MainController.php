@@ -10,17 +10,16 @@ use Inertia\Response as InertiaResponse;
 
 final class MainController extends Controller
 {
-    public function index(?ChatRoom $chatRoom = null): InertiaResponse
+    public function index(ProfileService $profileService, ?ChatRoom $chatRoom = null): InertiaResponse
     {
-        $profileService = app(ProfileService::class);
         if ($chatRoom) {
             $user = request()->user();
-            $chatRoom = $user->chatRooms()->with('users')->where('chat_room_id', $chatRoom->id)->first();
-            if (!$chatRoom) {
-                abort(404);
-            }
+
+            $chatRoom->load('users');
+
             $userIds = $chatRoom->users->pluck('id')->values()->all();
             $statuses = $profileService->getUsersStatus($user, $userIds);
+
             $chatRoom->users = $chatRoom->users->map(function ($chatUser) use ($statuses) {
                 $status = $statuses[$chatUser->id] ?? null;
                 $chatUser->is_online = $status?->is_online ?? false;
@@ -28,6 +27,7 @@ final class MainController extends Controller
                 return $chatUser;
             });
         }
+
         return inertia('Main', compact('chatRoom'));
     }
 }

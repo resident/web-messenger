@@ -12,7 +12,6 @@ use App\Http\Requests\UpdateChatRoomRequest;
 use App\Models\ChatRoom;
 use App\Repositories\ChatRoomRepository;
 use App\Services\ChatRoomService;
-use App\Services\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response as InertiaResponse;
@@ -52,27 +51,6 @@ class ChatRoomsController extends Controller
         broadcast(new ChatRoomCreated($chatRoom))->toOthers();
 
         return response()->redirectToRoute('main', [$chatRoom->id]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $chatRoomId, ProfileService $profileService)
-    {
-        $user = request()->user();
-        $chatRoom = $user->chatRooms()->with('users')->where('chat_room_id', $chatRoomId)->first();
-        if (!$chatRoom) {
-            abort(404);
-        }
-        $userIds = $chatRoom->users->pluck('id')->values()->all();
-        $statuses = $profileService->getUsersStatus($user, $userIds);
-        $chatRoom->users = $chatRoom->users->map(function ($chatUser) use ($statuses) {
-            $status = $statuses[$chatUser->id] ?? null;
-            $chatUser->is_online = $status?->is_online ?? false;
-            $chatUser->last_seen_at = $status?->last_seen_at;
-            return $chatUser;
-        });
-        return inertia('ChatRoom/Show', ['chatRoom' => $chatRoom]);
     }
 
     /**
