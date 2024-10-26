@@ -24,13 +24,14 @@ class UserSettings extends Model
     protected $fillable = [
         'user_id',
         'status_visibility',
-        // ...
+        'safe_view_is_on',
     ];
 
     protected function casts(): array
     {
         return [
             'status_visibility' => VisibilityPrivacyEnum::class,
+            'safe_view_is_on' => 'boolean',
         ];
     }
 

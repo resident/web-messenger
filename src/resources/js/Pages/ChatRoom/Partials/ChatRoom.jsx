@@ -9,6 +9,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
     const {
         userPrivateKey,
         user,
+        safeViewIsOn,
     } = useContext(ApplicationContext);
 
     const [chatRoomKey, setChatRoomKey] = useState(null);
@@ -145,7 +146,11 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
                 </div>
 
                 {message && (
-                    <div className={`text-gray-400`}>{truncate(message.message, 20)}</div>
+                    <div
+                        className={`text-gray-400 ${safeViewIsOn && 'blur-sm group-hover:blur-0'}`}
+                    >
+                        {truncate(message.message, 20)}
+                    </div>
                 )}
 
             </div>
