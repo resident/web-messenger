@@ -2,14 +2,14 @@
 
 namespace App\Repositories;
 
-use App\Models\UserSettings;
 use App\Enums\VisibilityPrivacyEnum;
+use App\Models\UserSettings;
 
 final class UserSettingsRepository
 {
     /**
      * Create 'UserSettings' of 'User'
-     * 
+     *
      * @param int $userId
      * @return UserSettings
      */
@@ -21,6 +21,11 @@ final class UserSettingsRepository
         ]);
     }
 
+    public function updateUserSettings(int $userId, array $settings): UserSettings
+    {
+        return UserSettings::query()->updateOrCreate(['user_id' => $userId], $settings);
+    }
+
     public function getUserSettingsByUserId(int $userId): UserSettings
     {
         return UserSettings::firstOrCreate(['user_id' => $userId]);
@@ -28,7 +33,7 @@ final class UserSettingsRepository
 
     /**
      * Update status_visibility setting
-     * 
+     *
      * @param int $userId
      * @param string $visibility
      * @return bool

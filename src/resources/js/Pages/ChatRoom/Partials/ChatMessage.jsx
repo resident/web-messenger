@@ -19,7 +19,7 @@ export default forwardRef(function ChatMessage({
                                                    onMessageRemoved = () => null,
                                                    ...props
                                                }, ref) {
-    const {userPrivateKey} = useContext(ApplicationContext);
+    const {userPrivateKey, safeViewIsOn} = useContext(ApplicationContext);
     const {chatRoomKey} = useContext(ChatRoomContext);
 
     const messageRef = ref ? ref : useRef();
@@ -155,15 +155,18 @@ export default forwardRef(function ChatMessage({
                     </div>
                 </div>
 
-                <div>{message.message}</div>
+                <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'}`}>
+                    {message.message}
+                </div>
 
                 {message.attachments.length > 0 &&
-                    <div className={`flex flex-wrap my-2`}>
+                    <div className={`flex flex-wrap my-2 ${safeViewIsOn && 'blur-lg group-hover:blur-0'}`}>
                         {message.attachments.map((attachment, i) => (
                             <ChatMessageAttachment key={i} attachment={attachment}/>
                         ))}
                     </div>
                 }
+
 
                 <div className={`
                     text-xs font-light text-right

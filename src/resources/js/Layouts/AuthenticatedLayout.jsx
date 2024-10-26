@@ -18,6 +18,7 @@ export default function Authenticated({user, header, children}) {
     const [isInactive, setIsInactive] = useState(false);
     const [isInactiveNow, setIsInactiveNow] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
+    const [safeViewIsOn, setSafeViewIsOn] = useState(user.settings.safe_view_is_on);
 
     useEffect(() => {
         Echo.registerAxiosRequestInterceptor();
@@ -33,13 +34,14 @@ export default function Authenticated({user, header, children}) {
                 isInactive, setIsInactive,
                 isInactiveNow, setIsInactiveNow,
                 sessionLocked, setSessionLocked,
+                safeViewIsOn, setSafeViewIsOn,
             }}>
-                <SyncUserRsaKeys />
-                <LoadChatRooms />
-                <RotateUserRsaKeys />
-                <InactivityTracker />
-                <VisibilityTracker />
-                <UserStatusTracker />
+                <SyncUserRsaKeys/>
+                <LoadChatRooms/>
+                <RotateUserRsaKeys/>
+                <InactivityTracker/>
+                <VisibilityTracker/>
+                <UserStatusTracker/>
 
                 <div className="max-w-7xl mx-auto text-gray-900">
                     <div

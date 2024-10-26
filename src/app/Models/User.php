@@ -80,7 +80,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     /**
      * Connection with 'Profile'
-     * 
+     *
      * @return HasOne
      *  */
     public function profile(): HasOne
@@ -90,10 +90,10 @@ class User extends Authenticatable implements MustVerifyEmailContract
 
     /**
      * Connection with 'UserSettings'
-     * 
+     *
      * @return HasOne
      *  */
-    public function userSettings(): HasOne
+    public function settings(): HasOne
     {
         return $this->hasOne(UserSettings::class);
     }

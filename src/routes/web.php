@@ -5,6 +5,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\UserSettingsController;
 use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\UserStorageController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/user-status/{userId}', [UserStatusController::class, 'getUserStatus'])->name('user-status.get');
     Route::post('/users-status', [UserStatusController::class, 'getUsersStatus'])->name('users-status.get');
+
+    Route::get('/user/settings', [UserSettingsController::class, 'get'])->name('user-settings.get');
+    Route::put('/user/settings', [UserSettingsController::class, 'update'])->name('user-settings.update');
 });
 
 require __DIR__ . '/auth.php';

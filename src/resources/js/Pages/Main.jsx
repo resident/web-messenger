@@ -3,8 +3,9 @@ import {Head, router} from '@inertiajs/react';
 import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 import {useState} from "react";
 import ChatRoomMessages from "@/Pages/ChatRoom/Partials/ChatRoomMessages.jsx";
-import { ArrowLeftIcon, EllipsisVerticalIcon } from "@heroicons/react/24/outline/index.js";
+import {ArrowLeftIcon} from "@heroicons/react/24/outline/index.js";
 import ChatStatus from '@/Pages/ChatRoom/Partials/ChatStatus.jsx';
+import ChatRoomMenu from "@/Pages/ChatRoom/Partials/ChatRoomMenu.jsx";
 
 export default function Main({auth, ...props}) {
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
@@ -33,19 +34,15 @@ export default function Main({auth, ...props}) {
                     {chatRoom &&
                         <div>
                             <div className={`p-2 flex justify-between bg-gray-200`}>
-                                <div className={`rounded-full p-1 hover:bg-indigo-600 hover:text-white`}>
-                                    <ArrowLeftIcon
-                                        className={`size-6 cursor-pointer`}
-                                        onClick={() => setChatRoom(null)}/>
-                                </div>
+                                <ArrowLeftIcon
+                                    className={`size-8 rounded-full p-1 hover:bg-indigo-600 hover:text-white cursor-pointer`}
+                                    onClick={() => setChatRoom(null)}/>
 
                                 <div>{chatRoom.title}</div>
-                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom} />
 
-                                <div className={`rounded-full p-1 hover:bg-indigo-600 hover:text-white`}>
-                                    <EllipsisVerticalIcon
-                                        className={`size-6 cursor-pointer`}/>
-                                </div>
+                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom}/>
+
+                                <ChatRoomMenu/>
                             </div>
 
                             <ChatRoomMessages chatRoom={chatRoom}/>
