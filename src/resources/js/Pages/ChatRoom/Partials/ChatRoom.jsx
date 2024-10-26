@@ -21,7 +21,9 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
     useEffect(() => {
         if (userPrivateKey) {
             (async () => {
-                setChatRoomKey(await CommonChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key));
+                setChatRoomKey(await CommonChatRoom.decryptChatRoomKey(
+                    userPrivateKey, chatRoom.users.find(u => u.id === user.id).pivot.chat_room_key
+                ));
             })();
         } else {
             setChatRoomKey(null);
@@ -55,7 +57,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
     };
 
     const onUserOnlineStatusChanged = (e) => {
-        const { user_id, is_online, last_seen_at } = e;
+        const {user_id, is_online, last_seen_at} = e;
         const otherUser = chatRoom.users.find(u => u.id !== user.id);
         if (otherUser && otherUser.id === user_id) {
             setIsOnline(is_online);
@@ -117,10 +119,10 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
             onClick={onClickHandler}
         >
             <div className={`min-w-12 min-h-12 mr-3 bg-lime-300 rounded-full relative`}>
-            {chatRoom.users.length === 2 && (
-                <span
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-            )}
+                {chatRoom.users.length === 2 && (
+                    <span
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                )}
             </div>
 
             <div className={`w-full`}>
