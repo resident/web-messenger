@@ -1,24 +1,26 @@
-import {useContext, useRef} from 'react';
+import { useContext, useRef, useState } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import {useForm} from '@inertiajs/react';
-import {Transition} from '@headlessui/react';
+import { useForm } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
 import UserPassword from "@/Common/UserPassword.js";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 
-export default function UpdatePasswordForm({className = ''}) {
-    const {syncProvider} = useContext(ApplicationContext);
+export default function UpdatePasswordForm({ className = '' }) {
+    const { syncProvider } = useContext(ApplicationContext);
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
-    const {data, setData, errors, put, reset, processing, recentlySuccessful} = useForm({
+    const { data, setData, errors, put, reset, processing, recentlySuccessful } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
     });
+
+    const [passErrors, setPassErrors] = useState({});
 
     const onPasswordUpdated = async (newPassword) => {
         const keyStorage = new UserRsaKeysStorage();
@@ -36,6 +38,25 @@ export default function UpdatePasswordForm({className = ''}) {
 
     const updatePassword = (e) => {
         e.preventDefault();
+
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+        let hasError = false
+        const newPassErrors = {};
+        if (!passwordPattern.test(data.password)) {
+            newPassErrors.password = 'The password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number.';
+            hasError = true;
+        }
+        if (data.password !== data.password_confirmation) {
+            newPassErrors.password_confirmation = 'Passwords do not match.';
+            hasError = true;
+        }
+
+        setPassErrors(newPassErrors);
+
+        if (hasError) {
+            return;
+        }
 
         put(route('user-password.update'), {
             preserveScroll: true,
@@ -66,7 +87,7 @@ export default function UpdatePasswordForm({className = ''}) {
 
             <form onSubmit={updatePassword} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="current_password" value="Current Password"/>
+                    <InputLabel htmlFor="current_password" value="Current Password" />
 
                     <TextInput
                         id="current_password"
@@ -78,11 +99,11 @@ export default function UpdatePasswordForm({className = ''}) {
                         autoComplete="current-password"
                     />
 
-                    <InputError message={errors.current_password} className="mt-2"/>
+                    <InputError message={errors.current_password} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="New Password"/>
+                    <InputLabel htmlFor="password" value="New Password" />
 
                     <TextInput
                         id="password"
@@ -94,11 +115,11 @@ export default function UpdatePasswordForm({className = ''}) {
                         autoComplete="new-password"
                     />
 
-                    <InputError message={errors.password} className="mt-2"/>
+                    <InputError message={errors.password || passErrors.password} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password"/>
+                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
 
                     <TextInput
                         id="password_confirmation"
@@ -109,7 +130,7 @@ export default function UpdatePasswordForm({className = ''}) {
                         autoComplete="new-password"
                     />
 
-                    <InputError message={errors.password_confirmation} className="mt-2"/>
+                    <InputError message={errors.password_confirmation || passErrors.password_confirmation} className="mt-2" />
                 </div>
 
                 <div className="flex items-center gap-4">

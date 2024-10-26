@@ -3,10 +3,12 @@ import {Head, router} from '@inertiajs/react';
 import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 import {useState} from "react";
 import ChatRoomMessages from "@/Pages/ChatRoom/Partials/ChatRoomMessages.jsx";
-import {ArrowLeftIcon, EllipsisVerticalIcon} from "@heroicons/react/24/outline/index.js";
+import { ArrowLeftIcon, EllipsisVerticalIcon } from "@heroicons/react/24/outline/index.js";
+import ChatStatus from '@/Pages/ChatRoom/Partials/ChatStatus.jsx';
 
 export default function Main({auth, ...props}) {
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
+
 
     return (
         <AuthenticatedLayout
@@ -38,6 +40,7 @@ export default function Main({auth, ...props}) {
                                 </div>
 
                                 <div>{chatRoom.title}</div>
+                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom} />
 
                                 <div className={`rounded-full p-1 hover:bg-indigo-600 hover:text-white`}>
                                     <EllipsisVerticalIcon
