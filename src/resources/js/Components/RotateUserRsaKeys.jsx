@@ -60,13 +60,14 @@ export default function RotateUserRsaKeys({}) {
         axios.put(route('rotate-keys.update'), {
             public_key: newUserRsaKeys.publicKey,
             keys: newChatRoomKeys
-        }).then((response) => {
+        }).then(async (response) => {
             if (response.status === 200) {
-                userRsaKeysStorage.saveKeysToLocalStorage(userPassword, newUserRsaKeys);
                 userRsaKeysStorage.saveKeysToSessionStorage(newUserRsaKeys.publicKey, newUserRsaKeys.privateKey);
-                UserPassword.saveToSession(userPassword, newUserRsaKeys.publicKey);
+                UserPassword.saveToSession(userPassword, newUserRsaKeys.publicKey).then();
 
-                syncProvider.sync('userRsaKeys');
+                const encryptedRsaKeys = await userRsaKeysStorage.encryptKeys(userPassword, newUserRsaKeys);
+
+                syncProvider.set('userRsaKeys', encryptedRsaKeys);
 
                 setUserPublicKey(newUserRsaKeys.publicKey);
                 setUserPrivateKey(newUserRsaKeys.privateKey);
@@ -84,9 +85,10 @@ export default function RotateUserRsaKeys({}) {
                 try {
                     await rotateKeys();
                 } catch (e) {
+                    console.error(e)
                 }
             }
-        }, 1000);
+        }, 30 * 1000);
 
         return () => {
             clearInterval(intervalId);

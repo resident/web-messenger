@@ -4,6 +4,7 @@
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UserSettingsController;
 use App\Http\Controllers\UserStatusController;
@@ -40,6 +41,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/user/settings', [UserSettingsController::class, 'get'])->name('user-settings.get');
     Route::put('/user/settings', [UserSettingsController::class, 'update'])->name('user-settings.update');
+
+    Route::get('/user/profile/{user}', [UserProfileController::class, 'show'])->name('user-profile.show');
 });
 
 require __DIR__ . '/auth.php';
