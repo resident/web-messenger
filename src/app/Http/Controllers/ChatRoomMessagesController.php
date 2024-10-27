@@ -68,7 +68,7 @@ class ChatRoomMessagesController extends Controller
 
         $message = $messageService->createMessageWithAttachments($messageDto, $attachmentsDto);
 
-        $message->load(['user', 'attachments']);
+        $message->load(['user.avatar', 'attachments']);
 
         broadcast(new ChatRoomMessageSent($message))->toOthers();
 

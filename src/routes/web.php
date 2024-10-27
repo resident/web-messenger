@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\ChatRoomMessagesController;
 use App\Http\Controllers\ChatRoomsController;
 use App\Http\Controllers\ProfileController;
@@ -21,8 +22,8 @@ Route::get('/dropbox', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/avatar/update', [AvatarController::class, 'store'])->name('avatar.update');
 
     Route::get('/chat-rooms', [ChatRoomsController::class, 'index'])->name('chat_rooms.index');
     Route::get('/chat-rooms/list', [ChatRoomsController::class, 'list'])->name('chat_rooms.list');

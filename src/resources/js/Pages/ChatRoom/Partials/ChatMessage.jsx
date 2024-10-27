@@ -15,7 +15,6 @@ export default forwardRef(function ChatMessage({
 
     useEffect(() => {
         const date = new Date(message.created_at);
-
         setCreatedAt({
             date: date.toLocaleDateString(),
             time: date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
@@ -50,8 +49,12 @@ export default forwardRef(function ChatMessage({
             `}
             ref={messageRef}
         >
-            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
-
+            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full overflow-hidden`}>
+                <img src={ message.user.avatar && `${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
+                    alt="avatar"
+                    className="w-full h-full object-cover" />
+            </div>
+                
             <div className={`
                 rounded-md p-3 break-words
                 ${self ? 'bg-lime-300' : 'bg-yellow-300'}
