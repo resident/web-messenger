@@ -30,7 +30,10 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $user->load('settings:user_id,safe_view_is_on');
+
+        if ($user) {
+            $user->load('settings:user_id,safe_view_is_on');
+        }
 
         return [
             ...parent::share($request),

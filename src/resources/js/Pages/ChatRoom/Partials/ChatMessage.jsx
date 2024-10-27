@@ -11,6 +11,7 @@ import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import InputError from "@/Components/InputError.jsx";
+import {Link} from "@inertiajs/react";
 
 export default forwardRef(function ChatMessage({
                                                    className = '',
@@ -65,7 +66,7 @@ export default forwardRef(function ChatMessage({
         try {
             const toChatRoomKey = await CommonChatRoom.decryptChatRoomKey(userPrivateKey, toChatRoom.pivot.chat_room_key);
 
-            ChatRoomMessage.forwardMessage(message, toChatRoom, chatRoomKey, toChatRoomKey).then(message => {
+            ChatRoomMessage.forwardMessage(message, toChatRoom, chatRoomKey, toChatRoomKey).then(() => {
                 setSuccess('Message forwarded');
 
                 setTimeout(() => closeMessageForwardingModal(), 2000);
@@ -135,7 +136,7 @@ export default forwardRef(function ChatMessage({
                     <div className={`
                     font-bold
                     ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
-                `}>{message.user.name}</div>
+                `}><Link href={route('user-profile.show', message.user.id)}>{message.user.name}</Link></div>
 
                     <div className={`flex gap-0.5`}>
                         <ArrowUturnRightIcon
