@@ -1,8 +1,7 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
-use App\Http\Controllers\ChatRoomMessagesController;
-use App\Http\Controllers\ChatRoomsController;
+use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
 use App\Http\Controllers\UserProfileController;
