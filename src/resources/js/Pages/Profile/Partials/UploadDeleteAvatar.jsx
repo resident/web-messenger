@@ -3,16 +3,20 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import { useState } from 'react';
 
-export default function UploadDeleteAvatar({ className = '' }) {
-    const user = usePage().props.auth.user;
-
-    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
+export default function UploadDeleteAvatar({ className = '', user }) {
+    const { data, setData, post, errors, recentlySuccessful } = useForm({
         avatar: null
     });
 
+    const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const[deletionSuccess, setDeletionSuccess] = useState(false);
+
     const submit = (e) => {
         e.preventDefault();
+        setUploading(true);
 
         const formData = new FormData();
         if (data.avatar) {
@@ -24,7 +28,22 @@ export default function UploadDeleteAvatar({ className = '' }) {
             forceFormData: true,
             preserveScroll: true,
             preserveState: true,
+            onFinish: () => setUploading(false),
         });
+    };
+
+    const removeAvatar = async () => {
+        setDeleting(true);
+
+        try {
+            await axios.delete(route('avatar.delete'));
+            setDeletionSuccess(true);
+            setTimeout(() => setDeletionSuccess(false), 2000);
+        } catch (error) {
+            console.error('Error deleting avatar:', error);
+        } finally {
+            setDeleting(false);
+        }
     };
 
     return (
@@ -37,6 +56,12 @@ export default function UploadDeleteAvatar({ className = '' }) {
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6" encType='multipart/form-data'>
+                {user.avatar && (
+                    <div className="mt-2">
+                        <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`} alt="Current Avatar" 
+                        className="h-40 w-40 rounded-full" />
+                    </div>
+                )}
                 <div>
                     <InputLabel htmlFor="avatar" value="Avatar" />
                     <input
@@ -46,17 +71,10 @@ export default function UploadDeleteAvatar({ className = '' }) {
                         onChange={(e) => setData('avatar', e.target.files[0])}
                     />
                     <InputError className="mt-2" message={errors.avatar} />
-                    
-                    {/* Display current avatar */}
-                    {user.avatar && (
-                        <div className="mt-2">
-                            <img src={`/storage/avatars/${user.avatar}`} alt="Current Avatar" className="h-20 w-20 rounded-full" />
-                        </div>
-                    )}
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Upload</PrimaryButton>
+                    <PrimaryButton disabled={uploading}>Upload</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -66,6 +84,20 @@ export default function UploadDeleteAvatar({ className = '' }) {
                         leaveTo="opacity-0"
                     >
                         <p className="text-sm text-gray-600">Uploaded successfully.</p>
+                    </Transition>
+                </div>
+                <div className="mt-2 flex items-center gap-4">
+                    <PrimaryButton onClick={removeAvatar} disabled={deleting}>
+                        Remove
+                    </PrimaryButton>
+                    <Transition
+                        show={deletionSuccess}
+                        enter="transition ease-in-out"
+                        enterFrom="opacity-0"
+                        leave="transition ease-in-out"
+                        leaveTo="opacity-0"
+                    >
+                        <p className="text-sm text-gray-600">Deleted successfully.</p>
                     </Transition>
                 </div>
             </form>

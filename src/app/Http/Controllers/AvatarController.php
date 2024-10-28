@@ -4,23 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AvatarRequest;
 use App\Models\Avatar;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 final class AvatarController extends Controller
 {
-    public function store(Request $request)
+    public function store(AvatarRequest $request)
     {
-        $request->validate([
-            'avatar' => 'required|file|mimes:jpg,jpeg,png,gif|max:2048',
-        ]);
-
         $user = $request->user();
 
         if ($user->avatar) {
-            Storage::delete("public/avatars/{$user->avatar->path}");
-            $user->avatar->delete();
+            $this->removeAvatar($user);
         }
 
         if ($request->file('avatar')) {
@@ -38,5 +35,18 @@ final class AvatarController extends Controller
         }
 
         return back()->withErrors(['error' => 'File not uploaded.']);
+    }
+
+    public function delete(Request $request)
+    {
+        $user = $request->user();
+        if ($user->avatar) {
+            $this->removeAvatar($user);
+        }
+    }
+
+    private function removeAvatar(User $user){
+        Storage::delete("public/avatars/{$user->avatar->path}");
+        $user->avatar->delete();
     }
 }

@@ -23,7 +23,9 @@ Route::get('/dropbox', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
     Route::post('/avatar/update', [AvatarController::class, 'store'])->name('avatar.update');
+    Route::delete('/avatar/delete', [AvatarController::class, 'delete'])->name('avatar.delete');
 
     Route::get('/chat-rooms', [ChatRoomsController::class, 'index'])->name('chat_rooms.index');
     Route::get('/chat-rooms/list', [ChatRoomsController::class, 'list'])->name('chat_rooms.list');
