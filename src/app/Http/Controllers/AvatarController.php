@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Avatar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 final class AvatarController extends Controller
 {
@@ -25,7 +26,7 @@ final class AvatarController extends Controller
 
         if ($request->file('avatar')) {
             $extension = $request->file('avatar')->getClientOriginalExtension();
-            $filename = 'avatar_' . time() . '.' . $extension;
+            $filename = 'avatar_' . Str::uuid() . '.' . $extension;
             $path = $request->file('avatar')->storeAs('public/avatars', $filename);
 
             $avatar = new Avatar([

@@ -11,7 +11,17 @@ export default forwardRef(function ChatMessage({
                                                }, ref) {
     const messageRef = ref ? ref : useRef();
 
+    const [userAvatar, setUserAvatar] = useState(message.user.avatar);
+    const [userAvatarPath, setUserAvatarPath] = useState('');
     const [createdAt, setCreatedAt] = useState({});
+
+    useEffect(() => {
+        const avatarsStorage = import.meta.env.VITE_AVATARS_STORAGE;
+
+        if (avatarsStorage && userAvatar) {
+            setUserAvatarPath(`${avatarsStorage}/${userAvatar.path}`);
+        }
+    }, [userAvatar]);
 
     useEffect(() => {
         const date = new Date(message.created_at);
@@ -50,11 +60,11 @@ export default forwardRef(function ChatMessage({
             ref={messageRef}
         >
             <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full overflow-hidden`}>
-                <img src={ message.user.avatar && `${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
-                    alt="avatar"
-                    className="w-full h-full object-cover" />
+                {userAvatarPath && <img src={userAvatarPath}
+                                        alt="avatar"
+                                        className="w-full h-full object-cover"/>}
             </div>
-                
+
             <div className={`
                 rounded-md p-3 break-words
                 ${self ? 'bg-lime-300' : 'bg-yellow-300'}
