@@ -1,6 +1,6 @@
 <?php
 
-
+use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
