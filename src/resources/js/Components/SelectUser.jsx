@@ -4,7 +4,7 @@ import InputError from "@/Components/InputError.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import {useRef, useState} from "react";
 
-export default function SelectUser({onUserSelected}) {
+export default function SelectUser({label = 'User Name', buttonText = 'Select', onUserSelected = user => null}) {
     const nameInput = useRef();
 
     const [name, setName] = useState("");
@@ -26,19 +26,22 @@ export default function SelectUser({onUserSelected}) {
 
     return (
         <div>
-            <InputLabel htmlFor="name" value="User Name"/>
+            <InputLabel htmlFor="name" value={label}/>
 
-            <TextInput
-                id="name"
-                ref={nameInput}
-                onChange={(e) => setName(e.target.value)}
-                type="text"
-                className="mt-1 block w-full mb-2"
-            />
+            <div className={`flex gap-2 my-1`}>
+                <TextInput
+                    id="name"
+                    className="w-full"
+                    ref={nameInput}
+                    onChange={(e) => setName(e.target.value)}
+                    type="text"
+                    placeholder="Username"
+                />
+
+                <PrimaryButton disabled={name.length === 0} onClick={selectUser}>{buttonText}</PrimaryButton>
+            </div>
 
             <InputError message={nameError} className="my-2"/>
-
-            <PrimaryButton disabled={name.length === 0} onClick={selectUser}>+</PrimaryButton>
         </div>
-    )
+    );
 }

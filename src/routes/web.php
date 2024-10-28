@@ -1,20 +1,20 @@
 <?php
 
-use App\Http\Controllers\AvatarController;
-use App\Http\Controllers\ChatRoomMessagesController;
-use App\Http\Controllers\ChatRoomsController;
+
+use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\UserSettingsController;
+use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\UserStorageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn() => Route::respondWithRoute(request()->user() ? 'dashboard' : 'login'));
+Route::get('/', fn() => Route::respondWithRoute(request()->user() ? 'main' : 'login'));
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/main/{chatRoom?}', [MainController::class, 'index'])->middleware(['auth', 'verified'])->name('main');
 
 Route::get('/dropbox', function () {
     return Inertia::render('Dropbox/Dropbox');
@@ -27,40 +27,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/avatar/update', [AvatarController::class, 'store'])->name('avatar.update');
     Route::delete('/avatar/delete', [AvatarController::class, 'delete'])->name('avatar.delete');
 
-    Route::get('/chat-rooms', [ChatRoomsController::class, 'index'])->name('chat_rooms.index');
-    Route::get('/chat-rooms/list', [ChatRoomsController::class, 'list'])->name('chat_rooms.list');
-    Route::get('/chat-rooms/create', [ChatRoomsController::class, 'create'])->name('chat_rooms.create');
-    Route::post('/chat-rooms/store', [ChatRoomsController::class, 'store'])->name('chat_rooms.store');
-
-    Route::get('/chat-rooms/{chatRoomId}', [ChatRoomsController::class, 'show'])
-        ->whereUuid('chatRoomId')
-        ->name('chat_rooms.show');
-
-    Route::put('/chat-rooms/{chatRoom}', [ChatRoomsController::class, 'update'])
-        ->whereUuid('chatRoom')->name('chat_rooms.update');
-
-    Route::get('/chat-rooms/{chatRoom}/messages/{count?}/{startId?}', [ChatRoomMessagesController::class, 'index'])
-        ->whereUuid('chatRoom')
-        ->whereNumber('count')
-        ->whereUuid('startId')
-        ->name('chat_rooms.messages.index');
-
-    Route::post('/chat-rooms/{chatRoom}/messages', [ChatRoomMessagesController::class, 'store'])
-        ->whereUuid('chatRoom')
-        ->name('chat_rooms.messages.store');
-
-    Route::delete('/chat-rooms/{chatRoom}/messages/{message}', [ChatRoomMessagesController::class, 'destroy'])
-        ->whereUuid('chatRoom')
-        ->whereUuid('message')
-        ->name('chat_rooms.messages.destroy');
-
-    Route::get(
-        '/chat-rooms/messages/attachments/{attachment}',
-        [ChatRoomMessagesController::class, 'downloadAttachment']
-    )
-        ->whereUuid('attachment')
-        ->name('chat_rooms.messages.download_attachment');
-
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 
     Route::put('/rotate-keys', [RotateKeysController::class, 'update'])->name('rotate-keys.update');
@@ -71,6 +37,15 @@ Route::middleware('auth')->group(function () {
         Route::put('/key/{key}', [UserStorageController::class, 'updateByKey'])->name('update-key');
         Route::delete('/key/{key}', [UserStorageController::class, 'destroyByKey'])->name('destroy-key');
     });
+
+    Route::get('/user-status/{userId}', [UserStatusController::class, 'getUserStatus'])->name('user-status.get');
+    Route::post('/users-status', [UserStatusController::class, 'getUsersStatus'])->name('users-status.get');
+
+    Route::get('/user/settings', [UserSettingsController::class, 'get'])->name('user-settings.get');
+    Route::put('/user/settings', [UserSettingsController::class, 'update'])->name('user-settings.update');
+
+    Route::get('/user/profile/{user}', [UserProfileController::class, 'show'])->name('user-profile.show');
 });
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/chat-rooms.php';

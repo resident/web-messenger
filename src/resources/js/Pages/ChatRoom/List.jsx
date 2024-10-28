@@ -7,7 +7,7 @@ export default function List({auth}) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Chat Rooms</h2>}
+            header="Chat Rooms"
         >
             <Head title="Chat Rooms"/>
 
@@ -22,7 +22,9 @@ export default function List({auth}) {
                                 >+</PrimaryButton>
                             </div>
 
-                            <ChatRooms/>
+                            <ChatRooms onChatRoomClick={chatRoom => {
+                                router.visit(route('chat_rooms.show', chatRoom.id));
+                            }}/>
                         </div>
                     </div>
                 </div>

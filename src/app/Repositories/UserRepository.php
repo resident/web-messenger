@@ -18,7 +18,7 @@ final class UserRepository
         return User::all();
     }
 
-    public function getUserById(int $id): User
+    public function getUserById(int $id): ?User
     {
         return User::query()->find($id);
     }

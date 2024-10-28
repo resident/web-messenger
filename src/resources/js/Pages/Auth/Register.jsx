@@ -3,14 +3,14 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import {Head, Link, useForm} from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import RSAKeysGenerator from '@/Encryption/RSAKeysGenerator.js';
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
 import UserPassword from "@/Common/UserPassword.js";
 
 export default function Register() {
-    const {data, setData, post, processing, errors, reset} = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
@@ -20,6 +20,8 @@ export default function Register() {
 
     const [publicKey, setPublicKey] = useState();
     const [privateKey, setPrivateKey] = useState();
+
+    const [passErrors, setPassErrors] = useState({});
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
 
@@ -42,10 +44,29 @@ export default function Register() {
     const submit = (e) => {
         e.preventDefault();
 
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+        let hasError = false
+        const newPassErrors = {};
+        if (!passwordPattern.test(data.password)) {
+            newPassErrors.password = 'The password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number.';
+            hasError = true;
+        }
+        if (data.password !== data.password_confirmation) {
+            newPassErrors.password_confirmation = 'Passwords do not match.';
+            hasError = true;
+        }
+
+        setPassErrors(newPassErrors);
+
+        if (hasError) {
+            return;
+        }
+
         (async () => {
             userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
             await UserPassword.saveToSession(data.password, publicKey);
-            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, {publicKey, privateKey});
+            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, { publicKey, privateKey });
         })().then(() => {
             post(route('register'), {
                 onFinish: () => reset('password', 'password_confirmation'),
@@ -55,11 +76,11 @@ export default function Register() {
 
     return (
         <GuestLayout>
-            <Head title="Register"/>
+            <Head title="Register" />
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="name" value="Name"/>
+                    <InputLabel htmlFor="name" value="Name" />
 
                     <TextInput
                         id="name"
@@ -72,11 +93,11 @@ export default function Register() {
                         required
                     />
 
-                    <InputError message={errors.name} className="mt-2"/>
+                    <InputError message={errors.name} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email"/>
+                    <InputLabel htmlFor="email" value="Email" />
 
                     <TextInput
                         id="email"
@@ -89,11 +110,11 @@ export default function Register() {
                         required
                     />
 
-                    <InputError message={errors.email} className="mt-2"/>
+                    <InputError message={errors.email} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password"/>
+                    <InputLabel htmlFor="password" value="Password" />
 
                     <TextInput
                         id="password"
@@ -106,11 +127,11 @@ export default function Register() {
                         required
                     />
 
-                    <InputError message={errors.password} className="mt-2"/>
+                    <InputError message={errors.password || passErrors.password} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password"/>
+                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
 
                     <TextInput
                         id="password_confirmation"
@@ -123,7 +144,7 @@ export default function Register() {
                         required
                     />
 
-                    <InputError message={errors.password_confirmation} className="mt-2"/>
+                    <InputError message={errors.password_confirmation || passErrors.password_confirmation} className="mt-2" />
                 </div>
 
                 <input

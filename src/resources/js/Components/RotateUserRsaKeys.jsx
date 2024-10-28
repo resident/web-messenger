@@ -7,13 +7,16 @@ import UserPassword from "@/Common/UserPassword.js";
 
 export default function RotateUserRsaKeys({}) {
     const {
-        userPrivateKey,
+        setUserPublicKey,
+        userPrivateKey, setUserPrivateKey,
         chatRooms, setChatRooms,
+        syncProvider,
     } = useContext(ApplicationContext);
 
     const userRsaKeysStorage = new UserRsaKeysStorage();
 
-    const rotationTimeout = (import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT ?? 604800) * 1000;
+    const oneWeek = 604800;
+    const rotationTimeout = (import.meta.env.VITE_USER_KEYS_ROTATION_TIMEOUT ?? oneWeek) * 1000;
 
     const isNeedRotation = () => {
         if (!localStorage.getItem('userKeysRotatedAt')) {
@@ -33,12 +36,14 @@ export default function RotateUserRsaKeys({}) {
         const userPassword = await UserPassword.getFromSession(userPrivateKey);
 
         await rsaKeysGenerator.generateKeys();
-        const newPublicKey = await rsaKeysGenerator.exportPublicKey();
-        const newPrivateKey = await rsaKeysGenerator.exportPrivateKey();
 
-        await rsaEncryptor.importPublicKey(newPublicKey);
+        const newUserRsaKeys = {
+            publicKey: await rsaKeysGenerator.exportPublicKey(),
+            privateKey: await rsaKeysGenerator.exportPrivateKey(),
+        };
+
+        await rsaEncryptor.importPublicKey(newUserRsaKeys.publicKey);
         await rsaEncryptor.importPrivateKey(userPrivateKey);
-
 
         const newChatRoomKeys = [];
 
@@ -53,14 +58,19 @@ export default function RotateUserRsaKeys({}) {
         }
 
         axios.put(route('rotate-keys.update'), {
-            public_key: newPublicKey,
+            public_key: newUserRsaKeys.publicKey,
             keys: newChatRoomKeys
-        }).then((response) => {
+        }).then(async (response) => {
             if (response.status === 200) {
-                userRsaKeysStorage.saveKeysToLocalStorage(userPassword, newPublicKey, newPrivateKey);
-                userRsaKeysStorage.saveKeysToSessionStorage(newPublicKey, newPrivateKey);
+                userRsaKeysStorage.saveKeysToSessionStorage(newUserRsaKeys.publicKey, newUserRsaKeys.privateKey);
+                UserPassword.saveToSession(userPassword, newUserRsaKeys.publicKey).then();
 
-                UserPassword.saveToSession(userPassword, newPublicKey);
+                const encryptedRsaKeys = await userRsaKeysStorage.encryptKeys(userPassword, newUserRsaKeys);
+
+                syncProvider.set('userRsaKeys', encryptedRsaKeys);
+
+                setUserPublicKey(newUserRsaKeys.publicKey);
+                setUserPrivateKey(newUserRsaKeys.privateKey);
 
                 setChatRooms(response.data.chatRooms);
 
@@ -75,9 +85,10 @@ export default function RotateUserRsaKeys({}) {
                 try {
                     await rotateKeys();
                 } catch (e) {
+                    console.error(e)
                 }
             }
-        }, 1000);
+        }, 30 * 1000);
 
         return () => {
             clearInterval(intervalId);

@@ -37,8 +37,12 @@ final readonly class ChatRoomMessageAttachmentService
             /** @var Collection<int, ChatRoomMessageAttachment> $attachments */
             $attachments = $message->attachments()->get();
 
+            $attachmentRefs = $this->repository->getAttachmentRefs($attachments);
+
             foreach ($attachments as $attachment) {
-                $this->deleteAttachmentFile($attachment);
+                if ($attachmentRefs->get($attachment->path) === 1) {
+                    $this->deleteAttachmentFile($attachment);
+                }
             }
 
             return $message->attachments()->delete();

@@ -1,35 +1,38 @@
-import {useContext, useEffect, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { useContext, useEffect } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 
-export default function ChatRooms() {
+export default function ChatRooms({ onChatRoomClick = chatRoom => null }) {
     const {
         user,
         chatRooms, setChatRooms,
-        sessionLocked,
     } = useContext(ApplicationContext);
 
-    const [chatRoomsLoaded, setChatRoomsLoaded] = useState(false);
+    const onChatRoomCreated = async (e) => {
+        const chatRoom = e.chatRoom;
+        const currentUserId = user.id;
 
-    useEffect(() => {
-        if (!sessionLocked) {
-            setChatRoomsLoaded(false);
+        if (chatRoom.users.length === 2) {
+            const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
 
-            axios.get(route('chat_rooms.list')).then((response) => {
-                setChatRooms(response.data);
-                setChatRoomsLoaded(true);
-            });
+            const statusResponse = await axios.get(route('user-status.get', { userId: otherUser.id }));
+            const status = statusResponse.data;
+
+            const updatedChatRoom = {
+                ...chatRoom,
+                is_online: status?.is_online ?? false,
+                last_seen_at: status?.last_seen_at,
+            };
+
+            setChatRooms(rooms => [updatedChatRoom, ...rooms]);
         }
-    }, [sessionLocked]);
-
-    useEffect(() => {
-        if (sessionLocked && chatRoomsLoaded) {
-            setChatRooms([])
+        else {
+            setChatRooms(rooms => [{
+                ...chatRoom,
+                is_online: false,
+                last_seen_at: null,
+            }, ...rooms]);
         }
-    }, [sessionLocked, chatRoomsLoaded]);
-
-    const onChatRoomCreated = (e) => {
-        setChatRooms(rooms => [e.chatRoom, ...rooms]);
     };
 
     useEffect(() => {
@@ -44,9 +47,13 @@ export default function ChatRooms() {
     }, []);
 
     return (
-        <div>
+        <div className={`mb-3`}>
             {chatRooms.map((chatRoom) => (
-                <ChatRoom key={chatRoom.id} chatRoom={chatRoom}/>
+                <ChatRoom
+                    key={chatRoom.id}
+                    chatRoom={chatRoom}
+                    onClickHandler={() => onChatRoomClick(chatRoom)}
+                />
             ))}
         </div>
     )

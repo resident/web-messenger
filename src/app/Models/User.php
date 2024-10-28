@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -76,6 +77,36 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->belongsToMany(ChatRoom::class)
             ->using(ChatRoomUser::class)
             ->withPivot(['chat_room_key']);
+    }
+
+    /**
+     * Connection with 'Profile'
+     *
+     * @return HasOne
+     *  */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Connection with 'UserSettings'
+     *
+     * @return HasOne
+     *  */
+    public function settings(): HasOne
+    {
+        return $this->hasOne(UserSettings::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($user) {
+            $user->profile()->create();
+            $user->settings()->create();
+        });
     }
 
     public function avatar(): HasOne
