@@ -78,6 +78,36 @@ class User extends Authenticatable implements MustVerifyEmailContract
             ->withPivot(['chat_room_key']);
     }
 
+    /**
+     * Connection with 'Profile'
+     *
+     * @return HasOne
+     *  */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Connection with 'UserSettings'
+     *
+     * @return HasOne
+     *  */
+    public function settings(): HasOne
+    {
+        return $this->hasOne(UserSettings::class);
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($user) {
+            $user->profile()->create();
+            $user->settings()->create();
+        });
+    }
+
     public function avatar(): HasOne
     {
         return $this->hasOne(Avatar::class);
