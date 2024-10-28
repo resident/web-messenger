@@ -137,9 +137,12 @@ export default forwardRef(function ChatMessage({
             </Modal>
 
             <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full overflow-hidden`}>
-                <img src={ message.user.avatar && `${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
-                    alt="avatar"
-                    className="w-full h-full object-cover" />
+                {message.user.avatar && 
+                    (   <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
+                        alt="avatar"
+                        className="w-full h-full object-cover" />
+                    )
+                }
             </div>
 
             <div className={`

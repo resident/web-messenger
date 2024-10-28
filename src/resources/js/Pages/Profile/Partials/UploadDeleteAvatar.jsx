@@ -3,7 +3,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function UploadDeleteAvatar({ className = '', user }) {
     const { data, setData, post, errors, recentlySuccessful } = useForm({
@@ -13,6 +13,7 @@ export default function UploadDeleteAvatar({ className = '', user }) {
     const [uploading, setUploading] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const[deletionSuccess, setDeletionSuccess] = useState(false);
+    const fileInputRef = useRef(null);
 
     const submit = (e) => {
         e.preventDefault();
@@ -28,7 +29,10 @@ export default function UploadDeleteAvatar({ className = '', user }) {
             forceFormData: true,
             preserveScroll: true,
             preserveState: true,
-            onFinish: () => setUploading(false),
+            onFinish: () =>{ 
+                setUploading(false)
+                fileInputRef.current.value = '';
+            },
         });
     };
 
@@ -63,12 +67,12 @@ export default function UploadDeleteAvatar({ className = '', user }) {
                     </div>
                 )}
                 <div>
-                    <InputLabel htmlFor="avatar" value="Avatar" />
                     <input
                         type="file"
                         id="avatar"
                         className="mt-1 block w-full"
                         onChange={(e) => setData('avatar', e.target.files[0])}
+                        ref={fileInputRef}
                     />
                     <InputError className="mt-2" message={errors.avatar} />
                 </div>
