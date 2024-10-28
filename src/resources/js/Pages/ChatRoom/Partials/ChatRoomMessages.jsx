@@ -5,9 +5,9 @@ import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import InputError from "@/Components/InputError.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
-import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import { useContext, useEffect, useRef, useState } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
+import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import {useContext, useEffect, useRef, useState} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
@@ -16,7 +16,6 @@ import RecordAudioMessage from "./RecordAudioMessage";
 export default function ChatRoomMessages({ ...props }) {
     const {
         user,
-        userPublicKey,
         userPrivateKey,
         chatRooms,
     } = useContext(ApplicationContext);
@@ -82,7 +81,9 @@ export default function ChatRoomMessages({ ...props }) {
 
     useEffect(() => {
         if (userPrivateKey) {
-            ChatRoom.decryptChatRoomKey(userPrivateKey, chatRoom.pivot.chat_room_key).then(chatRoomKey => {
+            const chatRoomKeyEnc = chatRoom.users.find(u => u.id === user.id).pivot.chat_room_key;
+
+            ChatRoom.decryptChatRoomKey(userPrivateKey, chatRoomKeyEnc).then(chatRoomKey => {
                 setChatRoomKey(chatRoomKey);
             });
         } else {
