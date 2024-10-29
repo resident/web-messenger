@@ -23,7 +23,7 @@ final class ChatRoomMessageRepository
             ->when($count !== null, fn($q) => $q->take($count))
             ->when($startId !== null, fn($q) => $q->where('id', '<', $startId))
             ->orderByDesc('id')
-            ->with(['user', 'attachments'])
+            ->with(['user.avatar', 'attachments'])
             ->get();
 
         return $results->reverse()->values();

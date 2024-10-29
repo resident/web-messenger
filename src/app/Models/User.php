@@ -107,4 +107,9 @@ class User extends Authenticatable implements MustVerifyEmailContract
             $user->settings()->create();
         });
     }
+
+    public function avatar(): HasOne
+    {
+        return $this->hasOne(Avatar::class);
+    }
 }

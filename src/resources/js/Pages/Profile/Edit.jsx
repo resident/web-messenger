@@ -5,6 +5,7 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 import DropboxActivation from './Partials/DropboxActivation';
 import {Head} from '@inertiajs/react';
 import TwoFactoAuthForm from "@/Pages/Profile/Partials/TwoFactoAuthForm.jsx";
+import UploadDeleteAvatar from './Partials/UploadDeleteAvatar';
 
 export default function Edit({auth, mustVerifyEmail, status}) {
     return (
@@ -15,6 +16,10 @@ export default function Edit({auth, mustVerifyEmail, status}) {
             <Head title="Profile"/>
 
             <div className="p-3 max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                    <UploadDeleteAvatar className="max-w-xl" user={auth.user}/>
+                </div>
+
                 <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                     <UpdateProfileInformationForm
                         mustVerifyEmail={mustVerifyEmail}

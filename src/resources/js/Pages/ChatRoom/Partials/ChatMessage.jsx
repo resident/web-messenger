@@ -25,12 +25,22 @@ export default forwardRef(function ChatMessage({
 
     const messageRef = ref ? ref : useRef();
 
+    const [userAvatar, setUserAvatar] = useState(message.user.avatar);
+    const [userAvatarPath, setUserAvatarPath] = useState('');
     const [createdAt, setCreatedAt] = useState({});
     const [showForwardingModal, setShowForwardingModal] = useState(false);
     const [forwardToChatRoom, setForwardToChatRoom] = useState(null);
     const [messageForwarding, setMessageForwarding] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    useEffect(() => {
+        const avatarsStorage = import.meta.env.VITE_AVATARS_STORAGE;
+
+        if (avatarsStorage && userAvatar) {
+            setUserAvatarPath(`${avatarsStorage}/${userAvatar.path}`);
+        }
+    }, [userAvatar]);
 
     useEffect(() => {
         const date = new Date(message.created_at);
@@ -126,7 +136,14 @@ export default forwardRef(function ChatMessage({
                 }
             </Modal>
 
-            <div className={`min-w-12 min-h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full`}></div>
+            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full overflow-hidden`}>
+                {message.user.avatar && 
+                    (   <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
+                        alt="avatar"
+                        className="w-full h-full object-cover" />
+                    )
+                }
+            </div>
 
             <div className={`
                 rounded-md p-3 break-words
@@ -167,7 +184,6 @@ export default forwardRef(function ChatMessage({
                         ))}
                     </div>
                 }
-
 
                 <div className={`
                     text-xs font-light text-right
