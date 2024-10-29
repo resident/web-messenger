@@ -32,7 +32,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         if ($user) {
-            $user->load('settings:user_id,safe_view_is_on');
+            $user->load(['settings:user_id,safe_view_is_on', 'avatar']);
         }
 
         return [
