@@ -9,6 +9,7 @@ import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
 import UserStatusTracker from "@/Components/UserStatusTracker.jsx";
 import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 import LoadChatRooms from "@/Components/LoadChatRooms.jsx";
+import UserCalls from "@/Components/UserCalls.jsx";
 
 export default function Authenticated({user, header, children}) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -19,6 +20,7 @@ export default function Authenticated({user, header, children}) {
     const [isInactiveNow, setIsInactiveNow] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
     const [safeViewIsOn, setSafeViewIsOn] = useState(user.settings.safe_view_is_on);
+    const [outputCall, setOutputCall] = useState(null);
 
     useEffect(() => {
         Echo.registerAxiosRequestInterceptor();
@@ -35,6 +37,7 @@ export default function Authenticated({user, header, children}) {
                 isInactiveNow, setIsInactiveNow,
                 sessionLocked, setSessionLocked,
                 safeViewIsOn, setSafeViewIsOn,
+                outputCall, setOutputCall,
             }}>
                 <SyncUserRsaKeys/>
                 <LoadChatRooms/>
@@ -42,6 +45,7 @@ export default function Authenticated({user, header, children}) {
                 <InactivityTracker/>
                 <VisibilityTracker/>
                 <UserStatusTracker/>
+                <UserCalls/>
 
                 <div className="max-w-7xl mx-auto text-gray-900">
                     <div
