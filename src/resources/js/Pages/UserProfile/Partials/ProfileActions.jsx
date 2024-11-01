@@ -1,4 +1,4 @@
-import {ChatBubbleOvalLeftIcon} from "@heroicons/react/24/outline/index.js";
+import {ChatBubbleOvalLeftIcon, PhoneIcon, VideoCameraIcon} from "@heroicons/react/24/outline/index.js";
 import {router, useForm} from "@inertiajs/react";
 import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
@@ -6,7 +6,7 @@ import {useContext, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 
 export default function ProfileActions({auth, user}) {
-    const {chatRooms} = useContext(ApplicationContext);
+    const {chatRooms, setOutputCall} = useContext(ApplicationContext);
 
     const [isSelfProfile] = useState(auth.user.id === user.id);
 
@@ -49,12 +49,40 @@ export default function ProfileActions({auth, user}) {
         });
     };
 
+    const makeCall = (type) => {
+        setOutputCall({
+            fromUser: auth.user,
+            toUser: user,
+            type: type,
+        });
+    };
+
+    const onAudioCallClick = async () => {
+        makeCall('audio');
+    };
+
+    const onVideoCallClick = async () => {
+        makeCall('video');
+    };
+
     return (
         <div className={`my-3 flex gap-2 ${isSelfProfile && 'hidden'}`}>
             <div className={`rounded-full p-2 hover:bg-gray-200 hover:cursor-pointer`}
                  onClick={onChatClick}
             >
                 <ChatBubbleOvalLeftIcon className={`size-8`}/>
+            </div>
+
+            <div className={`rounded-full p-2 hover:bg-gray-200 hover:cursor-pointer`}
+                 onClick={onAudioCallClick}
+            >
+                <PhoneIcon className={`size-8`}/>
+            </div>
+
+            <div className={`rounded-full p-2 hover:bg-gray-200 hover:cursor-pointer`}
+                 onClick={onVideoCallClick}
+            >
+                <VideoCameraIcon className={`size-8`}/>
             </div>
         </div>
     );

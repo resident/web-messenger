@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Services\ProfileService;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function (User $user, int $id): bool {
@@ -20,5 +19,9 @@ Broadcast::channel('chat-rooms.{userId}', function (User $user, int $userId): bo
 
 // Використовується користувачем для оновлення свого статусу та отримання статусу інших
 Broadcast::channel('user-status.{userId}', function (User $user, int $id): bool {
+    return $user->id === $id;
+});
+
+Broadcast::channel('user-call.{userId}', function (User $user, int $id): bool {
     return $user->id === $id;
 });

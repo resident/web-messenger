@@ -4,6 +4,7 @@ use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
+use App\Http\Controllers\UserCallController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UserSettingsController;
@@ -45,6 +46,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/user/settings', [UserSettingsController::class, 'update'])->name('user-settings.update');
 
     Route::get('/user/profile/{user}', [UserProfileController::class, 'show'])->name('user-profile.show');
+
+    Route::post('/user/call/{fromUser}/{toUser}/sdp-description', [UserCallController::class, 'sdpDescription'])
+        ->name('user-call.sdp-description');
+
+    Route::post('/user/call/{user}/ice-candidate', [UserCallController::class, 'iceCandidate'])
+        ->name('user-call.ice-candidate');
+
+    Route::post('/user/call/{user}/end-call', [UserCallController::class, 'endCall'])
+        ->name('user-call.end-call');
 });
 
 require __DIR__ . '/auth.php';
