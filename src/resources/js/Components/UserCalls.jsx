@@ -79,8 +79,6 @@ export default function () {
 
                 await peerConnectionRef.current.setLocalDescription(offer);
 
-                console.log('offer description', {offer});
-
                 await sendSdpDescription(outputCall.fromUser, outputCall.toUser, outputCall.type, offer);
             });
         }
@@ -102,8 +100,6 @@ export default function () {
 
 
     const handleOffer = async (offer) => {
-        console.log('handleOffer() called')
-
         setAnswered(false);
 
         offerRef.current = offer;
@@ -112,8 +108,6 @@ export default function () {
     };
 
     const handleAnswer = async (answer) => {
-        console.log('handleAnswer() called')
-
         try {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
 
@@ -140,9 +134,6 @@ export default function () {
     };
 
     const onSdpDescription = async (e) => {
-        console.log('onSdpDescription called');
-        console.log('e', e);
-
         setCallMediaType(e.mediaType);
 
         remoteUserRef.current = e.fromUser;
@@ -161,9 +152,6 @@ export default function () {
     };
 
     const onIceCandidate = async (e) => {
-        console.log('onIceCandidate called');
-        console.log('e', e);
-
         await handleCandidate(e.candidate);
     };
 
@@ -184,16 +172,11 @@ export default function () {
 
         peerConnectionRef.current.onicecandidate = (event) => {
             if (event.candidate) {
-                console.log('candidate', {candidate: event.candidate})
-
                 sendIceCandidate(remoteUserRef.current, event.candidate);
             }
         };
 
         peerConnectionRef.current.ontrack = (event) => {
-            console.log('peerConnection.current.ontrack');
-            console.log('event', event)
-
             const [remoteStream] = event.streams;
 
             remoteStreamRef.current = remoteStream;
@@ -245,8 +228,6 @@ export default function () {
         setOutputCall(null);
 
         closeCallWindow();
-
-        console.log("Call ended");
     };
 
     const onAcceptCall = async () => {
