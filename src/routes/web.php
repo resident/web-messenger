@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RotateKeysController;
@@ -26,6 +27,11 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/avatar/update', [AvatarController::class, 'store'])->name('avatar.update');
     Route::delete('/avatar/delete', [AvatarController::class, 'delete'])->name('avatar.delete');
+
+    Route::get('/contact/contacts', [ContactController::class, 'getAllContacts'])->name('contact.contacts');
+    Route::get('/contact/index', [ContactController::class, 'index'])->name('contact.show');
+    Route::post('/contact/add', [ContactController::class, 'store'])->name('contact.add');
+    Route::delete('/contact/delete', [ContactController::class, 'delete'])->name('contact.delete');
 
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
 
