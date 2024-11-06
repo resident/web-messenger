@@ -112,4 +112,12 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->hasOne(Avatar::class);
     }
+
+    /**
+     * Get the users this user has added as contacts.
+     */
+    public function contacts()
+    {
+        return $this->belongsToMany(User::class, 'contacts', 'user_id', 'contact_id');
+    }
 }

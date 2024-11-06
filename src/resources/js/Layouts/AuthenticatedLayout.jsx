@@ -141,6 +141,14 @@ export default function Authenticated({user, header, children}) {
                                                 Create Chat
                                             </ResponsiveNavLink>
                                         </div>
+                                        
+                                        <div className="space-y-1">
+                                            <ResponsiveNavLink href={route('contact.show')}
+                                                               active={route().current('contscts.show')}
+                                            >
+                                                Contacts
+                                            </ResponsiveNavLink>
+                                        </div>
 
                                         <div>
 

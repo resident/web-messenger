@@ -24,6 +24,10 @@ class DeleteUserFiles implements ShouldQueue
     public function handle(UserDeleted $event): void
     {
         $directory = 'attachments/' . $event->user->id;
+        
+        if($event->user->avatar){
+            Storage::delete("public/avatars/{$event->user->avatar->path}");
+        }
 
         if (Storage::directoryExists($directory)) {
             Storage::deleteDirectory($directory);

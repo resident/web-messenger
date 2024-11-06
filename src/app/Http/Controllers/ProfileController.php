@@ -37,7 +37,6 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        Storage::delete("public/avatars/{$user->avatar->path}");
 
         Auth::logout();
 
