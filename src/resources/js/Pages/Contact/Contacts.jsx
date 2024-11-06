@@ -30,7 +30,7 @@ export default function Contacts({ auth }) {
             user={auth.user}
             header="Contacts"
         >
-            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg h-full">
+            <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg h-full overflow-y-auto">
                 <div className="flex justify-end">
                     <PrimaryButton onClick={() => setShowModal(true)}>Add Contact</PrimaryButton>
                 </div>
@@ -41,7 +41,7 @@ export default function Contacts({ auth }) {
                     onAdded={setContactAdded}
                 />
 
-                <div className="flex flex-col gap-4 overflow-y-auto" >
+                <div className="flex flex-col gap-4" >
                     {contacts.length > 0 ? (
                         contacts.map(contact => (
                             <ContactPreview
