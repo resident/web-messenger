@@ -39,6 +39,7 @@ export default function Contacts({ auth }) {
                     showModal={showModal}
                     setShowModal={setShowModal}
                     onAdded={setContactAdded}
+                    auth = {auth}
                 />
 
                 <div className="flex flex-col gap-4" >

@@ -5,13 +5,15 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import axios from 'axios';
 
-export default function CreateContact({ showModal, setShowModal, onAdded }) {
+export default function CreateContact({ auth, showModal, setShowModal, onAdded }) {
     const [newContactName, setNewContactName] = useState('');
 
     const addContact = async (newContact) => {
         try {
-            await axios.post(route('contact.add'), newContact);
-            onAdded(prev => !prev);
+            if(auth.user.name != newContact.contact_name ){
+                await axios.post(route('contact.add'), newContact);
+                onAdded(prev => !prev);
+            }
         } catch (error) {
             console.error('Error adding contact:', error);
         }
