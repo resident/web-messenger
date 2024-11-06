@@ -41,7 +41,7 @@ export default function Contacts({ auth }) {
                     onAdded={setContactAdded}
                 />
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 overflow-y-auto" >
                     {contacts.length > 0 ? (
                         contacts.map(contact => (
                             <ContactPreview
