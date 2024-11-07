@@ -42,7 +42,7 @@ final class ContactController extends Controller
             return response()->json(['success' => 'Contact added successfully']);
         }
 
-        return response()->json(['message' => 'User is already a contact']);
+        return response()->json(['error' => 'User is already a contact'], 404);
     }
 
     public function delete(Request $request)

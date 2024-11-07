@@ -15,6 +15,7 @@ export default function Contacts({ auth }) {
             try {
                 const response = await axios.get(route('contact.contacts'));
                 setContacts(response.data);
+                setShowModal(false);
             } catch (error) {
                 console.error('Error fetching contacts:', error);
             }
