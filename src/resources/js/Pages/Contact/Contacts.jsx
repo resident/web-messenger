@@ -29,7 +29,7 @@ export default function Contacts({ auth }) {
     };
 
     const filteredContacts = contacts.filter(contact =>
-        contact.name.toLowerCase().includes(filterQuery.toLowerCase())
+        contact.name.includes(filterQuery)
     );
 
     return (
