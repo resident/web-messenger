@@ -4,11 +4,13 @@ import axios from 'axios';
 import ContactPreview from './Partials/ContactPreview';
 import PrimaryButton from '@/Components/PrimaryButton';
 import CreateContact from './Partials/CreateContact';
+import TextInput from '@/Components/TextInput';
 
 export default function Contacts({ auth }) {
     const [contacts, setContacts] = useState([]);
     const [contactAdded, setContactAdded] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [filterQuery, setFilterQuery] = useState('');
 
     useEffect(() => {
         (async () => {
@@ -26,6 +28,10 @@ export default function Contacts({ auth }) {
         setContacts((prevContacts) => prevContacts.filter(contact => contact.id !== contactId));
     };
 
+    const filteredContacts = contacts.filter(contact =>
+        contact.name.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -36,16 +42,25 @@ export default function Contacts({ auth }) {
                     <PrimaryButton onClick={() => setShowModal(true)}>Add Contact</PrimaryButton>
                 </div>
 
+                <div className='my-2 sm:w-full md:w-2/4 lg:w-1/4'>
+                    <TextInput
+                        placeholder='Filter contacts'
+                        className='w-full'
+                        value={filterQuery}
+                        onChange={e => setFilterQuery(e.target.value)} />
+                </div>
+
+
                 <CreateContact
                     showModal={showModal}
                     setShowModal={setShowModal}
                     onAdded={setContactAdded}
-                    auth = {auth}
+                    auth={auth}
                 />
 
                 <div className="flex flex-col gap-4" >
-                    {contacts.length > 0 ? (
-                        contacts.map(contact => (
+                    {filteredContacts.length > 0 ? (
+                        filteredContacts.map(contact => (
                             <ContactPreview
                                 key={contact.id}
                                 contact={contact}
