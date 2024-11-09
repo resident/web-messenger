@@ -7,9 +7,9 @@ import Dropbox from "@/Common/Dropbox.js";
 export default class SyncProviderFactory {
     static getAllDrivers() {
         return [
-            LocalStorageDriver,
-            BackendDriver,
-            DropboxDriver,
+            new LocalStorageDriver(),
+            new BackendDriver(),
+            new DropboxDriver(),
         ];
     }
 
@@ -23,7 +23,7 @@ export default class SyncProviderFactory {
 
         for (const driver of allDrivers) {
             if (allowedDriverNames.includes(driver.name)) {
-                allowedDrivers.push(new driver);
+                allowedDrivers.push(driver);
             }
         }
 

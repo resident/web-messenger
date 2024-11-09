@@ -17,7 +17,7 @@ cd /mnt/app || exit
 php artisan down
 
 if [[ "$composer_update" -eq 1 ]]; then
-    composer update --no-interaction --prefer-dist
+    composer install --no-interaction --prefer-dist
 fi
 
 php artisan migrate
@@ -32,7 +32,7 @@ php artisan queue:listen > deploy/logs/queue.log 2>&1 &
 php artisan schedule:work > deploy/logs/schedule.log 2>&1 &
 
 if [[ "$npm_update" -eq 1 ]]; then
-    npm update
+    npm install
 fi
 
 npm run dev > deploy/logs/npm_run_dev.log 2>&1 &
