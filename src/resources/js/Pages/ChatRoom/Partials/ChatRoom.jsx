@@ -119,7 +119,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
             className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
-            <div className={`min-w-12 min-h-12 mr-3 bg-lime-300 rounded-full relative`}>
+            <div className={`min-w-12 min-h-12 max-w-12 max-h-12 mr-3 bg-lime-300 rounded-full relative`}>
                 {chatRoom.users.length === 2 && (
                     <span
                         className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
