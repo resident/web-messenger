@@ -2,7 +2,7 @@ cd /mnt/app || exit
 
 php artisan down
 
-composer update --no-interaction --prefer-dist --optimize-autoloader --no-dev
+composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
 php artisan migrate
 php artisan cache:clear
@@ -16,7 +16,7 @@ php artisan reverb:start > deploy/logs/reverb.log 2>&1 &
 php artisan queue:listen > deploy/logs/queue.log 2>&1 &
 php artisan schedule:work > deploy/logs/schedule.log 2>&1 &
 
-npm update
-npm run build
+npm install
+npm run build > deploy/logs/npm_run_build.log 2>&1 &
 
 php artisan up
