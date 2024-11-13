@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Dto\ChatRoomMessageDto;
+use App\Enums\MessageStatusEnum;
 use App\Events\ChatRoomMessageRemoved;
 use App\Services\ChatRoomMessageAttachmentService;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,6 +26,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $message_iv
  * @property string $message_key
  * @property string $message_key_iv
+ * @property MessageStatusEnum $status
  * @property string $created_at
  * @property string $updated_at
  */
@@ -33,6 +35,13 @@ class ChatRoomMessage extends Model
     use HasFactory;
     use HasUuids;
     use Prunable;
+
+    protected function casts(): array
+    {
+        return [
+            'status' => MessageStatusEnum::class,
+        ];
+    }
 
     public function user(): BelongsTo
     {
@@ -47,6 +56,11 @@ class ChatRoomMessage extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(ChatRoomMessageAttachment::class);
+    }
+
+    public function seenBy(): HasMany
+    {
+        return $this->hasMany(ChatRoomMessageSeen::class, 'message_id');
     }
 
     /**

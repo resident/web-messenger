@@ -1,29 +1,36 @@
-import {forwardRef, useContext, useEffect, useRef, useState} from "react";
-import {ArrowUturnRightIcon, TrashIcon} from '@heroicons/react/24/solid'
+import { forwardRef, useContext, useEffect, useRef, useState } from "react";
+import { ArrowUturnRightIcon, TrashIcon, DocumentIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import ChatMessageAttachment from "@/Pages/ChatRoom/Partials/ChatMessageAttachment.jsx";
 import Modal from "@/Components/Modal.jsx";
 import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
-import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
-import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { ChatRoomContext } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import InputError from "@/Components/InputError.jsx";
-import {Link} from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import { CheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import CircularProgressBar from "@/Components/CircularProgressBar";
 
 export default forwardRef(function ChatMessage({
-                                                   className = '',
-                                                   message,
-                                                   self = false,
-                                                   onMessageRemoved = () => null,
-                                                   ...props
-                                               }, ref) {
-    const {userPrivateKey, safeViewIsOn} = useContext(ApplicationContext);
-    const {chatRoomKey} = useContext(ChatRoomContext);
+    className = '',
+    message,
+    self = false,
+    onMessageRemoved = () => null,
+    isPlaceholder = false,
+    errorPending = false,
+    uploadProgress = 0,
+    onRetrySend = () => null,
+    ...props
+}, ref) {
+    const { userPrivateKey, safeViewIsOn, userIsOnline } = useContext(ApplicationContext);
+    const { chatRoomKey } = useContext(ChatRoomContext);
 
     const messageRef = ref ? ref : useRef();
+    const observerRef = useRef();
 
     const [userAvatar, setUserAvatar] = useState(message.user.avatar);
     const [userAvatarPath, setUserAvatarPath] = useState('');
@@ -33,6 +40,13 @@ export default forwardRef(function ChatMessage({
     const [messageForwarding, setMessageForwarding] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    const [showSeenByModal, setShowSeenByModal] = useState(false);
+    const [seenByUsers, setSeenByUsers] = useState([]);
+
+    const [seenSent, setSeenSent] = useState(false);
+    const [isLoadingSeenByUsers, setIsLoadingSeenByUsers] = useState(false);
+    const [seenByError, setSeenByError] = useState(false);
 
     useEffect(() => {
         const avatarsStorage = import.meta.env.VITE_AVATARS_STORAGE;
@@ -47,14 +61,66 @@ export default forwardRef(function ChatMessage({
 
         setCreatedAt({
             date: date.toLocaleDateString(),
-            time: date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
+            time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
     }, []);
+
+    useEffect(() => {
+        if (self || isPlaceholder || errorPending || seenSent || !userIsOnline) {
+            return;
+        }
+
+        const createdAtDate = new Date(message.created_at);
+        const currentDate = new Date();
+
+        const daysDifference = Math.floor((currentDate - createdAtDate) / (1000 * 60 * 60 * 24));
+        if (message.status === "SEEN" && daysDifference >= 7) {
+            return;
+        }
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1,
+        };
+
+        const observerCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    axios.post(route('chat_rooms.messages.mark_as_seen', {
+                        chatRoom: message.chat_room_id,
+                        message: message.id,
+                    })).then(() => {
+                        setSeenSent(true);
+                    }).catch(error => {
+                    });
+
+                    observer.unobserve(entry.target);
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+        if (observerRef.current) {
+            observer.observe(observerRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current);
+            }
+        }
+    }, [observerRef.current, userIsOnline]);
 
     const removeMessage = () => {
         const userConfirmed = confirm('Are you sure?');
 
         if (!userConfirmed) return;
+
+        if (isPlaceholder && errorPending) {
+            onMessageRemoved();
+            return;
+        }
 
         axios.delete(route('chat_rooms.messages.destroy', {
             chatRoom: message.chat_room_id,
@@ -71,6 +137,9 @@ export default forwardRef(function ChatMessage({
     };
 
     const forwardMessage = async (toChatRoom) => {
+        if (isPlaceholder) {
+            return;
+        }
         setMessageForwarding(true);
 
         try {
@@ -100,6 +169,38 @@ export default forwardRef(function ChatMessage({
         }, 300);
     };
 
+    const handleStatusClick = () => {
+        if (message.status === 'SEEN') {
+            setShowSeenByModal(true);
+            setIsLoadingSeenByUsers(true);
+            fetchSeenByUsers();
+        }
+    }
+
+    const fetchSeenByUsers = async () => {
+        try {
+            const response = await axios.get(
+                route('chat_rooms.messages.get_seen_by', {
+                    chatRoom: message.chat_room_id,
+                    message: message.id
+                })
+            );
+            const sortedData = response.data.sort(
+                (a, b) => new Date(b.seen_at) - new Date(a.seen_at)
+            );
+            setSeenByUsers(sortedData);
+        } catch (error) {
+            setSeenByError("Failed to load data.");
+        } finally {
+            setIsLoadingSeenByUsers(false);
+        }
+    }
+
+    const formatSeenAt = (timestamp) => {
+        const date = new Date(timestamp);
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
     return (
         <div
             className={`
@@ -107,7 +208,16 @@ export default forwardRef(function ChatMessage({
                 ${self ? 'self-end' : 'self-start'}
                 ${className}
             `}
-            ref={messageRef}
+            ref={(el) => {
+                observerRef.current = el;
+                if (ref) {
+                    if (typeof ref === 'function') {
+                        ref(el);
+                    } else {
+                        ref.current = el;
+                    }
+                }
+            }}
         >
             <Modal
                 className={`p-3`}
@@ -116,13 +226,13 @@ export default forwardRef(function ChatMessage({
                 onClose={closeMessageForwardingModal}
             >
                 {forwardToChatRoom && <div>
-                    <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom}/>
+                    <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom} />
 
-                    <InputError message={error} className="my-2"/>
+                    <InputError message={error} className="my-2" />
 
                     <div className={`flex gap-2`}>
                         <PrimaryButton disabled={messageForwarding}
-                                       onClick={() => forwardMessage(forwardToChatRoom)}
+                            onClick={() => forwardMessage(forwardToChatRoom)}
                         >Forward</PrimaryButton>
 
                         <SecondaryButton onClick={closeMessageForwardingModal}>Cancel</SecondaryButton>
@@ -130,15 +240,68 @@ export default forwardRef(function ChatMessage({
 
                     {success && <div className={`mt-2 text-green-600`}>{success}</div>}
                 </div> || <ChatRooms
-                    onChatRoomClick={chatRoom => {
-                        setForwardToChatRoom(chatRoom);
-                    }}/>
+                        onChatRoomClick={chatRoom => {
+                            setForwardToChatRoom(chatRoom);
+                        }} />
                 }
             </Modal>
 
-            <div className={`w-12 h-12 mr-3 ${self ? 'bg-lime-300' : 'bg-yellow-300'} rounded-full overflow-hidden`}>
-                {message.user.avatar && 
-                    (   <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`} 
+            <Modal
+                className={`p-3 w-full sm:max-w-md`}
+                maxWidth="md"
+                show={showSeenByModal}
+                onClose={() => setShowSeenByModal(false)}
+            >
+                <div className="p-4">
+                    <h2 className="text-lg font-semibold mb-4">Seen by</h2>
+                    <hr />
+                    <div className="mt-4 h-64 sm:h-80 overflow-y-auto">
+                        {isLoadingSeenByUsers ? (
+                            <div className="space-y-4 mt-1">
+                                {[...Array(3)].map((_, index) => (
+                                    <div key={index} className="flex items-center space-x-4 animate-pulse">
+                                        <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+                                        <div className="flex-1 space-y-2 w-40">
+                                            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                                            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : seenByError ? (
+                            <div className="text-red-500">{seenByError}</div>
+                        ) : seenByUsers.length > 0 ? (
+                            seenByUsers.map((user) => (
+                                <div key={user.id} className="flex items-center mb-2">
+                                    <div className="w-12 h-12 mr-3 bg-yellow-300 rounded-full overflow-hidden">
+                                        {user.avatar &&
+                                            (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`}
+                                                alt="avatar"
+                                                className="w-full h-full object-cover" />
+                                            )}
+                                    </div>
+                                    <div>
+                                        <div>{user.name}</div>
+                                        <div className="text-xs text-gray-500">
+                                            <div className="relative mr-1 pr-5">
+                                                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-0" />
+                                                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-1" />
+                                            </div>
+                                            <span className="pl-6">{formatSeenAt(user.seen_at)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div>No data</div>
+                        )}
+                    </div>
+                </div>
+            </Modal>
+
+            <div className={`w-12 h-12 mr-3 ${errorPending ? 'bg-red-300' : (self ? 'bg-lime-300' : 'bg-yellow-300')} rounded-full overflow-hidden`}>
+                {message.user.avatar &&
+                    (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
                         alt="avatar"
                         className="w-full h-full object-cover" />
                     )
@@ -146,51 +309,90 @@ export default forwardRef(function ChatMessage({
             </div>
 
             <div className={`
-                rounded-md p-3 break-words
-                ${self ? 'bg-lime-300' : 'bg-yellow-300'}
+                rounded-md p-3 pb-2 break-words
+                ${errorPending ? 'bg-red-300' : (self ? 'bg-lime-300' : 'bg-yellow-300')}
             `}>
                 <div className={`flex justify-between`}>
                     <div className={`
                     font-bold
-                    ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
+                    ${errorPending ? 'text-red-700' : (self ? 'text-lime-700 ' : 'text-yellow-700 ')}
                 `}><Link href={route('user-profile.show', message.user.id)}>{message.user.name}</Link></div>
 
                     <div className={`flex gap-0.5`}>
-                        <ArrowUturnRightIcon
-                            className={`
+                        {!isPlaceholder && (
+                            <ArrowUturnRightIcon
+                                className={`
                             size-4 opacity-0 group-hover:opacity-100 cursor-pointer
                             ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
                         `}
-                            onClick={() => setShowForwardingModal(true)}
-                        />
-                        <TrashIcon
-                            className={`
+                                onClick={() => setShowForwardingModal(true)}
+                            />
+                        )}
+                        {(!isPlaceholder || (isPlaceholder && errorPending)) && (
+                            <TrashIcon
+                                className={`
                             size-4 opacity-0 group-hover:opacity-100 cursor-pointer
-                            ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
+                            ${errorPending ? 'text-gray-400 hover:text-white' : (self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 ')}
                         `}
-                            onClick={removeMessage}
-                        />
+                                onClick={removeMessage}
+                            />
+                        )}
                     </div>
                 </div>
 
-                <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'}`}>
+                <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'} pr-2`}>
                     {message.message}
                 </div>
 
                 {message.attachments.length > 0 &&
                     <div className={`flex flex-wrap my-2 ${safeViewIsOn && 'blur-lg group-hover:blur-0'}`}>
-                        {message.attachments.map((attachment, i) => (
-                            <ChatMessageAttachment key={i} attachment={attachment}/>
-                        ))}
+                        {isPlaceholder ? (
+                            <div className={`relative ${errorPending ? 'bg-red-100' : 'bg-blue-100'} rounded-md p-4 flex items-center w-full`}>
+                                <DocumentIcon className="w-6 h-6 text-gray-500 mr-2" />
+                                <span className="text-gray-700 mr-2">Attachments...</span>
+                                <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
+                                    {errorPending ? (
+                                        <ExclamationCircleIcon className="w-6 h-6" />
+                                    ) : (
+                                        <CircularProgressBar className="w-6 h-6" progress={uploadProgress} size={24} strokeWidth={4} />
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            message.attachments.map((attachment, i) => (
+                                <ChatMessageAttachment key={i} attachment={attachment} />
+                            ))
+                        )}
                     </div>
                 }
 
                 <div className={`
-                    text-xs font-light text-right
-                    ${self ? 'text-lime-700 ' : 'text-yellow-700 '}
+                    text-xs font-light text-right flex items-center justify-end
+                    ${self ? (errorPending ? 'text-red-700' : 'text-lime-700 ') : 'text-yellow-700 '}
                 `}>
                     <span className={`opacity-0 group-hover:opacity-100 mr-1`}>{createdAt.date}</span>
                     <span>{createdAt.time}</span>
+
+                    {self && (
+                        errorPending ? (
+                            <ArrowPathIcon
+                                className="text-white w-4 h-4 ml-2 cursor-pointer"
+                                onClick={onRetrySend}
+                            />
+                        ) : isPlaceholder ? (
+                            <div className="w-4 h-4 ml-2 border-2 border-t-transparent border-l-transparent border-gray-700 rounded-full animate-spin ml-2"></div>
+                        ) : (
+                            <div onClick={handleStatusClick} className="cursor-default w-4 h-4 ml-1">
+                                {message.status === 'SENT' ? (
+                                    <CheckIcon className="text-gray-500 w-full h-full" />
+                                ) : message.status === 'SEEN' ? (
+                                    <div className="relative w-full h-full cursor-pointer ml-1">
+                                        <CheckIcon className="text-blue-500 w-full h-full absolute top-0 left-0" />
+                                        <CheckIcon className="text-blue-500 w-full h-full absolute top-0 left-1" />
+                                    </div>
+                                ) : null}
+                            </div>
+                        ))}
                 </div>
             </div>
         </div>

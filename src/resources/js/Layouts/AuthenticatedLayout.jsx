@@ -1,9 +1,9 @@
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import {Link} from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
-import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
+import { ApplicationContextProvider } from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
 import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
 import UserStatusTracker from "@/Components/UserStatusTracker.jsx";
@@ -11,7 +11,7 @@ import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 import LoadChatRooms from "@/Components/LoadChatRooms.jsx";
 import UserCalls from "@/Components/UserCalls.jsx";
 
-export default function Authenticated({user, header, children}) {
+export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
     const [userPublicKey, setUserPublicKey] = useState(null);
@@ -19,6 +19,7 @@ export default function Authenticated({user, header, children}) {
     const [isInactive, setIsInactive] = useState(false);
     const [isInactiveNow, setIsInactiveNow] = useState(false);
     const [sessionLocked, setSessionLocked] = useState(false);
+    const [userIsOnline, setUserIsOnline] = useState(false);
     const [safeViewIsOn, setSafeViewIsOn] = useState(user.settings.safe_view_is_on);
     const [outputCall, setOutputCall] = useState(null);
 
@@ -36,16 +37,17 @@ export default function Authenticated({user, header, children}) {
                 isInactive, setIsInactive,
                 isInactiveNow, setIsInactiveNow,
                 sessionLocked, setSessionLocked,
+                userIsOnline, setUserIsOnline,
                 safeViewIsOn, setSafeViewIsOn,
                 outputCall, setOutputCall,
             }}>
-                <SyncUserRsaKeys/>
-                <LoadChatRooms/>
-                <RotateUserRsaKeys/>
-                <InactivityTracker/>
-                <VisibilityTracker/>
-                <UserStatusTracker/>
-                <UserCalls/>
+                <SyncUserRsaKeys />
+                <LoadChatRooms />
+                <RotateUserRsaKeys />
+                <InactivityTracker />
+                <VisibilityTracker />
+                <UserStatusTracker />
+                <UserCalls />
 
                 <div className="max-w-7xl mx-auto text-gray-900">
                     <div
@@ -59,7 +61,7 @@ export default function Authenticated({user, header, children}) {
                         {/* Logo, Header, Menu Button */}
                         <div className={`flex gap-2 p-2 sm:p-0 justify-between mb-2`}>
                             <Link href="/">
-                                <ApplicationLogo className={`block h-9 w-auto fill-current text-white`}/>
+                                <ApplicationLogo className={`block h-9 w-auto fill-current text-white`} />
                             </Link>
 
                             {header &&
@@ -85,7 +87,7 @@ export default function Authenticated({user, header, children}) {
                                                 `}
                                 >
                                     <svg className="h-6 w-6" stroke="currentColor" fill="none"
-                                         viewBox="0 0 24 24">
+                                        viewBox="0 0 24 24">
                                         <path
                                             className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
                                             strokeLinecap="round"
@@ -128,7 +130,7 @@ export default function Authenticated({user, header, children}) {
                                     <nav>
                                         <div className="space-y-1">
                                             <ResponsiveNavLink href={route('main')}
-                                                               active={route().current('main')}
+                                                active={route().current('main')}
                                             >
                                                 Main
                                             </ResponsiveNavLink>
@@ -136,15 +138,15 @@ export default function Authenticated({user, header, children}) {
 
                                         <div className="space-y-1">
                                             <ResponsiveNavLink href={route('chat_rooms.create')}
-                                                               active={route().current('chat_rooms.create')}
+                                                active={route().current('chat_rooms.create')}
                                             >
                                                 Create Chat
                                             </ResponsiveNavLink>
                                         </div>
-                                        
+
                                         <div className="space-y-1">
                                             <ResponsiveNavLink href={route('contact.show')}
-                                                               active={route().current('contscts.show')}
+                                                active={route().current('contscts.show')}
                                             >
                                                 Contacts
                                             </ResponsiveNavLink>
@@ -162,7 +164,7 @@ export default function Authenticated({user, header, children}) {
                                                 </ResponsiveNavLink>
 
                                                 <ResponsiveNavLink method="post" href={route('logout')}
-                                                                   as="button"
+                                                    as="button"
                                                 >
                                                     Log Out
                                                 </ResponsiveNavLink>

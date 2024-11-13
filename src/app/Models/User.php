@@ -79,6 +79,14 @@ class User extends Authenticatable implements MustVerifyEmailContract
     }
 
     /**
+     * Get the users this user has added as contacts.
+     */
+    public function contacts()
+    {
+        return $this->belongsToMany(User::class, 'contacts', 'user_id', 'contact_id');
+    }
+
+    /**
      * Connection with 'Profile'
      *
      * @return HasOne
@@ -98,6 +106,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasOne(UserSettings::class);
     }
 
+    public function avatar(): HasOne
+    {
+        return $this->hasOne(Avatar::class);
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -106,18 +119,5 @@ class User extends Authenticatable implements MustVerifyEmailContract
             $user->profile()->create();
             $user->settings()->create();
         });
-    }
-
-    public function avatar(): HasOne
-    {
-        return $this->hasOne(Avatar::class);
-    }
-
-    /**
-     * Get the users this user has added as contacts.
-     */
-    public function contacts()
-    {
-        return $this->belongsToMany(User::class, 'contacts', 'user_id', 'contact_id');
     }
 }

@@ -8,6 +8,7 @@ export default function UserStatusTracker() {
         isInactiveNow,
         sessionLocked,
         pageIsHidden,
+        setUserIsOnline
     } = useContext(ApplicationContext);
 
     const userId = usePage().props.auth.user.id;
@@ -16,6 +17,7 @@ export default function UserStatusTracker() {
 
     useEffect(() => {
         const shouldBeOnline = !isInactive && !sessionLocked && !pageIsHidden && !isInactiveNow;
+        setUserIsOnline(shouldBeOnline);
         if (shouldBeOnline && !isConnectedRef.current) {
             Echo.private(`user-status.${userId}`);
             isConnectedRef.current = true;

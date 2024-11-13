@@ -6,7 +6,9 @@ namespace App\Services;
 
 use App\Dto\ChatRoomMessageAttachmentDto;
 use App\Dto\ChatRoomMessageDto;
+use App\Enums\MessageStatusEnum;
 use App\Models\ChatRoomMessage;
+use App\Models\ChatRoomMessageSeen;
 use App\Repositories\ChatRoomMessageRepository;
 use Illuminate\Support\Facades\DB;
 
@@ -15,8 +17,7 @@ final readonly class ChatRoomMessageService
     public function __construct(
         public ChatRoomMessageRepository $repository,
         public ChatRoomMessageAttachmentService $attachmentService
-    ) {
-    }
+    ) {}
 
     /**
      * @param ChatRoomMessageDto $messageDto
@@ -46,5 +47,23 @@ final readonly class ChatRoomMessageService
             $this->attachmentService->deleteAttachments($message);
             return $this->repository->deleteMessage($message);
         });
+    }
+
+    public function updateMessageStatus(ChatRoomMessage $message, MessageStatusEnum $status): bool
+    {
+        if ($message->status !== $status) {
+            return $this->repository->updateMessageStatus($message, $status);
+        }
+        return false;
+    }
+
+    public function markAsSeen(string $messageId, int $userId, bool $seen): ChatRoomMessageSeen
+    {
+        return $this->repository->createOrUpdateMessageSeen($messageId, $userId, $seen);
+    }
+
+    public function getSeenByUsers(string $messageId)
+    {
+        return $this->repository->getSeenByUsers($messageId);
     }
 }

@@ -41,5 +41,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     )
         ->whereUuid('attachment')
         ->name('chat_rooms.messages.download_attachment');
-});
 
+    /*
+    Route::post('/chat-rooms/{chatRoom}/messages/delivered', [ChatRoomMessagesController::class, 'markAsDelivered'])
+        ->whereUuid('chatRoom')
+        ->name('chat_rooms.messages.mark_as_delivered');
+    */
+
+    Route::post('/chat-rooms/{chatRoom}/messages/{message}/seen', [ChatRoomMessagesController::class, 'markAsSeen'])
+        ->whereUuid(['chatRoom', 'message'])
+        ->name('chat_rooms.messages.mark_as_seen');
+
+    Route::get('/chat-rooms/{chatRoom}/messages/{message}/seen-by', [ChatRoomMessagesController::class, 'getSeenBy'])
+        ->whereUuid(['chatRoom', 'message'])
+        ->name('chat_rooms.messages.get_seen_by');
+});

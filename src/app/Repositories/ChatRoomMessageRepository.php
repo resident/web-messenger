@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Dto\ChatRoomMessageDto;
+use App\Enums\MessageStatusEnum;
 use App\Models\ChatRoomMessage;
+use App\Models\ChatRoomMessageSeen;
 use Illuminate\Database\Eloquent\Collection;
 
 final class ChatRoomMessageRepository
@@ -37,5 +39,27 @@ final class ChatRoomMessageRepository
     public function deleteMessage(ChatRoomMessage $message): ?bool
     {
         return $message->delete();
+    }
+
+    public function updateMessageStatus(ChatRoomMessage $message, MessageStatusEnum $status): bool
+    {
+        $message->status = $status;
+        return $message->save();
+    }
+
+    public function createOrUpdateMessageSeen(string $messageId, int $userId, bool $seen): ChatRoomMessageSeen
+    {
+        return
+            ChatRoomMessageSeen::updateOrCreate(
+                ['message_id' => $messageId, 'user_id' => $userId],
+                ['seen' => $seen]
+            );
+    }
+
+    public function getSeenByUsers(string $messageId)
+    {
+        return ChatRoomMessageSeen::with('user')
+            ->where('message_id', $messageId)
+            ->get();
     }
 }
