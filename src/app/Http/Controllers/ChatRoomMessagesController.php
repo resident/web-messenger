@@ -50,16 +50,6 @@ class ChatRoomMessagesController extends Controller
         StoreChatRoomMessageRequest $request,
         ChatRoomMessageService $messageService,
     ): JsonResponse {
-        if ($request->user()->id == 1 && !$request->session()->has('failed_message')) {
-            $request->session()->put('failed_message', true);
-
-            sleep(5);
-
-            return response()->json([
-                'error' => 'Failed to send the message. Please try again.',
-            ], 500);
-        }
-
         $messageDto = ChatRoomMessageDto::fromArray([
             'user_id' => $request->user()->id,
             'original_user_id' => $request->user()->id,

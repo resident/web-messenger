@@ -30,7 +30,7 @@ export default function Main({ auth, ...props }) {
                     }} />
                 </div>
 
-                <div className={`bg-gradient-to-r from-green-400 to-blue-500`}>
+                <div className={`bg-white`}>
                     {chatRoom &&
                         <div>
                             <div className={`p-2 flex justify-between bg-gray-200`}>

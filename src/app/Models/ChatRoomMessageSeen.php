@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Dto\ChatRoomMessageDto;
-use App\Enums\MessageStatusEnum;
-use App\Events\ChatRoomMessageRemoved;
-use App\Services\ChatRoomMessageAttachmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property string $id
@@ -29,6 +23,7 @@ class ChatRoomMessageSeen extends Model
 {
     use HasFactory;
     use HasUuids;
+    use MassPrunable;
 
     protected $fillable = [
         'message_id',
@@ -51,5 +46,15 @@ class ChatRoomMessageSeen extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the prunable model query.
+     */
+    public function prunable(): Builder
+    {
+        return static::whereHas('message', function ($query) {
+            $query->where('created_at', '<=', now()->subDays(7));
+        });
     }
 }

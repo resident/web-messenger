@@ -23,6 +23,10 @@ export default function Authenticated({ user, header, children }) {
     const [safeViewIsOn, setSafeViewIsOn] = useState(user.settings.safe_view_is_on);
     const [outputCall, setOutputCall] = useState(null);
 
+    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [contextMenuTarget, setContextMenuTarget] = useState(null);
+
     useEffect(() => {
         Echo.registerAxiosRequestInterceptor();
     }, []);
@@ -40,6 +44,9 @@ export default function Authenticated({ user, header, children }) {
                 userIsOnline, setUserIsOnline,
                 safeViewIsOn, setSafeViewIsOn,
                 outputCall, setOutputCall,
+                contextMenuVisible, setContextMenuVisible,
+                contextMenuPosition, setContextMenuPosition,
+                contextMenuTarget, setContextMenuTarget,
             }}>
                 <SyncUserRsaKeys />
                 <LoadChatRooms />

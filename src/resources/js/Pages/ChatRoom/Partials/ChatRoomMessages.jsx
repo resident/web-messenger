@@ -5,7 +5,7 @@ import InputError from "@/Components/InputError.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
 import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
@@ -242,10 +242,9 @@ export default function ChatRoomMessages({ ...props }) {
             }).catch(error => {
                 setPendingMessages(prev =>
                     prev.map((msg) =>
-                        msg.id === messageData.id ? { ...msg, errorPending: true } : msg
+                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
                     )
                 );
-                setErrors({ ...errors, message: error.message });
             }).finally(() => {
                 setSendingMessage(false);
             });
@@ -275,7 +274,7 @@ export default function ChatRoomMessages({ ...props }) {
             status: 'PENDING',
             created_at: new Date().toISOString(),
             isPlaceholder: true,
-            errorPending: false,
+            errorPending: null,
             uploadProgress: 0,
         };
 
@@ -290,10 +289,9 @@ export default function ChatRoomMessages({ ...props }) {
     const retrySendMessage = async (messageData) => {
         setPendingMessages(prev =>
             prev.map(msg =>
-                msg.id === messageData.id ? { ...msg, errorPending: false, uploadProgress: 0 } : msg
+                msg.id === messageData.id ? { ...msg, errorPending: null, uploadProgress: 0 } : msg
             )
         );
-
         setSendingMessage(true);
 
         await performSendMessage(messageData);
@@ -386,6 +384,65 @@ export default function ChatRoomMessages({ ...props }) {
         }
     })
 
+    const computedMessages = useMemo(() => {
+        return [...messages, ...pendingMessages].map((message, i, array) => {
+            const prevMessage = i > 0 ? array[i - 1] : null;
+            const nextMessage = i < array.length - 1 ? array[i + 1] : null;
+
+            const isStartOfGroup = (message, prevMessage) => {
+                if (!prevMessage) return true;
+                if (prevMessage.user_id !== message.user_id) return true;
+                const timeDiff = new Date(message.created_at) - new Date(prevMessage.created_at);
+                return timeDiff > 5 * 60 * 1000;
+            };
+
+            const isEndOfGroup = (message, nextMessage) => {
+                if (!nextMessage) return true;
+                if (nextMessage.user_id !== message.user_id) return true;
+                const timeDiff = new Date(nextMessage.created_at) - new Date(message.created_at);
+                return timeDiff > 5 * 60 * 1000;
+            };
+
+            const startOfGroup = isStartOfGroup(message, prevMessage);
+            const endOfGroup = isEndOfGroup(message, nextMessage);
+
+            let messageType;
+            if (startOfGroup && endOfGroup) {
+                messageType = 'singular';
+            } else if (startOfGroup) {
+                messageType = 'top';
+            } else if (endOfGroup) {
+                messageType = 'last';
+            } else {
+                messageType = 'middle';
+            }
+
+            let gap = '';
+            if (i === 0) {
+                gap = '';
+            } else {
+                gap = startOfGroup ? 'mt-4' : 'mt-[2px]';
+            }
+
+            return (
+                <ChatMessage
+                    key={`${i}:${message.id}`}
+                    className={`${gap} ${(removingMessage && removingMessage.id === message.id)
+                        ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}`}
+                    ref={(el) => setMessageRef(el, i)}
+                    self={user.id === message.user_id}
+                    message={message}
+                    messageType={messageType}
+                    onMessageRemoved={() => removeMessage(message)}
+                    isPlaceholder={message.isPlaceholder}
+                    errorPending={message.errorPending}
+                    uploadProgress={message.uploadProgress}
+                    onRetrySend={() => retrySendMessage(message)}
+                />
+            )
+        })
+    }, [messages, pendingMessages]);
+
     return (
         <ChatRoomContextProvider value={{ chatRoom, chatRoomKey }}>
             <div className={``}>
@@ -393,27 +450,12 @@ export default function ChatRoomMessages({ ...props }) {
                     className={`
                         h-[calc(100dvh-15rem)] sm:h-[calc(100dvh-19rem)]
                         overflow-y-auto
-                        flex flex-col gap-y-4 p-6
+                        flex flex-col p-3
                     `}
                     ref={messagesRef}
                     onScroll={messagesScrollHandler}
                 >
-                    {[...messages, ...pendingMessages].map((message, i) => (
-                        <ChatMessage
-                            key={`${i}:${message.id}`}
-                            className={(removingMessage && removingMessage.id === message.id)
-                                ? 'transition-opacity opacity-30 duration-500 ease-in ' : ''}
-                            ref={(el) => setMessageRef(el, i)}
-                            self={user.id === message.user_id}
-                            message={message}
-                            onMessageRemoved={() => removeMessage(message)}
-                            isPlaceholder={message.isPlaceholder}
-                            errorPending={message.errorPending}
-                            uploadProgress={message.uploadProgress}
-                            onRetrySend={() => retrySendMessage(message)}
-                        />
-                    ))}
-
+                    {computedMessages}
 
                     {messagesLoading && messages.length === 0 && pendingMessages.length === 0 && (
                         <>
@@ -479,10 +521,6 @@ export default function ChatRoomMessages({ ...props }) {
                                 disabled={!availableToSendMessage()}
                             >Send</PrimaryButton>
                         </div>
-                    </div>
-
-                    <div>
-                        <InputError message={errors.message} className="mt-2" />
                     </div>
 
                     <div className={`flex gap-3 justify-center pb-2`}>
