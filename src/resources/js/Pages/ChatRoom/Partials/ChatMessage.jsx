@@ -133,17 +133,21 @@ export default forwardRef(function ChatMessage({
     const hideMenuContext = () => {
         setContextMenuVisible(false);
         setContextMenuTarget(null);
-    }
+    };
 
     const handleContextMenu = (e) => {
         e.preventDefault();
+
+        if (contextMenuVisible) {
+            return;
+        }
         hideMenuContext();
+
         setTimeout(() => {
             setContextMenuPosition({ x: e.clientX, y: e.clientY });
             setContextMenuTarget(message.id);
             setContextMenuVisible(true);
         }, 0);
-
     };
 
     const handleCopyMessage = () => {
@@ -294,43 +298,50 @@ export default forwardRef(function ChatMessage({
         );
     }
 
-    const menuOptions = [
-        {
-            label: 'Copy',
-            icon: <DocumentDuplicateIcon className="size-4" />,
-            onClick: handleCopyMessage,
-        },
-        ...(errorPending ? [{
-            label: 'Retry',
-            icon: <ArrowPathIcon className="size-4" />,
-            color: 'text-red-500',
-            onClick: onRetrySend,
-        }] : isPlaceholder ? [] : [{
-            label: 'Forward',
-            icon: <ArrowUturnRightIcon className="size-4" />,
-            onClick: handleForwardMessage,
-        }]),
-        ...((self && message.status === 'SEEN') ? [{
-            label: 'Seen by',
-            icon: <Checkmarks />,
-            onClick: handleStatusClick,
-        }] : []),
-        {
-            label: 'Delete',
-            icon: <TrashIcon className="size-4" />,
-            color: 'text-red-500',
-            onClick: handleDeleteMessage,
-        },
-    ]
+    const getMenuOptions = () => {
+        const options = [
+            {
+                label: 'Copy',
+                icon: <DocumentDuplicateIcon className="size-4" />,
+                onClick: handleCopyMessage,
+            },
+            ...(errorPending ? [{
+                label: 'Retry',
+                icon: <ArrowPathIcon className="size-4" />,
+                color: 'text-red-500',
+                onClick: onRetrySend,
+            }] : isPlaceholder ? [] : [{
+                label: 'Forward',
+                icon: <ArrowUturnRightIcon className="size-4" />,
+                onClick: handleForwardMessage,
+            }]),
+            ...((self && message.status === 'SEEN') ? [{
+                label: 'Seen by',
+                icon: <Checkmarks />,
+                onClick: handleStatusClick,
+            }] : []),
+            {
+                label: 'Delete',
+                icon: <TrashIcon className="size-4" />,
+                color: 'text-red-500',
+                onClick: handleDeleteMessage,
+            },
+        ];
+        return options;
+    };
+
+
 
     return (
         <div
-            className="w-full flex flex-col"
+            className="w-full flex flex-col select-none"
             onContextMenu={handleContextMenu}
+            onMouseDown={() => window.getSelection().removeAllRanges()}
+            onTouchStart={() => window.getSelection().removeAllRanges()}
         >
             {contextMenuVisible && contextMenuTarget === message.id && (
                 <ContextMenu
-                    options={menuOptions}
+                    options={getMenuOptions()}
                     position={contextMenuPosition}
                     onClose={hideMenuContext}
                 />
@@ -478,7 +489,7 @@ export default forwardRef(function ChatMessage({
                         ${getMessageClasses(self, messageType)}
                     `}>
 
-                        <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'} pr-2 text-white`}>
+                        <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'} pr-2 text-white select-text`}>
                             {message.message}
                         </div>
 
