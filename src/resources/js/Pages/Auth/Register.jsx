@@ -3,14 +3,14 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { Head, Link, useForm } from '@inertiajs/react';
+import {Head, Link, useForm} from '@inertiajs/react';
 import RSAKeysGenerator from '@/Encryption/RSAKeysGenerator.js';
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import UserRsaKeysStorage from "@/Common/UserRsaKeysStorage.js";
 import UserPassword from "@/Common/UserPassword.js";
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const {data, setData, post, processing, errors, reset} = useForm({
         name: '',
         email: '',
         password: '',
@@ -66,7 +66,7 @@ export default function Register() {
         (async () => {
             userRsaKeysStorage.saveKeysToSessionStorage(publicKey, privateKey);
             await UserPassword.saveToSession(data.password, publicKey);
-            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, { publicKey, privateKey });
+            await userRsaKeysStorage.saveKeysToLocalStorage(data.password, {publicKey, privateKey});
         })().then(() => {
             post(route('register'), {
                 onFinish: () => reset('password', 'password_confirmation'),
@@ -76,75 +76,84 @@ export default function Register() {
 
     return (
         <GuestLayout>
-            <Head title="Register" />
+            <Head title="Register"/>
+
+            <h2 className="text-center font-bold text-blue-300 text-2xl">
+                Sign Up
+            </h2>
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                    <InputLabel htmlFor="name" value="Name" className="text-blue-300"/>
 
                     <TextInput
                         id="name"
                         name="name"
                         value={data.name}
-                        className="mt-1 block w-full"
+                        placeholder="Name"
+                        className="mt-1 block w-full bg-sky-200"
                         autoComplete="name"
                         isFocused={true}
                         onChange={(e) => setData('name', e.target.value)}
                         required
                     />
 
-                    <InputError message={errors.name} className="mt-2" />
+                    <InputError message={errors.name} className="mt-2"/>
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value="Email" className="text-blue-300"/>
 
                     <TextInput
                         id="email"
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        placeholder="Email"
+                        className="mt-1 block w-full bg-sky-200"
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
                         required
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError message={errors.email} className="mt-2"/>
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value="Password" className="text-blue-300"/>
 
                     <TextInput
                         id="password"
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        placeholder="Password"
+                        className="mt-1 block w-full bg-sky-200"
                         autoComplete="new-password"
                         onChange={(e) => setData('password', e.target.value)}
                         required
                     />
 
-                    <InputError message={errors.password || passErrors.password} className="mt-2" />
+                    <InputError message={errors.password || passErrors.password} className="mt-2"/>
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
+                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" className="text-blue-300"/>
 
                     <TextInput
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        placeholder="Confirm Password"
+                        className="mt-1 block w-full bg-sky-200"
                         autoComplete="new-password"
                         onChange={(e) => setData('password_confirmation', e.target.value)}
                         required
                     />
 
-                    <InputError message={errors.password_confirmation || passErrors.password_confirmation} className="mt-2" />
+                    <InputError message={errors.password_confirmation || passErrors.password_confirmation}
+                                className="mt-2"/>
                 </div>
 
                 <input
@@ -157,13 +166,14 @@ export default function Register() {
                 <div className="flex items-center justify-end mt-4">
                     <Link
                         href={route('login')}
-                        className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="underline text-sm text-blue-300 hover:text-blue-400 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                         Already registered?
                     </Link>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
+                    <PrimaryButton className="ms-4 bg-blue-400 hover:bg-blue-600 focus:bg-blue-600 active:bg-blue-600"
+                                   disabled={processing}>
+                        Sign Up
                     </PrimaryButton>
                 </div>
             </form>
