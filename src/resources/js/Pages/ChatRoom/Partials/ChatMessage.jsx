@@ -118,24 +118,15 @@ export default forwardRef(function ChatMessage({
         }
     }, [observerRef.current, userIsOnline]);
 
-    useEffect(() => {
-        const handleClickOutside = () => {
-            if (contextMenuVisible) {
-                hideMenuContext();
-            }
-        };
-        document.addEventListener('click', handleClickOutside);
-        return () => {
-            document.removeEventListener('click', handleClickOutside);
-        }
-    })
-
     const hideMenuContext = () => {
         setContextMenuVisible(false);
         setContextMenuTarget(null);
     };
 
     const handleContextMenu = (e) => {
+        if (showSeenByModal || showForwardingModal) {
+            return;
+        }
         e.preventDefault();
 
         if (contextMenuVisible) {
@@ -266,21 +257,21 @@ export default forwardRef(function ChatMessage({
 
         if (!self) {
             if (messageType === 'top') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-xl rounded-bl-sm';
+                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-xl rounded-bl-md';
             } else if (messageType === 'middle') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-sm rounded-bl-sm';
+                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-md rounded-bl-md';
             } else if (messageType === 'last') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-sm rounded-bl-none';
+                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-md rounded-bl-none';
             } else if (messageType === 'singular') {
                 classes = 'rounded-tr-xl rounded-br-xl rounded-tl-xl rounded-bl-none';
             }
         } else {
             if (messageType === 'top') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-xl rounded-br-sm';
+                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-xl rounded-br-md';
             } else if (messageType === 'middle') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-sm rounded-br-sm';
+                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-md rounded-br-md';
             } else if (messageType === 'last') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-sm rounded-br-none';
+                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-md rounded-br-none';
             } else if (messageType === 'singular') {
                 classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-xl rounded-br-none';
             }
@@ -288,6 +279,20 @@ export default forwardRef(function ChatMessage({
 
         return classes;
     };
+
+    const getMessageYPadding = (messageType) => {
+        let padding = '';
+        if (messageType === 'top') {
+            padding = 'pt-[2px] pb-[1px]';
+        } else if (messageType === 'middle') {
+            padding = 'pt-[1px] pb-[1px]';
+        } else if (messageType === 'last') {
+            padding = 'pt-[1px] pb-[2px]';
+        } else if (messageType === 'singular') {
+            padding = 'pt-[2px] pb-[2px]';
+        }
+        return padding;
+    }
 
     const Checkmarks = () => {
         return (
@@ -348,8 +353,8 @@ export default forwardRef(function ChatMessage({
             )}
             <div
                 className={`
-                flex items-end max-w-sm sm:max-w-lg group
-                ${self ? 'self-end flex-row-reverse' : 'self-start'}
+                flex w-full flex-col items-end group
+                ${self ? 'self-end' : 'self-start'}
                 ${className}
             `}
                 ref={(el) => {
@@ -425,7 +430,7 @@ export default forwardRef(function ChatMessage({
                                                 )}
                                         </div>
                                         <div>
-                                            <div>{user.name}</div>
+                                            <div className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{user.name}</div>
                                             <div className="text-xs text-gray-500">
                                                 <div className="relative mr-1 pr-5">
                                                     <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-0" />
@@ -452,38 +457,46 @@ export default forwardRef(function ChatMessage({
                     </div>
                 </Modal>
 
-                {(messageType === 'last' || messageType === 'singular') ? (
-                    <div className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')} 
-                        rounded-full overflow-hidden
-                        hidden sm:block`}
-                    >
-                        {message.user.avatar &&
-                            (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
-                                alt="avatar"
-                                className="w-full h-full object-cover" />
-                            )
-                        }
-                    </div>
-                ) : (
-                    <div className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} hidden sm:block`}></div>
-                )}
 
-                <div className="flex flex-col max-w-sm sm:max-w-lg">
-                    {!self && (messageType === 'top' || messageType === 'singular') && (
-                        <div className="flex pl-1.5 items-center space-x-2">
+                {!self && (messageType === 'top' || messageType === 'singular') && (
+                    <div className="flex flex-1 pl-1 group self-start items-end">
+                        <div className="min-w-12 mr-3 hidden sm:block"></div>
+                        <div className="flex ml-3 items-center space-x-2 mt-1">
                             <div className={`
-                            font-bold
+                            font-bold overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px]
                             ${errorPending ? 'text-red-700' : 'text-[#073666]'}
                             `}>
                                 <Link href={route('user-profile.show', message.user.id)}>{message.user.name}</Link>
                             </div>
                             <div className="size-1.5 rounded-full bg-[#073666]"></div>
                             <span className="text-[#57728E] text-xs">{createdAt.time}</span>
-                            <span className={`text-[#57728E] text-xs opacity-0 group-hover:opacity-100 mr-1`}>{createdAt.date}</span>
                         </div>
+                    </div>
+                )}
+
+
+
+                <div className={`flex flex-1 ${self ? 'flex-row-reverse' : ''} w-full pl-4 pr-3 ${getMessageYPadding(messageType)} group items-end
+                    transition-colors duration-100 ease-in-out
+                    ${contextMenuVisible && contextMenuTarget === message.id ? 'bg-black bg-opacity-10 rounded-r-lg' : ''}`}
+                >
+                    {(messageType === 'last' || messageType === 'singular') ? (
+                        <div className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')} 
+                        rounded-full overflow-hidden
+                        hidden sm:block`}
+                        >
+                            {message.user.avatar &&
+                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
+                                    alt="avatar"
+                                    className="w-full h-full object-cover" />
+                                )
+                            }
+                        </div>
+                    ) : (
+                        <div className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} hidden sm:block`}></div>
                     )}
                     <div className={`
-                        p-3 break-words
+                        p-3 break-words max-w-sm sm:max-w-lg min-w-[150px]
                         ${(!self && (messageType === 'top' || messageType === 'singular')) ? 'pb-3' : 'pb-1'}
                         ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
                         ${getMessageClasses(self, messageType)}
@@ -521,7 +534,6 @@ export default forwardRef(function ChatMessage({
                 `}>
                             {(self || (!self && messageType !== 'top' && messageType !== 'singular')) && (
                                 <div>
-                                    <span className={`opacity-0 group-hover:opacity-100 mr-1`}>{createdAt.date}</span>
                                     <span>{createdAt.time}</span>
                                 </div>
                             )}

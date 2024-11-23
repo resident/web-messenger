@@ -4,18 +4,21 @@ import ReactDOM from 'react-dom';
 export default function ContextMenu({ options, position, onClose }) {
     const menuRef = useRef(null);
     const [adjustedPosition, setAdjustedPosition] = useState({ x: position.x, y: position.y });
+    const [isVisible, setIsVisible] = useState(false);
+    const [hasMeasured, setHasMeasured] = useState(false);
+    const animationDuration = 150;
 
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
-                onClose();
+                handleClose();
             }
         };
         document.addEventListener('click', handleClickOutside);
         return () => {
             document.removeEventListener('click', handleClickOutside);
         };
-    }, [onClose]);
+    }, []);
 
     useLayoutEffect(() => {
         if (menuRef.current) {
@@ -40,8 +43,24 @@ export default function ContextMenu({ options, position, onClose }) {
             }
 
             setAdjustedPosition({ x: newX, y: newY });
+            setHasMeasured(true);
         }
     }, [position]);
+
+    useEffect(() => {
+        if (hasMeasured) {
+            setTimeout(() => {
+                setIsVisible(true);
+            }, 0);
+        }
+    }, [hasMeasured]);
+
+    const handleClose = () => {
+        setIsVisible(false);
+        setTimeout(() => {
+            onClose();
+        }, animationDuration);
+    };
 
     useEffect(() => {
         const originalOverflow = document.body.style.overflow;
@@ -52,7 +71,7 @@ export default function ContextMenu({ options, position, onClose }) {
         };
 
         const handleTouchMove = (e) => {
-            onClose();
+            handleClose();
         };
 
         window.addEventListener('wheel', handleWheel, { passive: false });
@@ -63,13 +82,13 @@ export default function ContextMenu({ options, position, onClose }) {
             window.removeEventListener('wheel', handleWheel);
             window.removeEventListener('touchmove', handleTouchMove);
         };
-    }, [onClose]);
+    }, []);
 
     useEffect(() => {
         const handleMouseMove = (e) => {
             if (menuRef.current) {
                 const menuRect = menuRef.current.getBoundingClientRect();
-                const margin = 100;
+                const margin = 50;
 
                 const extendedRect = {
                     top: menuRect.top - margin,
@@ -87,7 +106,7 @@ export default function ContextMenu({ options, position, onClose }) {
                     clientY <= extendedRect.bottom;
 
                 if (!isInside) {
-                    onClose();
+                    handleClose();
                 }
             }
         };
@@ -97,15 +116,19 @@ export default function ContextMenu({ options, position, onClose }) {
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
         };
-    }, [onClose]);
+    }, []);
 
     return ReactDOM.createPortal(
         <div
             ref={menuRef}
-            className="fixed bg-gray-100 rounded-lg p-2 space-y-2 z-50"
+            className={`fixed bg-gray-100 rounded-lg p-2 space-y-2 z-50 transform transition-all duration-150 ease-out
+        ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+      `}
             style={{
                 top: adjustedPosition.y,
                 left: adjustedPosition.x,
+                visibility: hasMeasured ? 'visible' : 'hidden',
+                transformOrigin: 'top left',
             }}
             onClick={(e) => e.stopPropagation()}
         >

@@ -389,6 +389,33 @@ export default function ChatRoomMessages({ ...props }) {
             const prevMessage = i > 0 ? array[i - 1] : null;
             const nextMessage = i < array.length - 1 ? array[i + 1] : null;
 
+            const messageDate = new Date(message.created_at);
+
+            const messageDateStr = messageDate.toDateString();
+            const prevMessageDateStr = prevMessage ? (new Date(prevMessage.created_at)).toDateString() : null;
+
+            const elements = [];
+
+            if (messageDateStr !== prevMessageDateStr) {
+                const now = new Date();
+                const isSameYear = messageDate.getFullYear() === now.getFullYear();
+
+                let dateFormatOptions = { month: 'long', day: 'numeric' };
+                if (!isSameYear) {
+                    dateFormatOptions.year = 'numeric';
+                }
+
+                const dateLabel = messageDate.toLocaleDateString(undefined, dateFormatOptions);
+
+                elements.push(
+                    <div key={`date-${messageDateStr}-${i}`} className="mt-1 mb-1 text-center select-none">
+                        <div className="inline-block px-3 rounded-full bg-gray-200 opacity-75 cursor-pointer">
+                            <span className="text-sm">{dateLabel}</span>
+                        </div>
+                    </div>
+                );
+            }
+
             const isStartOfGroup = (message, prevMessage) => {
                 if (!prevMessage) return true;
                 if (prevMessage.user_id !== message.user_id) return true;
@@ -421,10 +448,16 @@ export default function ChatRoomMessages({ ...props }) {
             if (i === 0) {
                 gap = '';
             } else {
-                gap = startOfGroup ? 'mt-4' : 'mt-[2px]';
+                if (messageType === 'singular') {
+                    gap = 'mt-1 mb-1';
+                } else if (messageType === 'top') {
+                    gap = 'mt-1';
+                } else if (messageType === 'last') {
+                    gap = 'mb-1';
+                }
             }
 
-            return (
+            elements.push(
                 <ChatMessage
                     key={`${i}:${message.id}`}
                     className={`${gap} ${(removingMessage && removingMessage.id === message.id)
@@ -440,7 +473,9 @@ export default function ChatRoomMessages({ ...props }) {
                     onRetrySend={() => retrySendMessage(message)}
                 />
             )
-        })
+
+            return elements;
+        }).flat();
     }, [messages, pendingMessages]);
 
     return (
@@ -450,7 +485,7 @@ export default function ChatRoomMessages({ ...props }) {
                     className={`
                         h-[calc(100dvh-15rem)] sm:h-[calc(100dvh-19rem)]
                         overflow-y-auto
-                        flex flex-col p-3
+                        flex flex-col py-3
                     `}
                     ref={messagesRef}
                     onScroll={messagesScrollHandler}
@@ -460,7 +495,7 @@ export default function ChatRoomMessages({ ...props }) {
                     {messagesLoading && messages.length === 0 && pendingMessages.length === 0 && (
                         <>
                             {[...Array(2)].map((_, index) => (
-                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group">
+                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -469,7 +504,7 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(4)].map((_, index) => (
-                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group">
+                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -478,7 +513,7 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(3)].map((_, index) => (
-                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group">
+                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -487,7 +522,7 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(2)].map((_, index) => (
-                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group">
+                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
