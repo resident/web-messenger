@@ -8,4 +8,14 @@ export default class ChatRoom {
 
         return await rsaEncryptor.decrypt(chatRoomKey);
     }
+
+    static findChatRoomByUsers(chatRooms, users) {
+        return chatRooms.find(
+            chatRoom => chatRoom.users.length === users.length && chatRoom.users.every(
+                user => users.some(
+                    user2 => user.id === user2.id
+                )
+            )
+        );
+    }
 }

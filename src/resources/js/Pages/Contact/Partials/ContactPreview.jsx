@@ -1,7 +1,20 @@
 import Dropdown from '@/Components/Dropdown';
 import {EllipsisVerticalIcon} from '@heroicons/react/24/solid';
+import ChatRoom from '@/Common/ChatRoom.js'
+import {useContext} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import {router} from "@inertiajs/react";
 
 const ContactPreview = ({contact, onDelete}) => {
+    const {user, chatRooms} = useContext(ApplicationContext);
+
+    const openChatRoom = () => {
+        const chatRoom = ChatRoom.findChatRoomByUsers(chatRooms, [user, contact]);
+
+        if (chatRoom) {
+            return router.visit(route('main', chatRoom.id));
+        }
+    };
 
     const handleDelete = async () => {
         try {
@@ -15,8 +28,10 @@ const ContactPreview = ({contact, onDelete}) => {
     };
 
     return (
-        <div className="flex lg:w-1/4 md:w-2/4 sm:w-3/4 mt-3 justify-between cursor-pointer relative hover:bg-gray-100">
-            <div className="flex items-center gap-2">
+        <div
+            className="flex lg:w-1/4 md:w-2/4 sm:w-3/4 mt-3 justify-between items-center cursor-pointer relative hover:bg-gray-100">
+            <div className="flex items-center gap-2 w-full"
+                 onClick={openChatRoom}>
                 {contact.avatar && <img
                     src={`${import.meta.env.VITE_AVATARS_STORAGE}/${contact.avatar.path}`}
                     alt={contact.name}
