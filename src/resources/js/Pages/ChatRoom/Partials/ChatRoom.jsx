@@ -35,17 +35,19 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
         chatRoomKeyRef.current = chatRoomKey;
 
         if (chatRoomKey && chatRoom.messages.length) {
-            const message = chatRoom.messages[0];
+            const message = chatRoom.messages[chatRoom.messages.length - 1];
 
             if (message.message_iv) {
-                ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.messages[0]).then((message) => {
+                ChatRoomMessage.decryptMessage(chatRoomKey, message).then((message) => {
                     setMessage(message);
                 });
             } else {
                 setMessage(message);
             }
+        } else {
+            setMessage(null);
         }
-    }, [chatRoomKey]);
+    });
 
     useEffect(() => {
         setIsOnline(chatRoom.is_online);

@@ -1,8 +1,8 @@
-import { useContext, useEffect } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
+import {useContext, useEffect} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 
-export default function ChatRooms({ onChatRoomClick = chatRoom => null }) {
+export default function ChatRooms({onChatRoomClick = chatRoom => null}) {
     const {
         user,
         chatRooms, setChatRooms,
@@ -15,7 +15,7 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null }) {
         if (chatRoom.users.length === 2) {
             const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
 
-            const statusResponse = await axios.get(route('user-status.get', { userId: otherUser.id }));
+            const statusResponse = await axios.get(route('user-status.get', {userId: otherUser.id}));
             const status = statusResponse.data;
 
             const updatedChatRoom = {
@@ -25,8 +25,7 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null }) {
             };
 
             setChatRooms(rooms => [updatedChatRoom, ...rooms]);
-        }
-        else {
+        } else {
             setChatRooms(rooms => [{
                 ...chatRoom,
                 is_online: false,

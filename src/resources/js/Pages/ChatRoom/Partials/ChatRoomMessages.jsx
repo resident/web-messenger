@@ -1,22 +1,21 @@
 import ChatMessage from "@/Pages/ChatRoom/Partials/ChatMessage.jsx";
 import TextArea from "@/Components/TextArea.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
-import InputError from "@/Components/InputError.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
-import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
+import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import {useContext, useEffect, useMemo, useRef, useState} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import RecordAudioMessage from "./RecordAudioMessage";
 
-export default function ChatRoomMessages({ ...props }) {
+export default function ChatRoomMessages({...props}) {
     const {
         user,
         userPrivateKey,
-        chatRooms,
+        chatRooms, setChatRooms,
     } = useContext(ApplicationContext);
 
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
@@ -56,8 +55,7 @@ export default function ChatRoomMessages({ ...props }) {
 
         if (freshChatRoom) {
             setChatRoom(freshChatRoom);
-        } else {
-            //todo exit from this room
+            setMessages([...freshChatRoom.messages])
         }
 
     }, [chatRooms]);
@@ -115,6 +113,12 @@ export default function ChatRoomMessages({ ...props }) {
 
     useEffect(() => {
         const combinedMessages = [...messages, ...pendingMessages];
+
+        if (chatRooms.length > 0 && chatRoom.messages.length !== messages.length) {
+            chatRooms.find(cr => cr.id === chatRoom.id).messages = combinedMessages;
+            setChatRooms([...chatRooms]);
+        }
+
         if (combinedMessages.length > 0) {
             setHasMessages(true);
 
@@ -144,7 +148,7 @@ export default function ChatRoomMessages({ ...props }) {
 
         setPrevMessagesLength(messages.length);
 
-        axios.get(route('chat_rooms.messages.index', { chatRoom: chatRoom.id, count, startId }))
+        axios.get(route('chat_rooms.messages.index', {chatRoom: chatRoom.id, count, startId}))
             .then(async (response) => {
                 const loadedMessages = [];
 
@@ -154,7 +158,11 @@ export default function ChatRoomMessages({ ...props }) {
                     loadedMessages.push(decryptedMessage);
                 }
 
-                setMessages([...loadedMessages, ...messages]);
+                if (startId) {
+                    setMessages([...loadedMessages, ...messages]);
+                } else {
+                    setMessages(loadedMessages);
+                }
 
                 if (loadedMessages.length > 0) {
                     setScrollTo(startId ? scrollToDirection.top : scrollToDirection.bottom);
@@ -191,7 +199,7 @@ export default function ChatRoomMessages({ ...props }) {
     };
 
     const onChatRoomUpdated = (e) => {
-        setChatRoom({ ...chatRoom, ...e.chatRoom });
+        setChatRoom({...chatRoom, ...e.chatRoom});
     };
 
     useEffect(() => {
@@ -222,7 +230,7 @@ export default function ChatRoomMessages({ ...props }) {
         const updatedMessage = e.message;
 
         setMessages(prev => prev.map(
-            msg => msg.id === updatedMessage.id ? { ...msg, status: updatedMessage.status } : msg
+            msg => msg.id === updatedMessage.id ? {...msg, status: updatedMessage.status} : msg
         ));
     };
 
@@ -231,7 +239,7 @@ export default function ChatRoomMessages({ ...props }) {
             ChatRoomMessage.sendMessage(messageData.message, chatRoom, chatRoomKey, messageData.attachments, progress => {
                 setPendingMessages(prev =>
                     prev.map(msg =>
-                        msg.id === messageData.id ? { ...msg, uploadProgress: progress } : msg
+                        msg.id === messageData.id ? {...msg, uploadProgress: progress} : msg
                     )
                 );
             }).then(async response => {
@@ -242,7 +250,7 @@ export default function ChatRoomMessages({ ...props }) {
             }).catch(error => {
                 setPendingMessages(prev =>
                     prev.map((msg) =>
-                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
+                        msg.id === messageData.id ? {...msg, errorPending: error.message} : msg
                     )
                 );
             }).finally(() => {
@@ -250,7 +258,7 @@ export default function ChatRoomMessages({ ...props }) {
             });
         } catch (e) {
             if (e instanceof ProgressEvent) {
-                setErrors({ ...errors, message: e.target.error.message });
+                setErrors({...errors, message: e.target.error.message});
             }
             setSendingMessage(false);
         }
@@ -258,7 +266,7 @@ export default function ChatRoomMessages({ ...props }) {
 
     const sendMessage = async () => {
         setSendingMessage(true);
-        setErrors({ ...errors, message: '' });
+        setErrors({...errors, message: ''});
 
         const tempId = crypto.randomUUID();
         const placeholderMessage = {
@@ -289,7 +297,7 @@ export default function ChatRoomMessages({ ...props }) {
     const retrySendMessage = async (messageData) => {
         setPendingMessages(prev =>
             prev.map(msg =>
-                msg.id === messageData.id ? { ...msg, errorPending: null, uploadProgress: 0 } : msg
+                msg.id === messageData.id ? {...msg, errorPending: null, uploadProgress: 0} : msg
             )
         );
         setSendingMessage(true);
@@ -400,7 +408,7 @@ export default function ChatRoomMessages({ ...props }) {
                 const now = new Date();
                 const isSameYear = messageDate.getFullYear() === now.getFullYear();
 
-                let dateFormatOptions = { month: 'long', day: 'numeric' };
+                let dateFormatOptions = {month: 'long', day: 'numeric'};
                 if (!isSameYear) {
                     dateFormatOptions.year = 'numeric';
                 }
@@ -479,7 +487,7 @@ export default function ChatRoomMessages({ ...props }) {
     }, [messages, pendingMessages]);
 
     return (
-        <ChatRoomContextProvider value={{ chatRoom, chatRoomKey }}>
+        <ChatRoomContextProvider value={{chatRoom, chatRoomKey}}>
             <div className={``}>
                 <div
                     className={`
@@ -495,7 +503,8 @@ export default function ChatRoomMessages({ ...props }) {
                     {messagesLoading && messages.length === 0 && pendingMessages.length === 0 && (
                         <>
                             {[...Array(2)].map((_, index) => (
-                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                                <div key={`skeleton-left-${index}`}
+                                     className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -504,7 +513,8 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(4)].map((_, index) => (
-                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                                <div key={`skeleton-right-${index}`}
+                                     className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -513,7 +523,8 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(3)].map((_, index) => (
-                                <div key={`skeleton-left-${index}`} className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                                <div key={`skeleton-left-${index}`}
+                                     className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -522,7 +533,8 @@ export default function ChatRoomMessages({ ...props }) {
                                 </div>
                             ))}
                             {[...Array(2)].map((_, index) => (
-                                <div key={`skeleton-right-${index}`} className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                                <div key={`skeleton-right-${index}`}
+                                     className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                                     <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                                     <div className="flex-1 space-y-4 py-1 w-40">
                                         <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -559,14 +571,14 @@ export default function ChatRoomMessages({ ...props }) {
                     </div>
 
                     <div className={`flex gap-3 justify-center pb-2`}>
-                        <Emojis onSmileSelected={insertEmoji} />
+                        <Emojis onSmileSelected={insertEmoji}/>
 
                         <SelectAttachments
                             selectedFiles={messageAttachments}
                             setSelectedFiles={setMessageAttachments}
                         />
 
-                        <AutoDeleteSettings />
+                        <AutoDeleteSettings/>
                         <RecordAudioMessage
                             selectedFiles={messageAttachments}
                             setSelectedFiles={setMessageAttachments}

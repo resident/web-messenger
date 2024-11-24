@@ -25,7 +25,7 @@ final class ChatRoomRepository
     public function getUserChatRoomsDesc(User $user): EloquentCollection
     {
         return $user->chatRooms()
-            ->with(['users', 'messages' => fn($q) => $q->latest()->take(1)])
+            ->with(['users', 'messages' => fn($q) => $q->with('user')->latest()->take(1)])
             ->orderByDesc('id')
             ->get();
     }
