@@ -8,12 +8,12 @@ export default class ChatRoomMessage {
 
         const aesEncryptor = new AESEncryptor();
         await aesEncryptor.importKey(messageKey);
-        const {iv: messageIv, encrypted: messageEncrypted} = await aesEncryptor.encryptString(message);
+        const { iv: messageIv, encrypted: messageEncrypted } = await aesEncryptor.encryptString(message);
 
         await aesEncryptor.importKey(chatRoomKey);
-        const {iv: messageKeyIv, encrypted: messageKeyEncrypted} = await aesEncryptor.encryptString(messageKey);
+        const { iv: messageKeyIv, encrypted: messageKeyEncrypted } = await aesEncryptor.encryptString(messageKey);
 
-        return {messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv};
+        return { messageEncrypted, messageIv, messageKeyEncrypted, messageKeyIv };
     }
 
     static async decryptMessage(chatRoomKey, message) {
@@ -38,7 +38,7 @@ export default class ChatRoomMessage {
 
         const attachmentArrayBuffer = await Utils.fileToArrayBuffer(attachment);
 
-        const {encrypted: attachmentEncrypted, iv: attachmentIv} = await aesEncryptor.encryptRaw(attachmentArrayBuffer);
+        const { encrypted: attachmentEncrypted, iv: attachmentIv } = await aesEncryptor.encryptRaw(attachmentArrayBuffer);
 
         await aesEncryptor.importKey(chatRoomKey);
 

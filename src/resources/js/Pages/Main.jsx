@@ -1,13 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {Head, router} from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
-import {useState} from "react";
+import { useState } from "react";
 import ChatRoomMessages from "@/Pages/ChatRoom/Partials/ChatRoomMessages.jsx";
-import {ArrowLeftIcon} from "@heroicons/react/24/outline/index.js";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline/index.js";
 import ChatStatus from '@/Pages/ChatRoom/Partials/ChatStatus.jsx';
 import ChatRoomMenu from "@/Pages/ChatRoom/Partials/ChatRoomMenu.jsx";
 
-export default function Main({auth, ...props}) {
+export default function Main({ auth, ...props }) {
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
 
 
@@ -16,7 +16,7 @@ export default function Main({auth, ...props}) {
             user={auth.user}
             header="Main"
         >
-            <Head title="Main"/>
+            <Head title="Main" />
 
             <div className={`grid grid-cols-1 md:grid-cols-[15rem,1fr]`}>
                 <div
@@ -27,25 +27,25 @@ export default function Main({auth, ...props}) {
                     <ChatRooms onChatRoomClick={chatRoom => {
                         setChatRoom(chatRoom);
                         router.visit(route('main', chatRoom.id));
-                    }}/>
+                    }} />
                 </div>
 
-                <div className={`bg-gradient-to-r from-green-400 to-blue-500`}>
+                <div className={`bg-white`}>
                     {chatRoom &&
                         <div>
                             <div className={`p-2 flex justify-between bg-gray-200`}>
                                 <ArrowLeftIcon
                                     className={`size-8 rounded-full p-1 hover:bg-indigo-600 hover:text-white cursor-pointer`}
-                                    onClick={() => setChatRoom(null)}/>
+                                    onClick={() => setChatRoom(null)} />
 
                                 <div>{chatRoom.title}</div>
 
-                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom}/>
+                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom} />
 
-                                <ChatRoomMenu/>
+                                <ChatRoomMenu />
                             </div>
 
-                            <ChatRoomMessages chatRoom={chatRoom}/>
+                            <ChatRoomMessages chatRoom={chatRoom} />
                         </div> ||
 
                         <div className={`h-full p-6 hidden md:flex items-center justify-center`}>

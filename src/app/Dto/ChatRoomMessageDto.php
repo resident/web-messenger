@@ -21,8 +21,8 @@ final class ChatRoomMessageDto
         public string $messageIv,
         public string $messageKey,
         public string $messageKeyIv,
+        public string $status,
         public ?string $createdAt,
         public ?string $updatedAt
-    ) {
-    }
+    ) {}
 }

@@ -6,17 +6,22 @@ namespace App\Http\Controllers;
 
 use App\Dto\ChatRoomMessageAttachmentDto;
 use App\Dto\ChatRoomMessageDto;
+use App\Enums\MessageStatusEnum;
 use App\Events\ChatRoomMessageRemoved;
 use App\Events\ChatRoomMessageSent;
+use App\Events\ChatRoomMessageStatusUpdated;
 use App\Http\Requests\ForwardChatRoomMessageRequest;
 use App\Http\Requests\StoreChatRoomMessageRequest;
 use App\Http\Requests\UpdateChatRoomMessageRequest;
 use App\Models\ChatRoom;
 use App\Models\ChatRoomMessage;
 use App\Models\ChatRoomMessageAttachment;
+use App\Models\ChatRoomMessageSeen;
 use App\Repositories\ChatRoomMessageRepository;
 use App\Services\ChatRoomMessageService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -50,6 +55,7 @@ class ChatRoomMessagesController extends Controller
             'original_user_id' => $request->user()->id,
             'chat_room_id' => $chatRoom->id,
             ...$request->safe(['message', 'messageIv', 'messageKey', 'messageKeyIv']),
+            'status' => MessageStatusEnum::SENT->value,
         ]);
 
         $attachments = $request->validated(['attachments'], []);
@@ -76,6 +82,72 @@ class ChatRoomMessagesController extends Controller
 
         return response()->json($message);
     }
+    /*
+    public function markAsDelivered(Request $request, ChatRoom $chatRoom, ChatRoomMessageService $messageService)
+    {
+        $messageIds = $request->input('message_ids', []);
+
+        $messages = ChatRoomMessage::whereIn('id', $messageIds)
+            ->where('chat_room_id', $chatRoom->id)
+            ->where('status', MessageStatusEnum::SENT)
+            ->get();
+
+        if ($messages->isNotEmpty()) {
+            foreach ($messages as $message) {
+                $messageService->updateMessageStatus($message, MessageStatusEnum::DELIVERED);
+            }
+
+            broadcast(new ChatRoomMessagesStatusUpdated($messages))->toOthers();
+        }
+
+        return response()->json(['status' => 'success']);
+    }*/
+
+    public function markAsSeen(Request $request, ChatRoom $chatRoom, ChatRoomMessage $message, ChatRoomMessageService $messageService)
+    {
+        $user = $request->user();
+
+        if ($user->id === $message->user_id) {
+            return response()->json(['status' => 'failed']);
+        }
+
+        // check 7 days
+        if (Carbon::parse($message->created_at)->diffInDays(now()) < 7) {
+            $existingSeen = ChatRoomMessageSeen::where('message_id', $message->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (!$existingSeen) {
+                $messageService->markAsSeen($message->id, $user->id, true);
+            }
+        }
+
+        if ($message->status !== MessageStatusEnum::SEEN) {
+            $messageService->updateMessageStatus($message, MessageStatusEnum::SEEN);
+
+            broadcast(new ChatRoomMessageStatusUpdated($message))->toOthers();
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    public function getSeenBy(ChatRoom $chatRoom, ChatRoomMessage $message, ChatRoomMessageService $messageService)
+    {
+        if (Carbon::parse($message->created_at)->diffInDays(now()) >= 7) {
+            return response()->json([]);
+        }
+
+        $seenByUsers = $messageService->getSeenByUsers($message->id)->map(function ($seen) {
+            return [
+                'id' => $seen->user->id,
+                'name' => $seen->user->name,
+                'avatar' => $seen->user?->avatar,
+                'seen_at' => $seen->updated_at,
+            ];
+        });
+
+        return response()->json($seenByUsers);
+    }
 
     public function forward(
         ChatRoom $chatRoom,
@@ -88,6 +160,7 @@ class ChatRoomMessagesController extends Controller
             'original_user_id' => $message->original_user_id,
             'chat_room_id' => $chatRoom->id,
             ...$request->safe(['message', 'messageIv', 'messageKey', 'messageKeyIv']),
+            'status' => MessageStatusEnum::SENT->value,
         ]);
 
         $attachments = collect($request->validated(['attachments'], []));
