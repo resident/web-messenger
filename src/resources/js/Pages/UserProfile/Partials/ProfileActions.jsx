@@ -4,6 +4,7 @@ import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 import {useContext, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import ChatRoom from "@/Common/ChatRoom.js";
 
 export default function ProfileActions({auth, user}) {
     const {chatRooms, setOutputCall} = useContext(ApplicationContext);
@@ -15,16 +16,8 @@ export default function ProfileActions({auth, user}) {
         users: [],
     });
 
-    const findChatRoomByUsers = () => {
-        return chatRooms.find(function (chatRoom) {
-            return chatRoom.users.length === 2
-                && chatRoom.users.find(u => u.id === auth.user.id)
-                && chatRoom.users.find(u => u.id === user.id);
-        });
-    };
-
     const onChatClick = async () => {
-        const chatRoom = findChatRoomByUsers();
+        const chatRoom = ChatRoom.findChatRoomByUsers(chatRooms, [auth.user, user]);
 
         if (chatRoom) {
             return router.visit(route('main', chatRoom.id));
