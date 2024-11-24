@@ -1,11 +1,11 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
-import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
+import {useContext, useEffect, useRef, useState} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
-import { TrashIcon } from "@heroicons/react/24/solid/index.js";
-import { router } from "@inertiajs/react";
+import {TrashIcon} from "@heroicons/react/24/solid/index.js";
+import {router} from "@inertiajs/react";
 
-export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
+export default function ChatRoom({className = '', chatRoom, onClickHandler = chatRoom => null}) {
     const {
         userPrivateKey,
         user,
@@ -70,7 +70,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     };
 
     const onUserOnlineStatusChanged = (e) => {
-        const { user_id, is_online, last_seen_at } = e;
+        const {user_id, is_online, last_seen_at} = e;
         const otherUser = chatRoom.users.find(u => u.id !== user.id);
         if (otherUser && otherUser.id === user_id) {
             setIsOnline(is_online);
@@ -102,10 +102,10 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         const currentDate = new Date();
 
         const formatDate = (date) => date.toLocaleDateString();
-        const getWeekDay = (date) => date.toLocaleDateString('en-US', { weekday: 'short' });
+        const getWeekDay = (date) => date.toLocaleDateString('en-US', {weekday: 'short'});
 
         if (inputDate.toLocaleDateString() === currentDate.toLocaleDateString()) {
-            return inputDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return inputDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         }
 
         const oneWeekAgo = new Date();
@@ -141,7 +141,12 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             <div className={`w-full`}>
                 <div className={`flex justify-between`}>
                     <div className={`flex gap-1 text-nowrap`}>
-                        <span className={`font-bold `}>{truncate(chatRoom.title, 15)}</span>
+                        <span className={`font-bold `}>
+                            {chatRoom.users.length === 2
+                                && truncate(chatRoom.users.find(u => u.id !== user.id).name, 15)
+                                || truncate(chatRoom.title, 15)
+                            }
+                        </span>
 
                         {message && (<span className={`text-sm`}>{prettyCreatedAt(message.created_at)}</span>)}
                     </div>

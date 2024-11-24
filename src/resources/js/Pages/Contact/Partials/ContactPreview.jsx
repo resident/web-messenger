@@ -1,7 +1,46 @@
 import Dropdown from '@/Components/Dropdown';
 import {EllipsisVerticalIcon} from '@heroicons/react/24/solid';
+import ChatRoom from '@/Common/ChatRoom.js'
+import {useContext} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import {router, useForm} from "@inertiajs/react";
+import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
+import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 
 const ContactPreview = ({contact, onDelete}) => {
+    const {user, chatRooms} = useContext(ApplicationContext);
+
+    const {data, post, reset} = useForm({
+        title: 'pm',
+        users: [],
+    });
+
+    const openChatRoom = async () => {
+        const users = [user, contact];
+        const chatRoom = ChatRoom.findChatRoomByUsers(chatRooms, users);
+
+        if (chatRoom) {
+            return router.visit(route('main', chatRoom.id));
+        }
+
+        const chatRoomKey = await AESKeyGenerator.generateKey();
+        const rsaEncryptor = new RSAEncryptor();
+
+        for (let curUser of users) {
+            await rsaEncryptor.importPublicKey(curUser.public_key);
+            const encryptedChatRoomKey = await rsaEncryptor.encrypt(chatRoomKey);
+
+            data.users.push({
+                id: curUser.id,
+                name: curUser.name,
+                chat_room_key: encryptedChatRoomKey,
+            });
+        }
+
+        post(route('chat_rooms.store'), {
+            onSuccess: () => reset(),
+        });
+    };
 
     const handleDelete = async () => {
         try {
@@ -15,8 +54,10 @@ const ContactPreview = ({contact, onDelete}) => {
     };
 
     return (
-        <div className="flex lg:w-1/4 md:w-2/4 sm:w-3/4 mt-3 justify-between cursor-pointer relative hover:bg-gray-100">
-            <div className="flex items-center gap-2">
+        <div
+            className="flex lg:w-1/4 md:w-2/4 sm:w-3/4 mt-3 justify-between items-center cursor-pointer relative hover:bg-gray-100">
+            <div className="flex items-center gap-2 w-full"
+                 onClick={openChatRoom}>
                 {contact.avatar && <img
                     src={`${import.meta.env.VITE_AVATARS_STORAGE}/${contact.avatar.path}`}
                     alt={contact.name}
