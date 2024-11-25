@@ -84,6 +84,6 @@ class ChatRoomsController extends Controller
      */
     public function destroy(ChatRoom $chatRoom, ChatRoomService $service): JsonResponse
     {
-        return response()->json($service->deleteChatRoom($chatRoom));
+        return response()->json($service->deleteUser($chatRoom, request()->user()));
     }
 }
