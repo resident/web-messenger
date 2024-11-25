@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Dto\ChatRoomDto;
 use App\Models\ChatRoom;
+use App\Models\User;
 use App\Repositories\ChatRoomRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -44,5 +45,14 @@ final readonly class ChatRoomService
         }
 
         return $this->repository->deleteChatRoom($chatRoom);
+    }
+
+    public function deleteUser(ChatRoom $chatRoom, User $user): ?bool
+    {
+        if ($chatRoom->users()->count() > 1) {
+            return (bool)$chatRoom->users()->detach($user);
+        } else {
+            return $this->deleteChatRoom($chatRoom);
+        }
     }
 }
