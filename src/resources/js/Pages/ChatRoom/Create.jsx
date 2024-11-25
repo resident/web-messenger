@@ -100,7 +100,7 @@ export default function Create({auth}) {
                                     <InputError message={errors.title} className="mt-2"/>
                                 </div>
 
-                                <SelectUser onUserSelected={addUser}/>
+                                <SelectUser onUserSelected={addUser} buttonText="Add"/>
 
                                 <div>
                                     <InputLabel htmlFor="users" value="Users"/>
