@@ -84,7 +84,7 @@ export default function Register() {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="name" value="Name" className="text-blue-300"/>
+                    <InputLabel htmlFor="name" value="Name" className="!text-blue-300"/>
 
                     <TextInput
                         id="name"
@@ -102,7 +102,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" className="text-blue-300"/>
+                    <InputLabel htmlFor="email" value="Email" className="!text-blue-300"/>
 
                     <TextInput
                         id="email"
@@ -120,7 +120,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" className="text-blue-300"/>
+                    <InputLabel htmlFor="password" value="Password" className="!text-blue-300"/>
 
                     <TextInput
                         id="password"
@@ -138,7 +138,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" className="text-blue-300"/>
+                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" className="!text-blue-300"/>
 
                     <TextInput
                         id="password_confirmation"
@@ -171,8 +171,9 @@ export default function Register() {
                         Already registered?
                     </Link>
 
-                    <PrimaryButton className="ms-4 bg-blue-400 hover:bg-blue-600 focus:bg-blue-600 active:bg-blue-600"
-                                   disabled={processing}>
+                    <PrimaryButton
+                        className="ms-4 !bg-blue-400 hover:!bg-blue-600 focus:!bg-blue-600 active:!bg-blue-600"
+                        disabled={processing}>
                         Sign Up
                     </PrimaryButton>
                 </div>
