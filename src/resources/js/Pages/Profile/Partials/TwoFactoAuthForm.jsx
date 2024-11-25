@@ -29,7 +29,7 @@ export default function TwoFactoAuthForm({className, ...props}) {
         setErrors({});
 
         try {
-            await axios.post(route('password.confirm'), {
+            await axios.post(route('password.confirm.store'), {
                 'password': currentPassword,
             });
 
