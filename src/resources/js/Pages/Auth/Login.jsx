@@ -52,7 +52,7 @@ export default function Login({status, canResetPassword, canRegister}) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email Address" className="text-blue-300"/>
+                    <InputLabel htmlFor="email" value="Email Address" className="!text-blue-300"/>
 
                     <TextInput
                         id="email"
@@ -70,7 +70,7 @@ export default function Login({status, canResetPassword, canRegister}) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" className="text-blue-300"/>
+                    <InputLabel htmlFor="password" value="Password" className="!text-blue-300"/>
 
                     <TextInput
                         id="password"
@@ -116,8 +116,9 @@ export default function Login({status, canResetPassword, canRegister}) {
                         </Link>
                     )}
 
-                    <PrimaryButton className="ms-4 bg-blue-400 hover:bg-blue-600 focus:bg-blue-600 active:bg-blue-600"
-                                   disabled={processing}>
+                    <PrimaryButton
+                        className="ms-4 !bg-blue-400 hover:!bg-blue-600 focus:!bg-blue-600 active:!bg-blue-600"
+                        disabled={processing}>
                         Log in
                     </PrimaryButton>
                 </div>

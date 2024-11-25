@@ -9,7 +9,8 @@ export default function Guest({children}) {
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-blue-500">
+        <div
+            className="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gradient-to-b from-blue-500 to-blue-900">
             <div className="w-full sm:max-w-md mt-6 px-6 py-4 bg-slate-700 shadow-md overflow-hidden sm:rounded-lg">
                 <div className="flex gap-2 items-end justify-center mb-2">
                     <Link href="/">
@@ -17,7 +18,7 @@ export default function Guest({children}) {
                     </Link>
 
                     <div className="font-bold text-3xl text-white">
-                        Messenger
+                        Privacy Hub
                     </div>
                 </div>
 

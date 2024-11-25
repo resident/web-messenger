@@ -29,7 +29,7 @@ export default function TwoFactorLogin({status}) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="code" value="Code" className="text-blue-300"/>
+                    <InputLabel htmlFor="code" value="Code" className="!text-blue-300"/>
 
                     <TextInput
                         id="code"
@@ -46,7 +46,7 @@ export default function TwoFactorLogin({status}) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="recovery_code" value="Recovery Code" className="text-blue-300"/>
+                    <InputLabel htmlFor="recovery_code" value="Recovery Code" className="!text-blue-300"/>
 
                     <TextInput
                         id="recovery_code"
@@ -62,8 +62,9 @@ export default function TwoFactorLogin({status}) {
                 </div>
 
                 <div className="flex items-center justify-end mt-4">
-                    <PrimaryButton className="ms-4 bg-blue-400 hover:bg-blue-600 focus:bg-blue-600 active:bg-blue-600"
-                                   disabled={processing}>
+                    <PrimaryButton
+                        className="ms-4 !bg-blue-400 hover:!bg-blue-600 focus:!bg-blue-600 active:!bg-blue-600"
+                        disabled={processing}>
                         Log in
                     </PrimaryButton>
                 </div>
