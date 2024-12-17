@@ -42,13 +42,13 @@ export default class Utils {
 
     static async getUserPassword() {
         const userRsaKeysStorage = new UserRsaKeysStorage();
-        const {privateKey} = userRsaKeysStorage.getKeysFromSession();
+        const { privateKey } = userRsaKeysStorage.getKeysFromSession();
         return await UserPassword.getFromSession(privateKey);
     }
 
     static async setUserPassword(userPassword) {
         const userRsaKeysStorage = new UserRsaKeysStorage();
-        const {publicKey} = userRsaKeysStorage.getKeysFromSession();
+        const { publicKey } = userRsaKeysStorage.getKeysFromSession();
         return await UserPassword.saveToSession(userPassword, publicKey);
     }
 
@@ -59,5 +59,16 @@ export default class Utils {
             reader.onerror = reject;
             reader.readAsArrayBuffer(file);
         });
+    }
+    static showNotification(title, options) {
+        if (Notification.permission === 'granted') {
+            new Notification(title, options);
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification(title, options);
+                }
+            });
+        }
     }
 }

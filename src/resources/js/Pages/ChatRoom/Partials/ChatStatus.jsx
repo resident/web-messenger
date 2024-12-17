@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 export default function ChatStatus({ currentUserId, chatRoom }) {
-    const [isOnline, setIsOnline] = useState(false);
-    const [lastSeenAt, setLastSeenAt] = useState(null);
+    const [isOnline, setIsOnline] = useState(chatRoom.is_online);
+    const [lastSeenAt, setLastSeenAt] = useState(chatRoom.last_seen_at);
     const [memberCount, setMemberCount] = useState(chatRoom.users.length);
     const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -17,15 +17,15 @@ export default function ChatStatus({ currentUserId, chatRoom }) {
     }
 
     useEffect(() => {
-        let otherUser = null;
-
-        if (memberCount === 2) {
-            otherUser = chatRoom.users.find(u => u.id !== currentUserId);
-            if (otherUser) {
-                setIsOnline(otherUser.is_online);
-                setLastSeenAt(otherUser.last_seen_at);
-            }
+        if (chatRoom) {
+            //console.log("SETTING CHANGES");
+            setIsOnline(chatRoom.is_online);
+            setLastSeenAt(chatRoom.last_seen_at);
+        } else {
+            setIsOnline(false);
+            setLastSeenAt(null);
         }
+        //console.log("SETTED CHANGES");
 
         const channel = `chat-room.${chatRoom.id}`;
         const subscription = Echo.private(channel);
@@ -39,7 +39,7 @@ export default function ChatStatus({ currentUserId, chatRoom }) {
         return () => {
             subscription.stopListening('UserOnlineStatusChanged');
         };
-    }, []);
+    }, [chatRoom]);
 
     useEffect(() => {
         const interval = setInterval(() => {

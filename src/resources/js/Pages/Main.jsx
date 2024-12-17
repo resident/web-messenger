@@ -26,17 +26,33 @@ export default function Main({ auth, ...props }) {
                     `}>
                     <ChatRooms onChatRoomClick={chatRoom => {
                         setChatRoom(chatRoom);
-                        router.visit(route('main', chatRoom.id));
-                    }} />
+                        router.get(route('main', chatRoom.id), {}, {
+                            preserveState: true,
+                            preserveScroll: true,
+                            replace: true,
+                            only: [],
+                        });
+                    }}
+                        activeChatRoom={chatRoom}
+                    />
                 </div>
 
                 <div className={`bg-white`}>
                     {chatRoom &&
-                        <div>
-                            <div className={`p-2 flex justify-between bg-gray-200`}>
+                        <div key={chatRoom.id}>
+                            <div key={chatRoom.id} className={`p-2 flex justify-between bg-gray-200`}>
                                 <ArrowLeftIcon
                                     className={`size-8 rounded-full p-1 hover:bg-indigo-600 hover:text-white cursor-pointer`}
-                                    onClick={() => setChatRoom(null)} />
+                                    onClick={() => {
+                                        setChatRoom(null)
+                                        router.get(route('main'), {}, {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                            replace: true,
+                                            only: []
+                                        });
+                                    }}
+                                />
 
                                 <div>{chatRoom.title}</div>
 

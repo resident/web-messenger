@@ -1,11 +1,12 @@
-import {useContext, useEffect} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { useContext, useEffect } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 
-export default function ChatRooms({onChatRoomClick = chatRoom => null}) {
+export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeChatRoomM = null }) {
     const {
         user,
         chatRooms, setChatRooms,
+        setActiveChatRoom,
     } = useContext(ApplicationContext);
 
     const onChatRoomCreated = async (e) => {
@@ -15,7 +16,7 @@ export default function ChatRooms({onChatRoomClick = chatRoom => null}) {
         if (chatRoom.users.length === 2) {
             const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
 
-            const statusResponse = await axios.get(route('user-status.get', {userId: otherUser.id}));
+            const statusResponse = await axios.get(route('user-status.get', { userId: otherUser.id }));
             const status = statusResponse.data;
 
             const updatedChatRoom = {
@@ -35,10 +36,23 @@ export default function ChatRooms({onChatRoomClick = chatRoom => null}) {
     };
 
     useEffect(() => {
+        setActiveChatRoom(activeChatRoomM);
+    }, [activeChatRoomM])
+
+    const onUserChatRoomUnreadCountUpdated = async (e) => {
+        const chatRoomId = e.chatRoomId;
+        const unreadCount = e.unreadCount;
+        const lastReadAt = e.lastReadAt;
+
+        setChatRooms(prev => prev.map(cr => cr.id === chatRoomId ? { ...cr, unread_count: unreadCount, last_read_at: lastReadAt } : cr));
+    }
+
+    useEffect(() => {
         const channel = `chat-rooms.${user.id}`;
 
         Echo.private(channel)
-            .listen('ChatRoomCreated', onChatRoomCreated);
+            .listen('ChatRoomCreated', onChatRoomCreated)
+            .listen('UserChatRoomUnreadCountUpdated', onUserChatRoomUnreadCountUpdated);
 
         return () => {
             Echo.leave(channel);

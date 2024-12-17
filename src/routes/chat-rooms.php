@@ -55,4 +55,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat-rooms/{chatRoom}/messages/{message}/seen-by', [ChatRoomMessagesController::class, 'getSeenBy'])
         ->whereUuid(['chatRoom', 'message'])
         ->name('chat_rooms.messages.get_seen_by');
+
+    Route::get('/chat-rooms/{chatRoom}/messages/last-message', [ChatRoomMessagesController::class, 'getLastMessage'])
+        ->whereUuid('chatRoom')
+        ->name('chat_rooms.messages.get_last_message');
+
+    Route::post('/chat-rooms/{chatRoom}/last-read-at', [ChatRoomsController::class, 'updateLastReadAt'])
+        ->whereUuid('chatRoom')
+        ->name('chat_rooms.last_read_at.update');
 });
