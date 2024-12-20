@@ -100,6 +100,7 @@ export default forwardRef(function ChatMessage({
                     const currentDate = new Date();
 
                     const daysDifference = Math.floor((currentDate - createdAtDate) / (1000 * 60 * 60 * 24));
+                    //console.log("Message:", { message, seenSent, daysDifference });
                     if (message.status === "SEEN" && daysDifference >= 7) {
                         return;
                     }

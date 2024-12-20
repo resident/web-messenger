@@ -12,7 +12,6 @@ export default function LoadChatRooms({ }) {
 
     const fetchChatRooms = async () => {
         const response = await axios.get(route('chat_rooms.list'));
-        //console.log("Fetching chats");
         setChatRooms(prev => {
             const existingChatRoomIds = new Set(prev.map(cr => cr.id));
             const updatedChatRooms = prev.map(cr => {
@@ -31,7 +30,6 @@ export default function LoadChatRooms({ }) {
     };
 
     const fetchUserStatuses = async () => {
-        //console.log("Fetching users statuses");
         const currentUserId = user.id;
         const twoUserChatRooms = chatRooms.filter(chatRoom => chatRoom.users.length === 2);
         const userIds = [...new Set(
@@ -41,18 +39,14 @@ export default function LoadChatRooms({ }) {
                     .map(u => u.id)
             )
         )];
-        //console.log("UserIds:", userIds);
 
         const statusResponse = await axios.post(route('users-status.get'), { user_ids: userIds });
         const statuses = statusResponse.data;
-        //console.log("Fetched statuses:", statuses);
 
         const updatedChatRooms = chatRooms.map(chatRoom => {
-            //console.log("Number of users in chat:", chatRoom.users.length)
             if (chatRoom.users.length === 2) {
                 const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
                 const status = statuses[otherUser.id];
-                //console.log("Status:", status);
 
                 return {
                     ...chatRoom,
@@ -73,7 +67,6 @@ export default function LoadChatRooms({ }) {
 
     useEffect(() => {
         if (!sessionLocked) {
-            //console.log("Session is unlocked");
             setChatRoomsLoaded(false);
             fetchChatRooms();
         }
@@ -81,7 +74,6 @@ export default function LoadChatRooms({ }) {
 
     useEffect(() => {
         if (chatRoomsLoaded) {
-            //console.log("Chat Rooms Loaded");
             fetchUserStatuses();
         }
     }, [chatRoomsLoaded]);

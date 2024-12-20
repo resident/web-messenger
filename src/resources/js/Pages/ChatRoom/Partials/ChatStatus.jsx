@@ -18,14 +18,12 @@ export default function ChatStatus({ currentUserId, chatRoom }) {
 
     useEffect(() => {
         if (chatRoom) {
-            //console.log("SETTING CHANGES");
             setIsOnline(chatRoom.is_online);
             setLastSeenAt(chatRoom.last_seen_at);
         } else {
             setIsOnline(false);
             setLastSeenAt(null);
         }
-        //console.log("SETTED CHANGES");
 
         const channel = `chat-room.${chatRoom.id}`;
         const subscription = Echo.private(channel);

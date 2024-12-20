@@ -6,7 +6,6 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
     const {
         user,
         chatRooms, setChatRooms,
-        setActiveChatRoom,
     } = useContext(ApplicationContext);
 
     const onChatRoomCreated = async (e) => {
@@ -34,10 +33,6 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
             }, ...rooms]);
         }
     };
-
-    useEffect(() => {
-        setActiveChatRoom(activeChatRoomM);
-    }, [activeChatRoomM])
 
     const onUserChatRoomUnreadCountUpdated = async (e) => {
         const chatRoomId = e.chatRoomId;

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
@@ -18,13 +18,13 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     const [chatRoomKey, setChatRoomKey] = useState(null);
     const [lastMessage, setLastMessage] = useState(chatRoom.last_message);
     const [isOnline, setIsOnline] = useState(chatRoom.is_online);
-    const [notification, setNotification] = useState(null);
-    const [channel, setChannel] = useState(`chat-room.${chatRoom.id}`);
 
     const activeChatRoomRef = useRef(activeChatRoom);
     const chatRoomRef = useRef(chatRoom);
 
     const chatRoomKeyRef = useRef(chatRoomKey);
+
+    const channel = `chat-room.${chatRoom.id}`;
 
     useEffect(() => {
         if (userPrivateKey) {
@@ -39,12 +39,9 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     }, [userPrivateKey]);
 
     useEffect(() => {
-        //console.log("ChatRoom.last_message 0");
         if (!chatRoom.last_message) return;
-        //console.log("ChatRoom.last_message 1");
 
-        if (chatRoom.last_message.message_iv) {
-            //console.log("ChatRoom.last_message 2");
+        if (chatRoom.last_message.message_iv && chatRoomKey) {
             (async () => {
                 ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                     setChatRooms(prev =>
@@ -55,7 +52,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 });
             })();
         } else {
-            //console.log("ChatRoom.last_message 3");
             setLastMessage(chatRoom.last_message);
         }
 
@@ -66,6 +62,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         if (activeChatRoomRef.current?.id === chatRoom?.id) {
             // Якщо та, що оновилась, вже не наша -- оновимо прослуховування
             if (!activeChatRoom || activeChatRoom.id !== activeChatRoomRef.current.id) {
+                const channel = `chat-room.${chatRoom.id}`;
                 Echo.private(channel)
                     .stopListening('ChatRoomMessageSent')
                     .stopListening('ChatRoomMessageRemoved')
@@ -104,24 +101,18 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     useEffect(() => {
         if (!chatRoom) return;
-        //console.log("Messages log:", chatRoom.messages);
         const mLength = chatRoom.messages.length;
         if (mLength > 0 && chatRoom.messages[mLength - 1].message_iv && chatRoomKey) {
-            //console.log("Decrypting last message");
             decryptAndSetLastMessage(chatRoomKey, chatRoom.messages[mLength - 1]);
         }
     }, [chatRoom.messages]);
 
     useEffect(() => {
-        //console.log("Render-1");
         if (!chatRoomKey) return;
 
         chatRoomKeyRef.current = chatRoomKey;
 
-        //console.log("Render-2");
         if (chatRoom.messages.length) {
-            //console.log("Render-3");
-            //const message = chatRoom.messages[chatRoom.messages.length - 1];
             const isActiveRoom = activeChatRoom && activeChatRoom.id === chatRoom.id;
             // Більше ніж 1 непрочитаних повідомлень -- вважаємо потім у ChatRoomMessages як initialLoading, тобто щоб всі повідомлення грузило там.
             // Оскільки це викликається тільки один раз при відображенні чату, то логіка використовується тільки для початкового завантаження
@@ -130,9 +121,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 if (isActiveRoom) {
                     decryptAndSetLastMessage(chatRoomKey, chatRoom.last_message);
                 } else {
-                    //console.log("Emptying the array?", chatRoom.unread_count > 1);
                     ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
-                        //console.log(`Decrypted message`, dMessage);
                         setChatRooms(prev =>
                             prev.map(cr =>
                                 cr.id === chatRoom.id ? { ...cr, messages: cr.unread_count > 1 ? [] : [dMessage], last_message: dMessage } : cr
@@ -142,17 +131,10 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 }
             } else {
                 if (!isActiveRoom && chatRoom.unread_count > 1) {
-                    //console.log("Emptying the array");
                     setChatRooms(prev =>
                         prev.map(cr => cr.id === chatRoom.id ? { ...cr, messages: [] } : cr)
                     );
                 }
-                /*
-                setChatRooms(prev =>
-                    prev.map(cr =>
-                        cr.id === chatRoom.id ? { ...cr, last_message: chatRoom.last_message } : cr
-                    )
-                );*/
             }
         } else {
             setChatRooms(prev =>
@@ -163,22 +145,10 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         }
     }, [chatRoomKey]);
 
-    /*
-    const markMessagesAsDelivered = (messageIds) => {
-        axios.post(route('chat_rooms.messages.mark_as_delivered', chatRoom.id), {
-            message_ids: messageIds
-        }).catch(error => {
-
-        })
-    }*/
-
     const onChatRoomMessageSent = (e) => {
-        //console.log("ChatRoom MessageSent");
         ChatRoomMessage.decryptMessage(chatRoomKeyRef.current, e.message).then((dMessage) => {
-            //console.log("ChatRoom MessageSent message:", dMessage);
 
             const currentActiveChatRoom = activeChatRoomRef.current;
-            //console.log(currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id);
             if (currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id) return;
 
             setChatRooms(prev =>
@@ -209,12 +179,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                     tag: `${chatRoomRef.current.title}`,
                     renotify: true,
                 });
-                /*
-                    .then(newNotification => {
-                    if (newNotification) {
-                        setNotification({ notification: newNotification, messageId: dMessage.id });
-                    }
-                });*/
             }
         });
     };
@@ -266,15 +230,19 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             } : cr);
             setIsOnline(is_online);
         }
-    }
+    };
 
     useEffect(() => {
-        Echo.private(channel)
-            .listen('ChatRoomMessageSent', onChatRoomMessageSent)
-            .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
-            .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
+        //console.log("Calling here:", { chatRoomKey });
+        if (chatRoomKey) {
+            Echo.private(channel)
+                .listen('ChatRoomMessageSent', onChatRoomMessageSent)
+                .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
+                .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
+        }
 
         return () => {
+            //console.log("Closing here");
             Echo.private(channel)
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
