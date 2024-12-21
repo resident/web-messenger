@@ -24,6 +24,7 @@
     "dependencies": {
         "@fix-webm-duration/fix": "^1.0.1",
         "@heroicons/react": "^2.1.5",
-        "dropbox": "^10.34.0"
+        "dropbox": "^10.34.0",
+        "lodash.debounce": "^4.0.8"
     }
 }

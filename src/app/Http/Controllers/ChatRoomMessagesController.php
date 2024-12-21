@@ -18,6 +18,7 @@ use App\Models\ChatRoomMessage;
 use App\Models\ChatRoomMessageAttachment;
 use App\Models\ChatRoomMessageSeen;
 use App\Repositories\ChatRoomMessageRepository;
+use App\Repositories\ChatRoomRepository;
 use App\Services\ChatRoomMessageService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +26,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Log;
+
 
 class ChatRoomMessagesController extends Controller
 {
@@ -32,14 +35,80 @@ class ChatRoomMessagesController extends Controller
      * Display a listing of the resource.
      */
     public function index(
+        Request $request,
         ChatRoomMessageRepository $chatRoomMessageRepository,
         ChatRoom $chatRoom,
-        int $count = 10,
+        int $count = 20,
         ?string $startId = null,
     ) {
-        $messages = $chatRoomMessageRepository->getMessages($chatRoom->id, $count, $startId);
+        $user = $request->user();
+        $upperload = $request->query('upperload', null);
+        $lowerload = $request->query('lowerload', null);
+        $lastMessage = $request->query('lastMessage', null);
 
-        return response()->json($messages);
+        if ($lastMessage) {
+            $startId = $chatRoomMessageRepository->getLastMessage($chatRoom)->id;
+        }
+
+        /*Log::info('Fetching chat room messages', [
+            'chatRoomId' => $chatRoom->id,
+            'userId' => $user->id,
+            'count' => $count,
+            'startId' => $startId,
+            'upperload' => $upperload,
+            'lowerload' => $lowerload,
+        ]);*/
+
+        if (!$upperload && !$lowerload) {
+            //Log::info('Initial load without upperload or lowerload');
+            $unreadMessage = $chatRoomMessageRepository->getFirstUnread($chatRoom, $user->id, $count / 2);
+
+            if (!$unreadMessage) {
+                //Log::info('No unread messages, loading normally');
+                $messages = $chatRoomMessageRepository->getMessages($chatRoom->id, $count, $startId, true);
+                //Log::info('Messages loaded', ['message_count' => $messages->count()]);
+                return response()->json($messages);
+            }
+
+            //Log::info('Loading messages around the first unread message', ['unreadMessageId' => $unreadMessage->id]);
+
+            $messages = $chatRoomMessageRepository->getMessages(
+                $chatRoom->id,
+                $count,
+                $unreadMessage->id,
+                true
+            );
+
+            //Log::info('Messages loaded around unread message', ['message_count' => $messages->count()]);
+
+            return response()->json($messages);
+        }
+        if ($upperload) {
+            //Log::info('Loading older messages (upwards)', ['startId' => $startId]);
+            $messages = $chatRoomMessageRepository->getMessages($chatRoom->id, $count, $startId, true);
+            //Log::info('Older messages loaded', ['message_count' => $messages->count()]);
+            return response()->json($messages);
+        }
+        if ($lowerload) {
+            //Log::info('Loading newer messages (downwards)', ['startId' => $startId]);
+            $messages = $chatRoomMessageRepository->getMessages($chatRoom->id, $count, $startId, false);
+            //Log::info('Newer messages loaded', ['message_count' => $messages->count()]);
+            return response()->json($messages);
+        }
+    }
+
+    public function getLastMessage(
+        ChatRoom $chatRoom,
+        ChatRoomMessageRepository $chatRoomMessageRepository,
+    ) {
+        $lastMessage = $chatRoomMessageRepository->getLastMessage($chatRoom);
+        /*Log::info('Fetched last message for chat room via repository', [
+            'chatRoomId' => $chatRoom->id,
+            'lastMessageId' => $lastMessage?->id,
+            'lastMessageContent' => $lastMessage?->content,
+            'lastMessageTime' => $lastMessage?->created_at,
+        ]);*/
+        return $lastMessage;
     }
 
     /**

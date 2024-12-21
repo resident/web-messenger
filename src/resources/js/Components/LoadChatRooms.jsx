@@ -12,7 +12,20 @@ export default function LoadChatRooms({ }) {
 
     const fetchChatRooms = async () => {
         const response = await axios.get(route('chat_rooms.list'));
-        setChatRooms(response.data);
+        setChatRooms(prev => {
+            const existingChatRoomIds = new Set(prev.map(cr => cr.id));
+            const updatedChatRooms = prev.map(cr => {
+                const matchingRoom = response.data.find(r => r.id === cr.id);
+                if (!cr.last_message && matchingRoom?.last_message) {
+                    return { ...cr, last_message: matchingRoom.last_message };
+                }
+                return cr;
+            });
+
+            const newChatRooms = response.data.filter(cr => !existingChatRoomIds.has(cr.id));
+
+            return [...updatedChatRooms, ...newChatRooms];
+        });
         setChatRoomsLoaded(true);
     };
 
@@ -49,7 +62,7 @@ export default function LoadChatRooms({ }) {
             }
         });
 
-        setChatRooms(updatedChatRooms);
+        setChatRooms(() => updatedChatRooms);
     };
 
     useEffect(() => {

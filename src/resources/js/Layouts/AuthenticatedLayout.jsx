@@ -14,6 +14,7 @@ import UserCalls from "@/Components/UserCalls.jsx";
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
+    const [activeChatRoom, setActiveChatRoom] = useState(null);
     const [userPublicKey, setUserPublicKey] = useState(null);
     const [userPrivateKey, setUserPrivateKey] = useState(null);
     const [isInactive, setIsInactive] = useState(false);
@@ -36,6 +37,7 @@ export default function Authenticated({ user, header, children }) {
             <ApplicationContextProvider value={{
                 user,
                 chatRooms, setChatRooms,
+                activeChatRoom, setActiveChatRoom,
                 userPublicKey, setUserPublicKey,
                 userPrivateKey, setUserPrivateKey,
                 isInactive, setIsInactive,

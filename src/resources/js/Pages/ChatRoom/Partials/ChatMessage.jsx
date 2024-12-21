@@ -1,4 +1,4 @@
-import {forwardRef, useContext, useEffect, useRef, useState} from "react";
+import { forwardRef, useContext, useEffect, useRef, useState } from "react";
 import {
     ArrowPathIcon,
     ArrowUturnRightIcon,
@@ -12,28 +12,29 @@ import ChatRooms from "@/Pages/ChatRoom/Partials/ChatRooms.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 import SecondaryButton from "@/Components/SecondaryButton.jsx";
-import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
-import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { ChatRoomContext } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import InputError from "@/Components/InputError.jsx";
-import {Link} from "@inertiajs/react";
-import {CheckIcon, ExclamationCircleIcon} from '@heroicons/react/24/outline';
+import { Link } from "@inertiajs/react";
+import { CheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import CircularProgressBar from "@/Components/CircularProgressBar";
 import ContextMenu from "@/Components/ContextMenu";
 
 export default forwardRef(function ChatMessage({
-                                                   className = '',
-                                                   message,
-                                                   self = false,
-                                                   messageType,
-                                                   onMessageRemoved = () => null,
-                                                   isPlaceholder = false,
-                                                   errorPending = false,
-                                                   uploadProgress = 0,
-                                                   onRetrySend = () => null,
-                                                   ...props
-                                               }, ref) {
+    className = '',
+    message,
+    self = false,
+    messageType,
+    onMessageRead = () => null,
+    onMessageRemoved = () => null,
+    isPlaceholder = false,
+    errorPending = false,
+    uploadProgress = 0,
+    onRetrySend = () => null,
+    ...props
+}, ref) {
     const {
         userPrivateKey, safeViewIsOn, userIsOnline,
         contextMenuVisible, setContextMenuVisible,
@@ -41,7 +42,7 @@ export default forwardRef(function ChatMessage({
         contextMenuTarget, setContextMenuTarget,
         chatRooms, setChatRooms,
     } = useContext(ApplicationContext);
-    const {chatRoomKey} = useContext(ChatRoomContext);
+    const { chatRoomKey } = useContext(ChatRoomContext);
 
     const messageRef = ref ? ref : useRef();
     const observerRef = useRef();
@@ -75,23 +76,11 @@ export default forwardRef(function ChatMessage({
 
         setCreatedAt({
             date: date.toLocaleDateString(),
-            time: date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
+            time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         });
     }, []);
 
     useEffect(() => {
-        if (self || isPlaceholder || errorPending || seenSent || !userIsOnline) {
-            return;
-        }
-
-        const createdAtDate = new Date(message.created_at);
-        const currentDate = new Date();
-
-        const daysDifference = Math.floor((currentDate - createdAtDate) / (1000 * 60 * 60 * 24));
-        if (message.status === "SEEN" && daysDifference >= 7) {
-            return;
-        }
-
         const observerOptions = {
             root: null,
             rootMargin: '0px',
@@ -101,6 +90,20 @@ export default forwardRef(function ChatMessage({
         const observerCallback = (entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
+                    onMessageRead(message);
+
+                    if (self || isPlaceholder || errorPending || (seenSent && message.status === "SEEN") || !userIsOnline) {
+                        return;
+                    }
+
+                    const createdAtDate = new Date(message.created_at);
+                    const currentDate = new Date();
+
+                    const daysDifference = Math.floor((currentDate - createdAtDate) / (1000 * 60 * 60 * 24));
+                    //console.log("Message:", { message, seenSent, daysDifference });
+                    if (message.status === "SEEN" && daysDifference >= 7) {
+                        return;
+                    }
                     axios.post(route('chat_rooms.messages.mark_as_seen', {
                         chatRoom: message.chat_room_id,
                         message: message.id,
@@ -143,7 +146,7 @@ export default forwardRef(function ChatMessage({
         hideMenuContext();
 
         setTimeout(() => {
-            setContextMenuPosition({x: e.clientX, y: e.clientY});
+            setContextMenuPosition({ x: e.clientX, y: e.clientY });
             setContextMenuTarget(message.id);
             setContextMenuVisible(true);
         }, 0);
@@ -204,9 +207,9 @@ export default forwardRef(function ChatMessage({
 
                 if (chatRooms.length > 0) {
                     ChatRoomMessage.decryptMessage(toChatRoomKey, response.data).then(message => {
-                        chatRooms.find(cr => cr.id === toChatRoom.id).messages.push(message);
-
-                        setChatRooms([...chatRooms]);
+                        setChatRooms(prev =>
+                            prev.map(cr => cr.id === toChatRoom.id ? { ...cr, messages: [...cr.messages, message] } : cr)
+                        );
                     })
                 }
 
@@ -266,7 +269,7 @@ export default forwardRef(function ChatMessage({
 
     const formatSeenAt = (timestamp) => {
         const date = new Date(timestamp);
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}`;
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
 
     const getMessageClasses = (self, messageType) => {
@@ -314,8 +317,8 @@ export default forwardRef(function ChatMessage({
     const Checkmarks = () => {
         return (
             <div className="relative pr-4">
-                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-0 transform -translate-y-1/2"/>
-                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-1 transform -translate-y-1/2"/>
+                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-0 transform -translate-y-1/2" />
+                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-1 transform -translate-y-1/2" />
             </div>
         );
     }
@@ -324,27 +327,27 @@ export default forwardRef(function ChatMessage({
         const options = [
             {
                 label: 'Copy',
-                icon: <DocumentDuplicateIcon className="size-4"/>,
+                icon: <DocumentDuplicateIcon className="size-4" />,
                 onClick: handleCopyMessage,
             },
             ...(errorPending ? [{
                 label: 'Retry',
-                icon: <ArrowPathIcon className="size-4"/>,
+                icon: <ArrowPathIcon className="size-4" />,
                 color: 'text-red-500',
                 onClick: onRetrySend,
             }] : isPlaceholder ? [] : [{
                 label: 'Forward',
-                icon: <ArrowUturnRightIcon className="size-4"/>,
+                icon: <ArrowUturnRightIcon className="size-4" />,
                 onClick: handleForwardMessage,
             }]),
             ...((self && message.status === 'SEEN') ? [{
                 label: 'Seen by',
-                icon: <Checkmarks/>,
+                icon: <Checkmarks />,
                 onClick: handleStatusClick,
             }] : []),
             {
                 label: 'Delete',
-                icon: <TrashIcon className="size-4"/>,
+                icon: <TrashIcon className="size-4" />,
                 color: 'text-red-500',
                 onClick: handleDeleteMessage,
             },
@@ -391,13 +394,13 @@ export default forwardRef(function ChatMessage({
                     onClose={closeMessageForwardingModal}
                 >
                     {forwardToChatRoom && <div>
-                        <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom}/>
+                        <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom} />
 
-                        <InputError message={error} className="my-2"/>
+                        <InputError message={error} className="my-2" />
 
                         <div className={`flex gap-2`}>
                             <PrimaryButton disabled={messageForwarding}
-                                           onClick={() => forwardMessage(forwardToChatRoom)}
+                                onClick={() => forwardMessage(forwardToChatRoom)}
                             >Forward</PrimaryButton>
 
                             <SecondaryButton onClick={closeMessageForwardingModal}>Cancel</SecondaryButton>
@@ -405,9 +408,9 @@ export default forwardRef(function ChatMessage({
 
                         {success && <div className={`mt-2 text-green-600`}>{success}</div>}
                     </div> || <ChatRooms
-                        onChatRoomClick={chatRoom => {
-                            setForwardToChatRoom(chatRoom);
-                        }}/>
+                            onChatRoomClick={chatRoom => {
+                                setForwardToChatRoom(chatRoom);
+                            }} />
                     }
                 </Modal>
 
@@ -419,7 +422,7 @@ export default forwardRef(function ChatMessage({
                 >
                     <div className="p-4 !pb-0">
                         <h2 className="text-lg font-semibold mb-4">Seen by</h2>
-                        <hr/>
+                        <hr />
                         <div className="mt-4 h-64 sm:h-80 overflow-y-auto">
                             {isLoadingSeenByUsers ? (
                                 <div className="space-y-4 mt-1">
@@ -444,7 +447,7 @@ export default forwardRef(function ChatMessage({
                                                     <img
                                                         src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`}
                                                         alt="avatar"
-                                                        className="w-full h-full object-cover"/>
+                                                        className="w-full h-full object-cover" />
                                                 )}
                                         </div>
                                         <div>
@@ -452,8 +455,8 @@ export default forwardRef(function ChatMessage({
                                                 className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{user.name}</div>
                                             <div className="text-xs text-gray-500">
                                                 <div className="relative mr-1 pr-5">
-                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-0"/>
-                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-1"/>
+                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-0" />
+                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-1" />
                                                 </div>
                                                 <span className="pl-6">{formatSeenAt(user.seen_at)}</span>
                                             </div>
@@ -464,7 +467,7 @@ export default forwardRef(function ChatMessage({
                                 <div>No data</div>
                             )}
                         </div>
-                        <hr/>
+                        <hr />
                         <div className="flex justify-end pr-3 pt-2">
                             <button
                                 className="text-blue-500 bg-transparent hover:bg-blue-100 font-semibold py-2 px-4 rounded"
@@ -507,8 +510,8 @@ export default forwardRef(function ChatMessage({
                         >
                             {message.user.avatar &&
                                 (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
-                                      alt="avatar"
-                                      className="w-full h-full object-cover"/>
+                                    alt="avatar"
+                                    className="w-full h-full object-cover" />
                                 )
                             }
                         </div>
@@ -531,28 +534,28 @@ export default forwardRef(function ChatMessage({
                                 {isPlaceholder ? (
                                     <div
                                         className={`relative ${errorPending ? 'bg-red-100' : 'bg-blue-100'} rounded-md p-4 flex items-center w-full`}>
-                                        <DocumentIcon className="w-6 h-6 text-gray-500 mr-2"/>
+                                        <DocumentIcon className="w-6 h-6 text-gray-500 mr-2" />
                                         <span className="text-gray-700 mr-2">Attachments...</span>
                                         <div
                                             className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
                                             {errorPending ? (
-                                                <ExclamationCircleIcon className="w-6 h-6"/>
+                                                <ExclamationCircleIcon className="w-6 h-6" />
                                             ) : (
                                                 <CircularProgressBar className="w-6 h-6" progress={uploadProgress}
-                                                                     size={24} strokeWidth={4}/>
+                                                    size={24} strokeWidth={4} />
                                             )}
                                         </div>
                                     </div>
                                 ) : (
                                     message.attachments.map((attachment, i) => (
-                                        <ChatMessageAttachment key={i} attachment={attachment}/>
+                                        <ChatMessageAttachment key={i} attachment={attachment} />
                                     ))
                                 )}
                             </div>
                         }
 
                         <div className={`
-                    text-xs font-light text-right flex items-center justify-end
+                    text-xs font-light text-right flex items-center justify-end min-h-4 min-w-1
                     ${self ? (errorPending ? 'text-red-700' : 'text-[#E7E9ED] ') : 'text-[#E7E9ED]'}
                 `}>
                             {(self || (!self && messageType !== 'top' && messageType !== 'singular')) && (
