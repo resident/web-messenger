@@ -431,19 +431,24 @@ export default function ChatRoomMessages({ ...props }) {
     // --- Коли pendingMessage та коли performSend message
     // 2 - Якщо людина натискає на кнопку вниз (ще треба доробити її)
     // 3 - Якщо людина вже внизу і їй приходить нове повідомлення
-    const scrollToLastMessage = (isVirtualizing, isLastMessageLoaded) => {
+    const scrollToLastMessage = (isVirtualizing, isLastMessageLoaded, sendingMessage = null) => {
         if (chatRoomRef.current.unread_count > 0) {
             setChatRooms(prev =>
                 prev.map(cr => cr.id === chatRoom.id ? { ...cr, unread_count: 0 } : cr)
             );
         }
-
+        //console.log("Is Last Message loaded?", { isLastMessageLoaded });
         // Якщо є gap (не збігаються останні повідомлення), стираються всі з allMessages, додається lastMessage в messages, завантажуємо зверху повідомлення (cacheLoading)
         if (!isLastMessageLoaded) { // Це працює тільки для надсилання свого повідомлення або кнопки "вниз"
             //setMessages([]);
             //setPendingMessages([]);
             setAllMessages([]);
             setInitialLoading(0);
+            //console.log("LastMessage?", {
+            //    chatRoomRefLastMessage: chatRoomRef.current.last_message,
+            //    chatRoomLastMessage: chatRoom.last_message,
+            //    lastMessage: lastMessage,
+            //});
             if (!chatRoomRef.current.last_message) {
                 // Якщо виявляється, що lastMessage не завантажене в нас, робимо upperLoad починаючи з останнього повідомлення lastMessage = true
                 setTimeout(() => {
@@ -453,7 +458,12 @@ export default function ChatRoomMessages({ ...props }) {
                 // Якщо lastMessage існує, то ставимо його в messages і починаємо від нього загрузку у cacheLoading
                 setCacheLoading(true);
                 setTimeout(() => {
-                    setAllMessages([lastMessage]);
+                    //console.log("What message are we sending?", sendingMessage);
+                    if (sendingMessage) {
+                        setAllMessages([lastMessage, sendingMessage]);
+                    } else {
+                        setAllMessages([lastMessage]);
+                    }
                 }, 0);
             }
         } else { // Це працює для надсилання свого повідомлення, кнопки "вниз" та отримання нового повідомлення (коли вже точно wasAtBottomAllMessages та isNearBottomOfScroll)
@@ -791,6 +801,8 @@ export default function ChatRoomMessages({ ...props }) {
         addMessageToSchedule(message);
     }
 
+    const [debouncedPendingSendQueue, setDebouncedPendingSendQueue] = useState([]);
+
     // Надсилаємо і відповідно, коли нам приходить з сервера інфа, що ми надіслали повідомлення
     const performSendMessage = async (messageData) => {
         try {
@@ -802,20 +814,7 @@ export default function ChatRoomMessages({ ...props }) {
                 );
             }).then(async response => {
                 const decryptedMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, response.data);
-                setAllMessages(prev => {
-                    const lastIndex = prev.length - 1;
-                    if (prev[lastIndex]?.id === messageData.id) {
-                        return [
-                            ...prev.slice(0, lastIndex),
-                            decryptedMessage
-                        ];
-                    } else {
-                        return [
-                            ...prev.filter(msg => msg.id !== messageData.id),
-                            decryptedMessage,
-                        ];
-                    }
-                });
+                setLastMessage(decryptedMessage);
                 setChatRooms(prev =>
                     prev.map(cr => {
                         if (cr.id === chatRoom.id) {
@@ -831,12 +830,22 @@ export default function ChatRoomMessages({ ...props }) {
                         return cr
                     })
                 );
+                setAllMessages(prev => {
+                    const lastIndex = prev.length - 1;
+                    if (prev[lastIndex]?.id === messageData.id) {
+                        return [
+                            ...prev.slice(0, lastIndex),
+                            decryptedMessage
+                        ];
+                    } else {
+                        return [
+                            ...prev.filter(msg => msg.id !== messageData.id),
+                            decryptedMessage,
+                        ];
+                    }
+                });
             }).catch(error => {
-                setAllMessages(prev =>
-                    prev.map((msg) =>
-                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
-                    )
-                );
+                setLastMessage(messageData);
                 setChatRooms(prev =>
                     prev.map(cr => {
                         if (cr.id === chatRoom.id) {
@@ -852,6 +861,11 @@ export default function ChatRoomMessages({ ...props }) {
                         return cr
                     })
                 );
+                setAllMessages(prev =>
+                    prev.map((msg) =>
+                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
+                    )
+                );
             }).finally(() => {
                 setSendingMessage(false);
             });
@@ -863,13 +877,30 @@ export default function ChatRoomMessages({ ...props }) {
         }
     }
 
+    const debouncedSendMessages = useRef(
+        debounce(() => {
+            debouncedPendingSendQueue.forEach(message => {
+                performSendMessage(message);
+            });
+            setDebouncedPendingSendQueue([]);
+        }, 300)
+    ).current;
+
     // Створюємо плейсхолдер для надісланого повідомлення
     const sendMessage = async () => {
         setSendingMessage(true);
         setErrors({ ...errors, message: '' });
 
         const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
-        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === chatRoomRef.current.last_message?.id);
+        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id);
+        //console.log("SendingMessage:", {
+        //    allMessages: allMessagesRefs.current,
+        //    allMessagesHere: allMessages,
+        //    chatRoomLastMessage: chatRoomRef.current.last_message,
+        //    chatRoomLastMessageHere: chatRoom.last_message,
+        //    lastMessageHere: lastMessage,
+        //    isLastMessageLoaded,
+        //});
 
         const tempId = crypto.randomUUID();
         const placeholderMessage = {
@@ -888,59 +919,30 @@ export default function ChatRoomMessages({ ...props }) {
             errorPending: null,
             uploadProgress: 0,
         };
-        if (isLastMessageLoaded) {
-            setChatRooms(prev =>
-                prev.map(cr => {
-                    if (cr.id === chatRoom.id) {
-                        let isNewer = true;
-                        if (cr.last_message) {
-                            isNewer = new Date(placeholderMessage.created_at) > new Date(cr.last_message.created_at);
-                        }
-                        return {
-                            ...cr,
-                            last_message: isNewer ? placeholderMessage : cr.last_message,
-                        };
-                    }
-                    return cr
-                })
-            );
-            setAllMessages(prev => addUniqueMessages(prev, [placeholderMessage], false));
 
-            setTimeout(() => {
-                /*
-                if (pendingMessages.some(pm => pm.id === placeholderMessage.id)) {
-                    console.log("Pending message was set 1");
-                    if (chatRooms.some(cr => cr.id === chatRoom.id && cr.last_message === placeholderMessage)) {
-                        console.log("Last message was set 1");
+        setChatRooms(prev =>
+            prev.map(cr => {
+                if (cr.id === chatRoom.id) {
+                    let isNewer = true;
+                    if (cr.last_message) {
+                        isNewer = new Date(placeholderMessage.created_at) > new Date(cr.last_message.created_at);
                     }
+                    return {
+                        ...cr,
+                        last_message: isNewer ? placeholderMessage : cr.last_message,
+                    };
                 }
-                console.log("Going into scrollToLastMessage");*/
-                scrollToLastMessage(isVirtualizing, isLastMessageLoaded);
-            }, 0);
-        } else {
-            //console.log("Going into scrollToLastMessage 1");
-            scrollToLastMessage(isVirtualizing, isLastMessageLoaded);
+                return cr
+            })
+        );
 
-            setTimeout(() => {
-                //console.log("Starting setting last_message and pending");
-                setChatRooms(prev =>
-                    prev.map(cr => {
-                        if (cr.id === chatRoom.id) {
-                            let isNewer = true;
-                            if (cr.last_message) {
-                                isNewer = new Date(placeholderMessage.created_at) > new Date(cr.last_message.created_at);
-                            }
-                            return {
-                                ...cr,
-                                last_message: isNewer ? placeholderMessage : cr.last_message,
-                            };
-                        }
-                        return cr
-                    })
-                );
-                setAllMessages(prev => addUniqueMessages(prev, [placeholderMessage], false));
-            }, 0);
-        }
+        setAllMessages(prev => addUniqueMessages(prev, [placeholderMessage], false));
+        setDebouncedPendingSendQueue(prevQueue => [...prevQueue, placeholderMessage]);
+        debouncedSendMessages();
+
+        setTimeout(() => {
+            scrollToLastMessage(isVirtualizing, isLastMessageLoaded, !isLastMessageLoaded ? placeholderMessage : null);
+        }, 0);
 
         setMessage('');
         setMessageAttachments([]);
@@ -1018,8 +1020,11 @@ export default function ChatRoomMessages({ ...props }) {
 
 
         const anchorMessage = windowMessages[anchorIndex];
+        //console.log("Anchor Message:", { anchorMessage });
         const globalIndex = allMessages.findIndex(m => m.id === anchorMessage.id);
+        //console.log("GlobalIndex:", globalIndex);
         const anchorEl = messageRefs.current[globalIndex];
+        //console.log("Anchor element:", { anchorEl });
         if (!anchorEl) return;
 
         const anchorRect = anchorEl.getBoundingClientRect();
@@ -1062,21 +1067,32 @@ export default function ChatRoomMessages({ ...props }) {
         ) return;
 
         const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
+        //console.log("MessagesRef:", { messagesRef });
 
         lastKnownScrollTopRef.current = scrollTop;
         if (windowMessages.length > 0) {
             lastKnownAnchorMessageIdRef.current = windowMessages[0].id;
         }
+        //console.log("WindowMessages:", { windowMessages });
 
         if (restoringState) return;
 
         const threshold = 50;
         const atTop = scrollTop <= threshold;
         const atBottom = scrollHeight - (scrollTop + clientHeight) <= threshold;
+        //console.log("Where am I?", {
+        //    atTop,
+        //    atBottom,
+        //    scrollState: atTop ? "top" : atBottom ? "bottom" : "center",
+        //    scrollTop,
+        //    scrollHeight,
+        //    clientHeight,
+        //})
 
         const bufferSize = 20; // Airbag
 
         if (atTop && scrollState !== 'upper') {
+            //console.log("We're going upper");
             setScrollState('upper');
             setAnchorMessage(true);
 
@@ -1091,6 +1107,7 @@ export default function ChatRoomMessages({ ...props }) {
                 }
             }
         } else if (atBottom && scrollState !== 'bottom') {
+            //console.log("We're going lower");
             setScrollState('bottom');
             setAnchorMessage(false);
 
@@ -1165,9 +1182,10 @@ export default function ChatRoomMessages({ ...props }) {
 
     const handleKeyDown = (e) => {
         if (e.ctrlKey && e.key === 'Enter') {
-            if (availableToSendMessage()) {
+            /*if (availableToSendMessage()) {
                 sendMessage();
-            }
+            }*/
+            sendMessage();
         }
 
         saveMessageInputSelectionState();
@@ -1512,7 +1530,7 @@ export default function ChatRoomMessages({ ...props }) {
 
                             <PrimaryButton
                                 onClick={() => sendMessage()}
-                                disabled={!availableToSendMessage()}
+                            //disabled={!availableToSendMessage()}
                             >Send</PrimaryButton>
                         </div>
                     </div>
