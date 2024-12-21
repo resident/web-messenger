@@ -234,12 +234,10 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     useEffect(() => {
         //console.log("Calling here:", { chatRoomKey });
-        if (chatRoomKey) {
-            Echo.private(channel)
-                .listen('ChatRoomMessageSent', onChatRoomMessageSent)
-                .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
-                .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
-        }
+        Echo.private(channel)
+            .listen('ChatRoomMessageSent', onChatRoomMessageSent)
+            .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
+            .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
 
         return () => {
             //console.log("Closing here");

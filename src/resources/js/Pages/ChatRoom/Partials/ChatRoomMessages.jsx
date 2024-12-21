@@ -593,9 +593,9 @@ export default function ChatRoomMessages({ ...props }) {
 
                 const notif = !isNearBottom && !userIsOnlineRef.current && !chatRoomRef.current.muted && dMessage.user_id !== user.id;
                 if (notif) {
-                    Utils.showNotification(`${chatRoomRef.title}`, {
+                    Utils.showNotification(`${chatRoomRef.current.title}`, {
                         body: `${dMessage.user.name}: ${dMessage.message}`,
-                        tag: `${chatRoomRef.title}`,
+                        tag: `${chatRoomRef.current.title}`,
                         renotify: true,
                     });
                 }

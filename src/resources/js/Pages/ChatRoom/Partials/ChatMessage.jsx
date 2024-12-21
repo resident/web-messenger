@@ -277,23 +277,23 @@ export default forwardRef(function ChatMessage({
 
         if (!self) {
             if (messageType === 'top') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-xl rounded-bl-md';
+                classes = 'rounded-tr-2xl rounded-br-2xl rounded-tl-2xl rounded-bl';
             } else if (messageType === 'middle') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-md rounded-bl-md';
+                classes = 'rounded-tr-2xl rounded-br-2xl rounded-tl rounded-bl';
             } else if (messageType === 'last') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-md rounded-bl-none';
+                classes = 'rounded-tr-2xl rounded-br-2xl rounded-tl rounded-bl-none';
             } else if (messageType === 'singular') {
-                classes = 'rounded-tr-xl rounded-br-xl rounded-tl-xl rounded-bl-none';
+                classes = 'rounded-tr-2xl rounded-br-2xl rounded-tl-2xl rounded-bl-none';
             }
         } else {
             if (messageType === 'top') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-xl rounded-br-md';
+                classes = 'rounded-tl-2xl rounded-bl-2xl rounded-tr-2xl rounded-br';
             } else if (messageType === 'middle') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-md rounded-br-md';
+                classes = 'rounded-tl-2xl rounded-bl-2xl rounded-tr rounded-br';
             } else if (messageType === 'last') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-md rounded-br-none';
+                classes = 'rounded-tl-2xl rounded-bl-2xl rounded-tr rounded-br-none';
             } else if (messageType === 'singular') {
-                classes = 'rounded-tl-xl rounded-bl-xl rounded-tr-xl rounded-br-none';
+                classes = 'rounded-tl-2xl rounded-bl-2xl rounded-tr-2xl rounded-br-none';
             }
         }
 
@@ -303,11 +303,11 @@ export default forwardRef(function ChatMessage({
     const getMessageYPadding = (messageType) => {
         let padding = '';
         if (messageType === 'top') {
-            padding = 'pt-[2px] pb-[1px]';
+            padding = 'pt-[2px] pb-[0.5px]';
         } else if (messageType === 'middle') {
-            padding = 'pt-[1px] pb-[1px]';
+            padding = 'pt-[0.5px] pb-[0.5px]';
         } else if (messageType === 'last') {
-            padding = 'pt-[1px] pb-[2px]';
+            padding = 'pt-[0.5px] pb-[2px]';
         } else if (messageType === 'singular') {
             padding = 'pt-[2px] pb-[2px]';
         }
