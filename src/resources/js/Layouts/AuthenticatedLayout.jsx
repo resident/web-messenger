@@ -99,8 +99,8 @@ export default function Authenticated({user, header, children}) {
                                                 className="font-medium text-sm text-gray-200">{user.email}</div>
                                         </div>
 
-                                        <nav>
-                                            <div className="space-y-1">
+                                        <nav className="space-y-3">
+                                            <div>
                                                 <ResponsiveNavLink href={route('main')}
                                                                    active={route().current('main')}
                                                 >
@@ -108,7 +108,7 @@ export default function Authenticated({user, header, children}) {
                                                 </ResponsiveNavLink>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div>
                                                 <ResponsiveNavLink href={route('chat_rooms.create')}
                                                                    active={route().current('chat_rooms.create')}
                                                 >
@@ -116,7 +116,7 @@ export default function Authenticated({user, header, children}) {
                                                 </ResponsiveNavLink>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div>
                                                 <ResponsiveNavLink href={route('contact.show')}
                                                                    active={route().current('contscts.show')}
                                                 >
@@ -125,22 +125,20 @@ export default function Authenticated({user, header, children}) {
                                             </div>
 
                                             <div>
+                                                <ResponsiveNavLink
+                                                    href={route('profile.edit')}
+                                                    active={route().current('profile.edit')}
+                                                >
+                                                    Profile
+                                                </ResponsiveNavLink>
+                                            </div>
 
-
-                                                <div className="">
-                                                    <ResponsiveNavLink
-                                                        href={route('profile.edit')}
-                                                        active={route().current('profile.edit')}
-                                                    >
-                                                        Profile
-                                                    </ResponsiveNavLink>
-
-                                                    <ResponsiveNavLink method="post" href={route('logout')}
-                                                                       as="button"
-                                                    >
-                                                        Log Out
-                                                    </ResponsiveNavLink>
-                                                </div>
+                                            <div>
+                                                <ResponsiveNavLink method="post" href={route('logout')}
+                                                                   as="button"
+                                                >
+                                                    Log Out
+                                                </ResponsiveNavLink>
                                             </div>
                                         </nav>
                                     </div>
