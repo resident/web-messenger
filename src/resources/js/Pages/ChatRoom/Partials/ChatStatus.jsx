@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 
-export default function ChatStatus({ currentUserId, chatRoom }) {
+export default function ChatStatus({currentUserId, chatRoom}) {
     const [isOnline, setIsOnline] = useState(chatRoom.is_online);
     const [lastSeenAt, setLastSeenAt] = useState(chatRoom.last_seen_at);
     const [memberCount, setMemberCount] = useState(chatRoom.users.length);
@@ -8,7 +8,7 @@ export default function ChatStatus({ currentUserId, chatRoom }) {
 
 
     const onUserOnlineStatusChanged = (e) => {
-        const { user_id, is_online, last_seen_at } = e;
+        const {user_id, is_online, last_seen_at} = e;
         const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
         if (otherUser && otherUser.id === user_id) {
             setIsOnline(is_online);
@@ -71,16 +71,22 @@ export default function ChatStatus({ currentUserId, chatRoom }) {
                 } else if (diffHours < 12) {
                     lastSeenText = `Last seen ${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
                 } else if (diffHours < 24) {
-                    lastSeenText = `Last seen today at ${lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    lastSeenText = `Last seen today at ${lastSeenDate.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}`;
                 } else if (diffDays === 1) {
-                    lastSeenText = `Last seen yesterday at ${lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                    lastSeenText = `Last seen yesterday at ${lastSeenDate.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}`;
                 } else {
                     lastSeenText = `Last seen on ${lastSeenDate.toLocaleDateString()}`;
                 }
 
-                return <span className="text-gray-500 text-sm">{lastSeenText}</span>;
+                return <span className="text-sm">{lastSeenText}</span>;
             } else {
-                return <span className="text-gray-500 text-sm">Last seen recently</span>;
+                return <span className="text-sm">Last seen recently</span>;
             }
         } else {
             return null;

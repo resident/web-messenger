@@ -1,12 +1,10 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
-import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
+import {useContext, useEffect, useRef, useState} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
-import { TrashIcon } from "@heroicons/react/24/solid/index.js";
-import { router } from "@inertiajs/react";
 import Utils from "@/Common/Utils.js";
 
-export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
+export default function ChatRoom({className = '', chatRoom, onClickHandler = chatRoom => null}) {
     const {
         userPrivateKey,
         user,
@@ -46,7 +44,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                     setChatRooms(prev =>
                         prev.map(cr =>
-                            cr.id === chatRoom.id ? { ...cr, last_message: dMessage } : cr
+                            cr.id === chatRoom.id ? {...cr, last_message: dMessage} : cr
                         )
                     );
                 });
@@ -91,7 +89,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                         const updatedMessages = cr.messages.map(msg =>
                             msg.id === dMessage.id ? dMessage : msg
                         );
-                        return { ...cr, messages: updatedMessages, last_message: dMessage }
+                        return {...cr, messages: updatedMessages, last_message: dMessage}
                     }
                     return cr;
                 })
@@ -124,7 +122,11 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                     ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                         setChatRooms(prev =>
                             prev.map(cr =>
-                                cr.id === chatRoom.id ? { ...cr, messages: cr.unread_count > 1 ? [] : [dMessage], last_message: dMessage } : cr
+                                cr.id === chatRoom.id ? {
+                                    ...cr,
+                                    messages: cr.unread_count > 1 ? [] : [dMessage],
+                                    last_message: dMessage
+                                } : cr
                             )
                         );
                     });
@@ -132,14 +134,14 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             } else {
                 if (!isActiveRoom && chatRoom.unread_count > 1) {
                     setChatRooms(prev =>
-                        prev.map(cr => cr.id === chatRoom.id ? { ...cr, messages: [] } : cr)
+                        prev.map(cr => cr.id === chatRoom.id ? {...cr, messages: []} : cr)
                     );
                 }
             }
         } else {
             setChatRooms(prev =>
                 prev.map(cr =>
-                    cr.id === chatRoom.id ? { ...cr, last_message: null } : cr
+                    cr.id === chatRoom.id ? {...cr, last_message: null} : cr
                 )
             );
         }
@@ -198,7 +200,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 const previousMessage = messageId !== -1 ? chatRoomRef.current.messages[messageId - 1] : null;
                 const newLastMessage = previousMessage
                     ? previousMessage
-                    : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom.id })).then(res => res.data);
+                    : await axios.get(route("chat_rooms.messages.get_last_message", {chatRoom: chatRoom.id})).then(res => res.data);
                 let updatedMessages = chatRoomRef.current.messages.filter(m => m.id !== messageToRemove.id);
                 if (updatedMessages.length === 0) {
                     updatedMessages = [newLastMessage];
@@ -206,21 +208,21 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
                 setChatRooms(prev =>
                     prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        { ...cr, messages: [...updatedMessages], last_message: { ...newLastMessage } } : cr)
+                        {...cr, messages: [...updatedMessages], last_message: {...newLastMessage}} : cr)
                 );
             }
 
             if (new Date(messageToRemove.createdAt) > new Date(chatRoomRef.current.last_read_at + "Z") && messageToRemove.user_id !== user.id) {
                 setChatRooms(prev =>
                     prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        { ...cr, unread_count: Math.max((chatRoomRef.current.unread_count || 0) - 1, 0) } : cr)
+                        {...cr, unread_count: Math.max((chatRoomRef.current.unread_count || 0) - 1, 0)} : cr)
                 );
             }
         })();
     };
 
     const onUserOnlineStatusChanged = (e) => {
-        const { user_id, is_online, last_seen_at } = e;
+        const {user_id, is_online, last_seen_at} = e;
         const otherUser = chatRoomRef.current.users.find(u => u.id !== user.id);
         if (otherUser?.id === user_id) {
             setChatRooms(cr => cr.id === chatRoomRef.current.id ? {
@@ -263,10 +265,10 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         const currentDate = new Date();
 
         const formatDate = (date) => date.toLocaleDateString();
-        const getWeekDay = (date) => date.toLocaleDateString('en-US', { weekday: 'short' });
+        const getWeekDay = (date) => date.toLocaleDateString('en-US', {weekday: 'short'});
 
         if (inputDate.toLocaleDateString() === currentDate.toLocaleDateString()) {
-            return inputDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return inputDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
         }
 
         const oneWeekAgo = new Date();
@@ -279,63 +281,55 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         return formatDate(inputDate);
     }
 
-    const removeChatRoom = async (e) => {
-        e.stopPropagation();
-
-        await axios.delete(route('chat_rooms.destroy', chatRoom.id));
-
-        router.visit(route('main'));
-    };
-
     return (
         <div
-            className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
+            className={`flex min-w-min bg-blue-400 hover:bg-blue-300 rounded-md cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
-            <div className={`min-w-12 min-h-12 max-w-12 max-h-12 mr-3 bg-lime-300 rounded-full relative`}>
-                {chatRoom.users.length === 2 && (
-                    <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                )}
-            </div>
-
             <div className={`w-full`}>
-                <div className={`flex justify-between`}>
-                    <div className={`flex gap-1 text-nowrap`}>
-                        <span className={`font-bold `}>
-                            {chatRoom.users.length === 2
-                                && truncate(chatRoom.users.find(u => u.id !== user.id).name, 15)
-                                || truncate(chatRoom.title, 15)
-                            }
-                        </span>
-
-                        {lastMessage && (<span className={`text-sm`}>{prettyCreatedAt(lastMessage.created_at)}</span>)}
-                    </div>
-
-                    <div className={`flex gap-0.5`}>
+                <div className={`flex justify-between pl-1 my-2`}>
+                    <div>
                         {chatRoom.unread_count > 0 && (
-                            <div className="bg-red-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
-                                {chatRoom.unread_count > 99999 ? '99999+' : chatRoom.unread_count}
+                            <div
+                                className="bg-blue-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
+                                {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
                             </div>
                         )}
-                        <TrashIcon
-                            className={`
-                            size-4 opacity-0 group-hover:opacity-100 cursor-pointer
-                            ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
-                        `}
-                            onClick={removeChatRoom}
-                        />
                     </div>
+
+                    <div className={`flex gap-2`}>
+                        <span
+                            className={`font-bold text-2xl text-nowrap text-blue-100 group-hover:text-black`}>{truncate(chatRoom.title, 15)}</span>
+
+                        <div className={`size-12 mr-3 bg-blue-300 rounded-full relative`}>
+                            {lastMessage.user.avatar &&
+                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${lastMessage.user.avatar.path}`}
+                                      alt="avatar"
+                                      className="size-12 object-cover rounded-full"/>)
+                            }
+
+                            {chatRoom.users.length === 2 && isOnline && (
+                                <span className={`absolute top-0 right-0 w-3 h-3 rounded-full bg-blue-500`}></span>
+                            )}
+                        </div>
+                    </div>
+
+
                 </div>
 
                 {lastMessage && !lastMessage.message_iv && (
-                    <div
-                        className={`text-gray-400 ${safeViewIsOn && 'blur-sm group-hover:blur-0'}`}
+                    <div className={`
+                            flex justify-between text-gray-600 bg-blue-300 group-hover:bg-white rounded-md text-sm p-1
+                            ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
+                        `}
                     >
-                        {truncate(lastMessage.message, 20)}
+                        <div>
+                            {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
+                        </div>
+
+                        <div>{prettyCreatedAt(lastMessage.created_at)}</div>
                     </div>
                 )}
-
             </div>
         </div>
     );

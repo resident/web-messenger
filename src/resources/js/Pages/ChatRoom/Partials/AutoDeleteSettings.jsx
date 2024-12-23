@@ -126,7 +126,7 @@ export default function AutoDeleteSettings() {
         <div className={`relative`}>
             <div
                 className={`
-                    absolute -top-32 -right-20 bg-gray-200 rounded-md p-3 shadow-md
+                    absolute -top-32 -right-[8rem] bg-gray-200 rounded-md p-3 shadow-md
                     ${showSettings ? 'block' : 'hidden'}
                 `}
             >

@@ -1,9 +1,11 @@
-import {EllipsisVerticalIcon} from "@heroicons/react/24/outline/index.js";
+import {EllipsisHorizontalIcon} from "@heroicons/react/24/outline/index.js";
 import Checkbox from "@/Components/Checkbox.jsx";
 import {useContext, useState} from "react";
 import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import axios from "axios";
+import {router} from "@inertiajs/react";
 
-export default function ChatRoomMenu() {
+export default function ChatRoomMenu({chatRoom}) {
     const {safeViewIsOn, setSafeViewIsOn} = useContext(ApplicationContext);
 
     const [menuIsHidden, setMenuIsHidden] = useState(true);
@@ -21,23 +23,47 @@ export default function ChatRoomMenu() {
             });
     };
 
+    const removeChatRoom = async (e) => {
+        e.stopPropagation();
+
+        const result = confirm('Delete this chat room?');
+
+        if (result) {
+            await axios.delete(route('chat_rooms.destroy', chatRoom.id));
+
+            router.visit(route('main'));
+        }
+    };
+
     return (
-        <div className={` relative`}>
-            <EllipsisVerticalIcon
-                className={`size-8 rounded-full p-1 hover:bg-indigo-600 hover:text-white cursor-pointer`}
+        <div className={`relative`}>
+            <EllipsisHorizontalIcon
+                className={`
+                    size-8 border-2 border-white rounded-full p-1 text-white cursor-pointer hover:bg-blue-600
+                `}
                 onClick={toggleMenu}
             />
 
-            <div
-                className={`absolute top-10 right-0 bg-gray-200 shadow-2xl whitespace-nowrap ${menuIsHidden ? 'hidden' : ''}`}>
-                <div className={`hover:bg-gray-300 p-2`}>
-                    <div className={`flex flex-nowrap gap-2 items-center`}>
+            <div className={`
+                    absolute top-11 right-0 bg-blue-400 shadow-2xl whitespace-nowrap border-4 border-white text-white
+                    rounded-lg
+                    ${menuIsHidden ? 'hidden' : ''}
+                `}>
+                <div className={`flex  flex-col gap-2 p-2`}>
+                    <div
+                        className={`bg-blue-800 hover:bg-blue-900 p-2 select-none flex flex-nowrap gap-2 items-center`}>
                         <span>Safe View</span>
 
                         <Checkbox
                             checked={safeViewIsOn}
                             onChange={onSafeViewChanged}
                         />
+                    </div>
+
+                    <div className={`bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer`}
+                         onClick={removeChatRoom}
+                    >
+                        Delete
                     </div>
                 </div>
             </div>
