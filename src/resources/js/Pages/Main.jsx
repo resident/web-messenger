@@ -22,7 +22,7 @@ export default function Main({ auth, ...props }) {
                 <div
                     className={`
                         h-[calc(100dvh-4.1rem)] sm:h-[calc(100dvh-8.1rem)]
-                        overflow-auto bg-gray-200 ${chatRoom ? 'hidden md:block' : ''}
+                        overflow-auto bg-blue-900 ${chatRoom ? 'hidden md:block' : ''}
                     `}>
                     <ChatRooms onChatRoomClick={chatRoom => {
                         setChatRoom(chatRoom);
@@ -37,28 +37,34 @@ export default function Main({ auth, ...props }) {
                     />
                 </div>
 
-                <div className={`bg-white`}>
+                <div className={`bg-blue-300`}>
                     {chatRoom &&
                         <div key={chatRoom.id}>
-                            <div key={chatRoom.id} className={`p-2 flex justify-between bg-gray-200`}>
-                                <ArrowLeftIcon
-                                    className={`size-8 rounded-full p-1 hover:bg-indigo-600 hover:text-white cursor-pointer`}
-                                    onClick={() => {
-                                        setChatRoom(null)
-                                        router.get(route('main'), {}, {
-                                            preserveState: true,
-                                            preserveScroll: true,
-                                            replace: true,
-                                            only: []
-                                        });
-                                    }}
-                                />
+                            <div key={chatRoom.id} className={`p-2 flex justify-between bg-blue-500 text-white`}>
+                                <div>
+                                    <ArrowLeftIcon
+                                        className={`size-8 rounded-full p-1 hover:bg-blue-600 cursor-pointer`}
+                                        onClick={() => {
+                                            setChatRoom(null)
+                                            router.get(route('main'), {}, {
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                                replace: true,
+                                                only: []
+                                            });
+                                        }}
+                                    />
+                                </div>
 
-                                <div>{chatRoom.title}</div>
+                                <div className={`flex gap-5`}>
+                                    <ChatStatus chatRoom={chatRoom} />
 
-                                <ChatStatus chatRoom={chatRoom} />
+                                    <div className={`text-3xl`}>
+                                        {chatRoom.title}
+                                    </div>
 
-                                <ChatRoomMenu />
+                                    <ChatRoomMenu chatRoom={chatRoom} />
+                                </div>
                             </div>
 
                             <ChatRoomMessages chatRoom={chatRoom} />

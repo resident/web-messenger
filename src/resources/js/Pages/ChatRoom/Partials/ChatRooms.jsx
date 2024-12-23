@@ -1,8 +1,10 @@
-import { useContext, useEffect } from "react";
-import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
+import {useContext, useEffect} from "react";
+import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
+import {PlusIcon} from "@heroicons/react/24/outline/index.js";
+import {router} from "@inertiajs/react";
 
-export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeChatRoomM = null }) {
+export default function ChatRooms({onChatRoomClick = chatRoom => null, activeChatRoomM = null}) {
     const {
         user,
         chatRooms, setChatRooms,
@@ -15,7 +17,7 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
         if (chatRoom.users.length === 2) {
             const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
 
-            const statusResponse = await axios.get(route('user-status.get', { userId: otherUser.id }));
+            const statusResponse = await axios.get(route('user-status.get', {userId: otherUser.id}));
             const status = statusResponse.data;
 
             const updatedChatRoom = {
@@ -39,7 +41,11 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
         const unreadCount = e.unreadCount;
         const lastReadAt = e.lastReadAt;
 
-        setChatRooms(prev => prev.map(cr => cr.id === chatRoomId ? { ...cr, unread_count: unreadCount, last_read_at: lastReadAt } : cr));
+        setChatRooms(prev => prev.map(cr => cr.id === chatRoomId ? {
+            ...cr,
+            unread_count: unreadCount,
+            last_read_at: lastReadAt
+        } : cr));
     }
 
     useEffect(() => {
@@ -55,13 +61,22 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
     }, []);
 
     return (
-        <div className={`mb-3`}>
+        <div className={`p-2 mb-3 flex flex-col gap-y-2`}>
+            <div className={`
+                    h-10 bg-blue-400 hover:bg-blue-300 hover:cursor-pointer rounded-md flex justify-center items-center
+                `}
+                 onClick={() => router.visit(route('chat_rooms.create'))}>
+                <PlusIcon className={`size-8 stroke-[3px] text-white`}/>
+            </div>
+
             {chatRooms.map((chatRoom) => (
-                <ChatRoom
-                    key={chatRoom.id}
-                    chatRoom={chatRoom}
-                    onClickHandler={() => onChatRoomClick(chatRoom)}
-                />
+                <div key={chatRoom.id} className={`bg-blue-400 hover:bg-blue-500 rounded-md`}>
+                    <ChatRoom
+                        key={chatRoom.id}
+                        chatRoom={chatRoom}
+                        onClickHandler={() => onChatRoomClick(chatRoom)}
+                    />
+                </div>
             ))}
         </div>
     )

@@ -169,9 +169,9 @@ export default function ChatStatus({ ...props }) {
                     lastSeenText = `Last seen on ${lastSeenDate.toLocaleDateString()}`;
                 }
 
-                return <span className="text-gray-500 text-sm">{lastSeenText}</span>;
+                return <span className="text-sm">{lastSeenText}</span>;
             } else {
-                return <span className="text-gray-500 text-sm">Last seen recently</span>;
+                return <span className="text-sm">Last seen recently</span>;
             }
         } else {
             return null;

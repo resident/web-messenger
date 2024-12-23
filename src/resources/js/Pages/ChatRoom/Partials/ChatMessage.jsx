@@ -496,7 +496,6 @@ export default forwardRef(function ChatMessage({
                     </div>
                 )}
 
-
                 <div
                     className={`flex flex-1 ${self ? 'flex-row-reverse' : ''} w-full pl-4 pr-3 ${getMessageYPadding(messageType)} group items-end
                     transition-colors duration-100 ease-in-out
@@ -504,7 +503,7 @@ export default forwardRef(function ChatMessage({
                 >
                     {(messageType === 'last' || messageType === 'singular') ? (
                         <div
-                            className={`relative min-w-12 min-h-12 max-w-12 max-h-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
+                            className={`relative size-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
                         rounded-full overflow-hidden
                         hidden sm:block`}
                         >

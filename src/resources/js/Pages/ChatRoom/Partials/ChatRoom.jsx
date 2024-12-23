@@ -1,9 +1,7 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
-import { TrashIcon } from "@heroicons/react/24/solid/index.js";
-import { router } from "@inertiajs/react";
 import Utils from "@/Common/Utils.js";
 
 export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
@@ -142,7 +140,11 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                     ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                         setChatRooms(prev =>
                             prev.map(cr =>
-                                cr.id === chatRoom.id ? { ...cr, messages: cr.unread_count > 1 ? [] : [dMessage], last_message: dMessage } : cr
+                                cr.id === chatRoom.id ? {
+                                    ...cr,
+                                    messages: cr.unread_count > 1 ? [] : [dMessage],
+                                    last_message: dMessage
+                                } : cr
                             )
                         );
                     });
@@ -366,7 +368,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     return (
         <div
-            className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
+            className={`flex min-w-min bg-blue-400 hover:bg-blue-300 rounded-md cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
             <div className={`
@@ -408,28 +410,46 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
                     <div className={`flex gap-0.5`}>
                         {chatRoom.unread_count > 0 && (
-                            <div className="bg-red-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
-                                {chatRoom.unread_count > 99999 ? '99999+' : chatRoom.unread_count}
+                            <div
+                                className="bg-blue-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
+                                {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
                             </div>
                         )}
-                        <TrashIcon
-                            className={`
-                            size-4 opacity-0 group-hover:opacity-100 cursor-pointer
-                            ${self ? 'text-lime-500 hover:text-lime-700 ' : 'text-yellow-500 hover:text-yellow-700 '}
-                        `}
-                            onClick={removeChatRoom}
-                        />
                     </div>
+
+                    <div className={`flex gap-2`}>
+                        <span
+                            className={`font-bold text-2xl text-nowrap text-blue-100 group-hover:text-black`}>{truncate(chatRoom.title, 15)}</span>
+
+                        <div className={`size-12 mr-3 bg-blue-300 rounded-full relative`}>
+                            {lastMessage.user.avatar &&
+                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${lastMessage.user.avatar.path}`}
+                                    alt="avatar"
+                                    className="size-12 object-cover rounded-full" />)
+                            }
+
+                            {chatRoom.users.length === 2 && isOnline && (
+                                <span className={`absolute top-0 right-0 w-3 h-3 rounded-full bg-blue-500`}></span>
+                            )}
+                        </div>
+                    </div>
+
+
                 </div>
 
                 {lastMessage && !lastMessage.message_iv && (
-                    <div
-                        className={`text-gray-400 ${safeViewIsOn && 'blur-sm group-hover:blur-0'}`}
+                    <div className={`
+                            flex justify-between text-gray-600 bg-blue-300 group-hover:bg-white rounded-md text-sm p-1
+                            ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
+                        `}
                     >
-                        {truncate(lastMessage.message, 20)}
+                        <div>
+                            {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
+                        </div>
+
+                        <div>{prettyCreatedAt(lastMessage.created_at)}</div>
                     </div>
                 )}
-
             </div>
         </div>
     );
