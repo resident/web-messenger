@@ -86,12 +86,7 @@ export default function Authenticated({user, header, children}) {
                             <div></div>
                         </div>
 
-                        <div
-                            className={`
-                                h-[calc(100dvh-4.1rem)] sm:h-[calc(100dvh-8.1rem)]
-                                overflow-auto
-                                grid grid-cols-1 md:grid-cols-[auto,1fr]
-                            `}>
+                        <div className={`grid grid-cols-1 md:grid-cols-[auto,1fr]`}>
 
                             {/* Menu */}
                             <div className={`flex flex-col justify-between py-3 md:px-3 bg-blue-950`}>
@@ -163,6 +158,8 @@ export default function Authenticated({user, header, children}) {
                             {/* Content */}
                             <main className={`
                                 md:col-start-2
+                                h-[calc(100dvh-4.1rem)] sm:h-[calc(100dvh-8.1rem)]
+                                overflow-auto
                             `}>
 
 
