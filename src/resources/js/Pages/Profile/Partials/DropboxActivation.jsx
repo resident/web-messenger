@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import {useEffect, useState} from 'react';
+import {Link} from '@inertiajs/react';
 import DropboxClient from "@/Common/Dropbox.js";
 import DangerButton from '@/Components/DangerButton';
 
@@ -7,8 +7,7 @@ export default function DropboxActivation() {
 
     const [accessToken, setAccessToken] = useState(null);
     const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
-    const dropbox = new DropboxClient({ clientId: clientId });
-    
+    const dropbox = new DropboxClient({clientId: clientId});
 
 
     useEffect(() => {
@@ -19,7 +18,7 @@ export default function DropboxActivation() {
     }, []);
 
     const disableSync = async () => {
-        
+
         dropbox.removeAccessToken();
         setAccessToken(null);
     };
@@ -27,16 +26,16 @@ export default function DropboxActivation() {
     return (
         <section className="space-y-6">
             <header>
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium">
                     Dropbox Sync
                 </h2>
 
                 {accessToken ? (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm">
                         Dropbox sync is currently enabled. You can disable it below.
                     </p>
                 ) : (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm">
                         Dropbox sync is disabled. Enable it to sync your data.
                     </p>
                 )}
@@ -49,7 +48,12 @@ export default function DropboxActivation() {
             ) : (
                 <Link
                     href={route('dropbox.auth')}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150"
+                    className={`
+                        inline-flex items-center px-4 py-2 bg-blue-400 border border-transparent rounded-md
+                        font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-600
+                        active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                        transition ease-in-out duration-150
+                    `}
                 >
                     Enable Dropbox Sync
                 </Link>

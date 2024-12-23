@@ -1,18 +1,17 @@
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { useForm, usePage } from '@inertiajs/react';
-import { Transition } from '@headlessui/react';
-import { useState, useRef } from 'react';
+import {useForm} from '@inertiajs/react';
+import {Transition} from '@headlessui/react';
+import {useRef, useState} from 'react';
 
-export default function UploadDeleteAvatar({ className = '', user }) {
-    const { data, setData, post, errors, recentlySuccessful } = useForm({
+export default function UploadDeleteAvatar({className = '', user}) {
+    const {data, setData, post, errors, recentlySuccessful} = useForm({
         avatar: null
     });
 
     const [uploading, setUploading] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const[deletionSuccess, setDeletionSuccess] = useState(false);
+    const [deletionSuccess, setDeletionSuccess] = useState(false);
     const fileInputRef = useRef(null);
 
     const submit = (e) => {
@@ -29,7 +28,7 @@ export default function UploadDeleteAvatar({ className = '', user }) {
             forceFormData: true,
             preserveScroll: true,
             preserveState: true,
-            onFinish: () =>{ 
+            onFinish: () => {
                 setUploading(false)
                 fileInputRef.current.value = '';
             },
@@ -53,8 +52,8 @@ export default function UploadDeleteAvatar({ className = '', user }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Upload Avatar</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="text-lg font-medium">Upload Avatar</h2>
+                <p className="mt-1 text-sm">
                     Update your profile picture by uploading an avatar.
                 </p>
             </header>
@@ -62,48 +61,55 @@ export default function UploadDeleteAvatar({ className = '', user }) {
             <form onSubmit={submit} className="mt-6 space-y-6" encType='multipart/form-data'>
                 {user.avatar && (
                     <div className="mt-2">
-                        <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`} alt="Current Avatar" 
-                        className="h-40 w-40 rounded-full" />
+                        <img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`} alt="Current Avatar"
+                             className="h-40 w-40 rounded-full"/>
                     </div>
                 )}
+
                 <div>
                     <input
                         type="file"
                         id="avatar"
-                        className="mt-1 block w-full"
+                        className="mt-1 block w-full bg-blue-800"
                         onChange={(e) => setData('avatar', e.target.files[0])}
                         ref={fileInputRef}
                     />
-                    <InputError className="mt-2" message={errors.avatar} />
+                    <InputError className="mt-2" message={errors.avatar}/>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={uploading}>Upload</PrimaryButton>
+                <div className={`flex gap-2`}>
+                    <div className="flex items-center gap-4">
+                        <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                       disabled={uploading}>Upload</PrimaryButton>
 
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600">Uploaded successfully.</p>
-                    </Transition>
+                        <Transition
+                            show={recentlySuccessful}
+                            enter="transition ease-in-out"
+                            enterFrom="opacity-0"
+                            leave="transition ease-in-out"
+                            leaveTo="opacity-0"
+                        >
+                            <p className="text-sm">Uploaded successfully.</p>
+                        </Transition>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                       onClick={removeAvatar} disabled={deleting}>
+                            Remove
+                        </PrimaryButton>
+                        <Transition
+                            show={deletionSuccess}
+                            enter="transition ease-in-out"
+                            enterFrom="opacity-0"
+                            leave="transition ease-in-out"
+                            leaveTo="opacity-0"
+                        >
+                            <p className="text-sm">Deleted successfully.</p>
+                        </Transition>
+                    </div>
                 </div>
-                <div className="mt-2 flex items-center gap-4">
-                    <PrimaryButton onClick={removeAvatar} disabled={deleting}>
-                        Remove
-                    </PrimaryButton>
-                    <Transition
-                        show={deletionSuccess}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-sm text-gray-600">Deleted successfully.</p>
-                    </Transition>
-                </div>
+
             </form>
         </section>
     );

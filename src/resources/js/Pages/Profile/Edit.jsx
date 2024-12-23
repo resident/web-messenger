@@ -15,36 +15,40 @@ export default function Edit({auth, mustVerifyEmail, status}) {
         >
             <Head title="Profile"/>
 
-            <div className="p-3 max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <UploadDeleteAvatar className="max-w-xl" user={auth.user}/>
-                </div>
+            <div className={`
+                    p-1 max-w-7xl mx-auto space-y-6 bg-blue-300 text-white
+                `}>
+                <div className={`space-y-2 px-2 py-4 bg-white rounded-lg`}>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <UploadDeleteAvatar className="max-w-xl" user={auth.user}/>
+                    </div>
 
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <UpdateProfileInformationForm
-                        mustVerifyEmail={mustVerifyEmail}
-                        status={status}
-                        className="max-w-xl"
-                    />
-                </div>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <UpdateProfileInformationForm
+                            mustVerifyEmail={mustVerifyEmail}
+                            status={status}
+                            className="max-w-xl"
+                        />
+                    </div>
 
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <UpdatePasswordForm className="max-w-xl"/>
-                </div>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <UpdatePasswordForm className="max-w-xl"/>
+                    </div>
 
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <TwoFactoAuthForm
-                        isEnabled={!!auth.user.two_factor_confirmed_at}
-                        className="max-w-xl"/>
-                </div>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <TwoFactoAuthForm
+                            isEnabled={!!auth.user.two_factor_confirmed_at}
+                            className="max-w-xl"/>
+                    </div>
 
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <DropboxActivation
-                        className="max-w-xl"/>
-                </div>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <DropboxActivation
+                            className="max-w-xl"/>
+                    </div>
 
-                <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                    <DeleteUserForm className="max-w-xl"/>
+                    <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
+                        <DeleteUserForm className="max-w-xl"/>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

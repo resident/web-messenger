@@ -22,16 +22,16 @@ export default function UpdateProfileInformation({mustVerifyEmail, status, class
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+                <h2 className="text-lg font-medium">Profile Information</h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm">
                     Update your account's profile information and email address.
                 </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="name" value="Name"/>
+                    <InputLabel className={`text-white`} htmlFor="name" value="Name"/>
 
                     <TextInput
                         id="name"
@@ -47,7 +47,7 @@ export default function UpdateProfileInformation({mustVerifyEmail, status, class
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Email"/>
+                    <InputLabel className={`text-white`} htmlFor="email" value="Email"/>
 
                     <TextInput
                         id="email"
@@ -64,7 +64,7 @@ export default function UpdateProfileInformation({mustVerifyEmail, status, class
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
-                        <p className="text-sm mt-2 text-gray-800">
+                        <p className="text-sm mt-2">
                             Your email address is unverified.
                             <Link
                                 href={route('verification.send')}
@@ -85,7 +85,8 @@ export default function UpdateProfileInformation({mustVerifyEmail, status, class
                 )}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                   disabled={processing}>Save</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -94,7 +95,7 @@ export default function UpdateProfileInformation({mustVerifyEmail, status, class
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">Saved.</p>
+                        <p className="text-sm">Saved.</p>
                     </Transition>
                 </div>
             </form>
