@@ -1,10 +1,10 @@
-import {useContext, useEffect, useRef, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
-import {default as CommonChatRoom} from "@/Common/ChatRoom.js";
+import { useContext, useEffect, useRef, useState } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
+import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import Utils from "@/Common/Utils.js";
 
-export default function ChatRoom({className = '', chatRoom, onClickHandler = chatRoom => null}) {
+export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
     const {
         userPrivateKey,
         user,
@@ -15,14 +15,36 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
 
     const [chatRoomKey, setChatRoomKey] = useState(null);
     const [lastMessage, setLastMessage] = useState(chatRoom.last_message);
-    const [isOnline, setIsOnline] = useState(chatRoom.is_online);
+    const [users, setUsers] = useState(chatRoom.users);
+
+    const [isOnline, setIsOnline] = useState(false);
+    const [members, setMembers] = useState(chatRoom.users.length);
 
     const activeChatRoomRef = useRef(activeChatRoom);
     const chatRoomRef = useRef(chatRoom);
-
     const chatRoomKeyRef = useRef(chatRoomKey);
 
     const channel = `chat-room.${chatRoom.id}`;
+
+    const [otherUser, setOtherUser] = useState(null);
+
+    useEffect(() => {
+        setUsers(chatRoom.users);
+        setMembers(chatRoom.users.length);
+        if (chatRoom.users.length === 2) {
+            setOtherUser(chatRoom.users.find(u => u.id !== user.id));
+        } else {
+            setOtherUser(null);
+        }
+    }, [chatRoom.users]);
+
+    useEffect(() => {
+        if (otherUser) {
+            setIsOnline(otherUser.is_online);
+        } else {
+            setIsOnline(false);
+        }
+    }, [otherUser]);
 
     useEffect(() => {
         if (userPrivateKey) {
@@ -44,7 +66,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
                 ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                     setChatRooms(prev =>
                         prev.map(cr =>
-                            cr.id === chatRoom.id ? {...cr, last_message: dMessage} : cr
+                            cr.id === chatRoom.id ? { ...cr, last_message: dMessage } : cr
                         )
                     );
                 });
@@ -77,10 +99,6 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
         chatRoomRef.current = chatRoom;
     }, [chatRoom]);
 
-    useEffect(() => {
-        setIsOnline(chatRoom.is_online);
-    }, [chatRoom.is_online]);
-
     const decryptAndSetLastMessage = (chatRoomKey, message) => {
         ChatRoomMessage.decryptMessage(chatRoomKey, message).then((dMessage) => {
             setChatRooms(prev =>
@@ -89,7 +107,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
                         const updatedMessages = cr.messages.map(msg =>
                             msg.id === dMessage.id ? dMessage : msg
                         );
-                        return {...cr, messages: updatedMessages, last_message: dMessage}
+                        return { ...cr, messages: updatedMessages, last_message: dMessage }
                     }
                     return cr;
                 })
@@ -134,14 +152,14 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
             } else {
                 if (!isActiveRoom && chatRoom.unread_count > 1) {
                     setChatRooms(prev =>
-                        prev.map(cr => cr.id === chatRoom.id ? {...cr, messages: []} : cr)
+                        prev.map(cr => cr.id === chatRoom.id ? { ...cr, messages: [] } : cr)
                     );
                 }
             }
         } else {
             setChatRooms(prev =>
                 prev.map(cr =>
-                    cr.id === chatRoom.id ? {...cr, last_message: null} : cr
+                    cr.id === chatRoom.id ? { ...cr, last_message: null } : cr
                 )
             );
         }
@@ -200,7 +218,7 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
                 const previousMessage = messageId !== -1 ? chatRoomRef.current.messages[messageId - 1] : null;
                 const newLastMessage = previousMessage
                     ? previousMessage
-                    : await axios.get(route("chat_rooms.messages.get_last_message", {chatRoom: chatRoom.id})).then(res => res.data);
+                    : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom.id })).then(res => res.data);
                 let updatedMessages = chatRoomRef.current.messages.filter(m => m.id !== messageToRemove.id);
                 if (updatedMessages.length === 0) {
                     updatedMessages = [newLastMessage];
@@ -208,30 +226,28 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
 
                 setChatRooms(prev =>
                     prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        {...cr, messages: [...updatedMessages], last_message: {...newLastMessage}} : cr)
+                        { ...cr, messages: [...updatedMessages], last_message: { ...newLastMessage } } : cr)
                 );
             }
 
             if (new Date(messageToRemove.createdAt) > new Date(chatRoomRef.current.last_read_at + "Z") && messageToRemove.user_id !== user.id) {
                 setChatRooms(prev =>
                     prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        {...cr, unread_count: Math.max((chatRoomRef.current.unread_count || 0) - 1, 0)} : cr)
+                        { ...cr, unread_count: Math.max((chatRoomRef.current.unread_count || 0) - 1, 0) } : cr)
                 );
             }
         })();
     };
 
     const onUserOnlineStatusChanged = (e) => {
-        const {user_id, is_online, last_seen_at} = e;
-        const otherUser = chatRoomRef.current.users.find(u => u.id !== user.id);
-        if (otherUser?.id === user_id) {
-            setChatRooms(cr => cr.id === chatRoomRef.current.id ? {
+        const { user_id, is_online, last_seen_at } = e;
+        setChatRooms(prev =>
+            prev.map(cr => cr.id === chatRoom.id ? {
                 ...cr,
-                is_online: is_online,
-                last_seen_at: last_seen_at,
-            } : cr);
-            setIsOnline(is_online);
-        }
+                users: cr.users.map(user => user.id === user_id
+                    ? { ...user, is_online, last_seen_at }
+                    : user)
+            } : cr));
     };
 
     useEffect(() => {
@@ -263,10 +279,10 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
         const currentDate = new Date();
 
         const formatDate = (date) => date.toLocaleDateString();
-        const getWeekDay = (date) => date.toLocaleDateString('en-US', {weekday: 'short'});
+        const getWeekDay = (date) => date.toLocaleDateString('en-US', { weekday: 'short' });
 
         if (inputDate.toLocaleDateString() === currentDate.toLocaleDateString()) {
-            return inputDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+            return inputDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         const oneWeekAgo = new Date();
@@ -279,35 +295,116 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
         return formatDate(inputDate);
     }
 
+    // Коллаж
+    const getCollageAvatars = () => {
+        if (users.length <= 2) return [];
+        let prioritizedUser = null;
+        if (lastMessage?.user_id) {
+            const found = users.find(u => u.id === lastMessage.user_id && u.avatar?.path);
+            if (found) {
+                prioritizedUser = found;
+            }
+        }
+
+        let withAvatars = users.filter(u => u.avatar?.path);
+        if (prioritizedUser) {
+            withAvatars = withAvatars.filter(u => u.id !== prioritizedUser.id);
+            withAvatars.unshift(prioritizedUser);
+        }
+
+        return withAvatars.slice(0, 4);
+    }
+
+    const renderCollage = () => {
+        const collage = getCollageAvatars();
+        const count = collage.length;
+        if (count === 0) {
+            return null;
+        }
+
+        if (users.length > 2 && count === 1) {
+            return (
+                <>
+                    <img
+                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </>
+            )
+        }
+
+        return (
+            <div className="w-full h-full relative">
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 z-0" />
+
+                <div className="absolute left-0 top-0 w-1/2 h-full">
+                    <img
+                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </div>
+
+                <div className="absolute left-1/2 top-0 w-1/2 h-full flex flex-col items-center justify-evenly">
+                    {count > 1 && collage.slice(1).map((u, idx) => (
+                        <img
+                            key={u.id}
+                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${u.avatar.path}`}
+                            className="w-full h-full object-cover"
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div
-            className={`flex min-w-min bg-blue-400 hover:bg-blue-300 rounded-md cursor-pointer group ${className}`}
+            //${activeChatRoom?.id === chatRoom.id ? 'bg-gradient-to-b from-[#BFDBFE] via-white to-white' : 'bg-gradient-to-b from-[#3B82F6] hover:from-blue-300 via-blue-300 hover:via-blue-100 to-blue-300  hover:to-blue-100'}
+            className={`flex min-w-min
+                ${activeChatRoom?.id === chatRoom.id ? 'bg-blue-200' : 'bg-blue-400 hover:bg-blue-200'}
+                rounded-lg cursor-pointer group ${className} overflow-hidden`}
             onClick={onClickHandler}
         >
             <div className={`w-full`}>
-                <div className={`flex justify-between pl-1 my-2`}>
+                <div className={`flex justify-between`}>
                     <div>
                         {chatRoom.unread_count > 0 && (
                             <div
-                                className="bg-blue-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
+                                className="bg-blue-500 text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5">
                                 {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
                             </div>
                         )}
                     </div>
 
-                    <div className={`flex gap-2`}>
+                    <div className={`flex gap-[14px] mt-2.5 mb-2`}>
                         <span
-                            className={`font-bold text-2xl text-nowrap text-blue-100 group-hover:text-black`}>{truncate(chatRoom.title, 15)}</span>
-
-                        <div className={`size-12 mr-3 bg-blue-300 rounded-full relative`}>
-                            {lastMessage.user.avatar &&
-                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${lastMessage.user.avatar.path}`}
-                                      alt="avatar"
-                                      className="size-12 object-cover rounded-full"/>)
+                            className={`font-bold text-lg text-nowrap 
+                                ${activeChatRoom?.id === chatRoom.id ? 'text-black' : 'text-[#e0f4ff] group-hover:text-black'}`
+                            }>
+                            {users.length === 2
+                                ? truncate(otherUser?.name ?? '', 15)
+                                : truncate(chatRoom.title, 15)
                             }
+                        </span>
 
-                            {chatRoom.users.length === 2 && isOnline && (
-                                <span className={`absolute top-0 right-0 w-3 h-3 rounded-full bg-blue-500`}></span>
+                        <div className={`relative size-[53px] mr-[15px] items-center justify-center`}>
+                            <div className="relative bg-blue-300 rounded-full overflow-hidden w-full h-full">
+                                {users.length === 2 && otherUser && (
+                                    otherUser?.avatar?.path ? (
+                                        <img
+                                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${otherUser.avatar.path}`}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                        />
+                                    ) : null
+                                )}
+                                {users.length > 2 && renderCollage()}
+                            </div>
+                            {users.length === 2 && otherUser && (
+                                <span
+                                    className={`
+                                        absolute top-0 right-0 size-2 rounded-full bg-blue-500 ring-white ring-2
+                                    `}
+                                />
                             )}
                         </div>
                     </div>
@@ -315,19 +412,27 @@ export default function ChatRoom({className = '', chatRoom, onClickHandler = cha
 
                 </div>
 
-                {lastMessage && !lastMessage.message_iv && (
-                    <div className={`
-                            flex justify-between text-gray-600 bg-blue-300 group-hover:bg-white rounded-md text-sm p-1
+
+                <div className={`
+                            flex justify-between text-gray-600 rounded-lg
+                            ${activeChatRoom?.id === chatRoom.id ? 'bg-white' : 'bg-blue-300 group-hover:bg-blue-100'}
+                            text-sm py-[2px] px-3
                             ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
                         `}
-                    >
-                        <div>
-                            {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
-                        </div>
+                >
+                    {!lastMessage || lastMessage.message_iv ? (
+                        <div className="italic">No messages...</div>
+                    ) : (
+                        <div className="flex justify-between w-full">
+                            <div>
+                                {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
+                            </div>
 
-                        <div>{prettyCreatedAt(lastMessage.created_at)}</div>
-                    </div>
-                )}
+                            <div>{prettyCreatedAt(lastMessage.created_at)}</div>
+                        </div>
+                    )
+                    }
+                </div>
             </div>
         </div>
     );

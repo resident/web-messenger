@@ -26,7 +26,7 @@ final class ProfileService
         $this->profileRepository->updateLastSeenAt($userId, $isOnline);
         $userStatus = $this->profileRepository->getUserStatus($userId);
         $this->updateRedisUserStatus($userStatus);
-        broadcast(new UserOnlineStatusChanged($userStatus))->toOthers();
+        broadcast(new UserOnlineStatusChanged($userStatus));
     }
 
     protected function updateRedisUserStatus(UserStatusDto $userStatus): void

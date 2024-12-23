@@ -1,9 +1,9 @@
 import ChatMessage from "@/Pages/ChatRoom/Partials/ChatMessage.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
-import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import {useContext, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
@@ -13,9 +13,9 @@ import Utils from "@/Common/Utils.js";
 import useStorage from "@/Common/LocalStorage";
 import isEqual from 'lodash.isequal';
 import debounce from "lodash.debounce";
-import {ArrowUpIcon} from "@heroicons/react/24/outline/index.js";
+import { ArrowUpIcon } from "@heroicons/react/24/outline/index.js";
 
-export default function ChatRoomMessages({...props}) {
+export default function ChatRoomMessages({ ...props }) {
     const {
         user,
         userPrivateKey,
@@ -64,7 +64,7 @@ export default function ChatRoomMessages({...props}) {
     const [pendingShift, setPendingShift] = useState(null);
 
     const STORAGE_KEY = `chatRoomStates`;
-    const {getChatState, setChatState, removeChatState} = useStorage(STORAGE_KEY);
+    const { getChatState, setChatState, removeChatState } = useStorage(STORAGE_KEY);
     const [restoringState, setRestoringState] = useState(1);
     const lastKnownScrollTopRef = useRef(0);
     const lastKnownWindowStartIndexRef = useRef(windowStartIndex);
@@ -219,7 +219,7 @@ export default function ChatRoomMessages({...props}) {
 
         if (manual) {
             const prevCount = allMessages.length;
-            setPendingShift({direction: upperLoad ? "up" : "down", prevCount});
+            setPendingShift({ direction: upperLoad ? "up" : "down", prevCount });
             isLoadingMoreRef.current = 1;
             loadMessages(count, startId, upperLoad, lowerLoad);
         } else {
@@ -241,7 +241,7 @@ export default function ChatRoomMessages({...props}) {
             const messagesToLoad = 20 - n;
 
             startId = messages[0]?.id;
-            setPendingShift({direction: upperLoad ? "up" : "down", prevCount: allMessages.length});
+            setPendingShift({ direction: upperLoad ? "up" : "down", prevCount: allMessages.length });
             isLoadingMoreRef.current = 1;
             loadMessages(messagesToLoad, startId, upperLoad, lowerLoad);
         }
@@ -306,7 +306,7 @@ export default function ChatRoomMessages({...props}) {
                 allMessages[allMessages.length - 1]);
         if (check) {
             setChatRooms(prev =>
-                prev.map(cr => cr.id === chatRoom.id ? {...cr, messages: allMessages} : cr)
+                prev.map(cr => cr.id === chatRoom.id ? { ...cr, messages: allMessages } : cr)
             );
         }
     }, [allMessages, windowMessages]);
@@ -323,7 +323,7 @@ export default function ChatRoomMessages({...props}) {
         if (shouldScroll && scrollTo === "bottom" && messageRefs.current.length > 0) {
             const lastMessageEl = messageRefs.current[messageRefs.current.length - 1];
             if (lastMessageEl) {
-                lastMessageEl.scrollIntoView({behavior: 'instant', block: 'start'});
+                lastMessageEl.scrollIntoView({ behavior: 'instant', block: 'start' });
             }
             setScrollTo(null);
             setShouldScroll(false);
@@ -439,7 +439,7 @@ export default function ChatRoomMessages({...props}) {
     const scrollToLastMessage = (isVirtualizing, isLastMessageLoaded, sendingMessage = null) => {
         if (chatRoomRef.current.unread_count > 0) {
             setChatRooms(prev =>
-                prev.map(cr => cr.id === chatRoom.id ? {...cr, unread_count: 0} : cr)
+                prev.map(cr => cr.id === chatRoom.id ? { ...cr, unread_count: 0 } : cr)
             );
         }
         //console.log("Is Last Message loaded?", { isLastMessageLoaded });
@@ -512,7 +512,7 @@ export default function ChatRoomMessages({...props}) {
 
                 const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === chatRoomRef.current.last_message?.id);
 
-                const {scrollTop, scrollHeight, clientHeight} = messagesRef.current || {};
+                const { scrollTop, scrollHeight, clientHeight } = messagesRef.current || {};
                 const isNearBottom = scrollHeight - (scrollTop + clientHeight) <= 200;
 
                 const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
@@ -621,10 +621,10 @@ export default function ChatRoomMessages({...props}) {
                 const previousMessage = messageId !== -1 ? messagesArray[messageId - 1] : null;
                 const newLastMessage = previousMessage
                     ? previousMessage
-                    : await axios.get(route("chat_rooms.messages.get_last_message", {chatRoom: chatRoom.id})).then(res => res.data);
+                    : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom.id })).then(res => res.data);
 
                 setChatRooms(prev =>
-                    prev.map(cr => cr.id === chatRoomRef.current.id ? {...cr, last_message: newLastMessage} : cr)
+                    prev.map(cr => cr.id === chatRoomRef.current.id ? { ...cr, last_message: newLastMessage } : cr)
                 );
             }
 
@@ -634,7 +634,7 @@ export default function ChatRoomMessages({...props}) {
                     prev.map(cr => {
                         if (cr.id === chatRoomRef.current.id) {
                             const newUnreadCount = Math.max((chatRoomRef.current.unread_count || 0) - 1, 0);
-                            return {...cr, unread_count: newUnreadCount}
+                            return { ...cr, unread_count: newUnreadCount }
                         }
                         return cr;
                     })
@@ -648,14 +648,14 @@ export default function ChatRoomMessages({...props}) {
     };
 
     const onChatRoomUpdated = (e) => {
-        setChatRoom({...chatRoom, ...e.chatRoom});
+        setChatRoom({ ...chatRoom, ...e.chatRoom });
     };
 
     const onChatRoomMessageStatusUpdated = (e) => {
         const updatedMessage = e.message;
 
         setAllMessages(prev => prev.map(
-            msg => msg.id === updatedMessage.id ? {...msg, status: updatedMessage.status} : msg
+            msg => msg.id === updatedMessage.id ? { ...msg, status: updatedMessage.status } : msg
         ));
     };
 
@@ -693,7 +693,7 @@ export default function ChatRoomMessages({...props}) {
             );
             const lastReadAtTime = normalizeToSimpleFormat(newestMessage.created_at);
 
-            axios.post(route('chat_rooms.last_read_at.update', {chatRoom: chatRoom.id}), {
+            axios.post(route('chat_rooms.last_read_at.update', { chatRoom: chatRoom.id }), {
                 last_read_at: lastReadAtTime,
             }).then(() => {
                 scheduleLastReadAtMessagesRef.current = new Set(Array.from(scheduleLastReadAtMessagesRef.current).filter(
@@ -814,7 +814,7 @@ export default function ChatRoomMessages({...props}) {
             ChatRoomMessage.sendMessage(messageData.message, chatRoom, chatRoomKey, messageData.attachments, progress => {
                 setAllMessages(prev =>
                     prev.map(msg =>
-                        msg.id === messageData.id ? {...msg, uploadProgress: progress} : msg
+                        msg.id === messageData.id ? { ...msg, uploadProgress: progress } : msg
                     )
                 );
             }).then(async response => {
@@ -868,7 +868,7 @@ export default function ChatRoomMessages({...props}) {
                 );
                 setAllMessages(prev =>
                     prev.map((msg) =>
-                        msg.id === messageData.id ? {...msg, errorPending: error.message} : msg
+                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
                     )
                 );
             }).finally(() => {
@@ -876,7 +876,7 @@ export default function ChatRoomMessages({...props}) {
             });
         } catch (e) {
             if (e instanceof ProgressEvent) {
-                setErrors({...errors, message: e.target.error.message});
+                setErrors({ ...errors, message: e.target.error.message });
             }
             setSendingMessage(false);
         }
@@ -894,10 +894,10 @@ export default function ChatRoomMessages({...props}) {
     // Створюємо плейсхолдер для надісланого повідомлення
     const sendMessage = async () => {
         setSendingMessage(true);
-        setErrors({...errors, message: ''});
+        setErrors({ ...errors, message: '' });
 
         const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
-        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id);
+        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id) || allMessagesRefs.current.length === 0;
         //console.log("SendingMessage:", {
         //    allMessages: allMessagesRefs.current,
         //    allMessagesHere: allMessages,
@@ -1044,7 +1044,7 @@ export default function ChatRoomMessages({...props}) {
 
     const messagesScrollHandler = () => {
         if (messagesLoading && isLoadingMoreRef.current !== 0) {
-            const {scrollTop, scrollHeight, clientHeight} = messagesRef.current;
+            const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
 
             lastKnownScrollTopRef.current = scrollTop;
             if (windowMessages.length > 0) {
@@ -1075,7 +1075,7 @@ export default function ChatRoomMessages({...props}) {
             !messagesRef.current
         ) return;
 
-        const {scrollTop, scrollHeight, clientHeight} = messagesRef.current;
+        const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
         //console.log("MessagesRef:", { messagesRef });
 
         lastKnownScrollTopRef.current = scrollTop;
@@ -1132,7 +1132,7 @@ export default function ChatRoomMessages({...props}) {
 
             if (remaining <= bufferSize) {
                 const startId = messages[messages.length - 1]?.id
-                if (startId && startId !== lastMessage.id) {
+                if (startId && startId !== lastMessage?.id) {
                     loadMore(true, 20, startId, false, true);
                 } else if (remaining > 0) {
 
@@ -1162,12 +1162,12 @@ export default function ChatRoomMessages({...props}) {
                     const previousMessage = (messageId !== -1 && messagesArray.length > 1) ? messagesArray[messageId - 1] : null;
                     const newLastMessage = previousMessage
                         ? previousMessage
-                        : await axios.get(route("chat_rooms.messages.get_last_message", {chatRoom: chatRoom})).then(res => res.data);
+                        : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom })).then(res => res.data);
 
                     setChatRooms(prev =>
                         prev.map(cr => cr.id === chatRoomRef.current.id ? {
                             ...cr,
-                            last_message: {...newLastMessage}
+                            last_message: { ...newLastMessage }
                         } : cr)
                     );
                 }
@@ -1275,7 +1275,7 @@ export default function ChatRoomMessages({...props}) {
                 const savedState = getChatState(chatRoom.id);
                 //console.log("SavedState:", savedState);
                 if (savedState) {
-                    const {scrollTop, messageId} = savedState;
+                    const { scrollTop, messageId } = savedState;
                     //console.log("Saved is:", {
                     //    scrollTop,
                     //    messageId,
@@ -1410,7 +1410,7 @@ export default function ChatRoomMessages({...props}) {
             outputElements.push(
                 ...[...Array(2)].map((_, index) => (
                     <div key={`skeleton-left-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                        className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1420,7 +1420,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(4)].map((_, index) => (
                     <div key={`skeleton-right-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                        className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1430,7 +1430,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(3)].map((_, index) => (
                     <div key={`skeleton-left-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                        className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1440,7 +1440,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(2)].map((_, index) => (
                     <div key={`skeleton-right-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                        className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1460,7 +1460,7 @@ export default function ChatRoomMessages({...props}) {
                 const messageDate = processedMessage.showDate;
                 const isSameYear = messageDate.getFullYear() === now.getFullYear();
 
-                let dateFormatOptions = {month: 'long', day: 'numeric'};
+                let dateFormatOptions = { month: 'long', day: 'numeric' };
                 if (!isSameYear) {
                     dateFormatOptions.year = 'numeric';
                 }
@@ -1498,7 +1498,7 @@ export default function ChatRoomMessages({...props}) {
     }, [windowMessages, initialLoading, restoringState, allMessages]);
 
     return (
-        <ChatRoomContextProvider value={{chatRoom, chatRoomKey}}>
+        <ChatRoomContextProvider value={{ chatRoom, chatRoomKey }}>
             <div className={`bg-blue-300 p-1`}>
                 <div className={`bg-white rounded-lg p-3`}>
                     <div
@@ -1520,7 +1520,7 @@ export default function ChatRoomMessages({...props}) {
                                 setSelectedFiles={setMessageAttachments}
                             />
 
-                            <AutoDeleteSettings/>
+                            <AutoDeleteSettings />
 
                             <RecordAudioMessage
                                 selectedFiles={messageAttachments}
@@ -1529,7 +1529,7 @@ export default function ChatRoomMessages({...props}) {
                         </div>
 
                         <div className="flex items-center rounded-full bg-gray-200 p-1 pb-0 w-full">
-                            <div><Emojis onSmileSelected={insertEmoji}/></div>
+                            <div><Emojis onSmileSelected={insertEmoji} /></div>
 
                             <textarea
                                 className={`
@@ -1545,11 +1545,15 @@ export default function ChatRoomMessages({...props}) {
                             />
 
                             <div className={``}>
-                                <button className={`text-white bg-blue-500 hover:bg-blue-600 rounded-full p-1`}
-                                        onClick={() => sendMessage()}
-                                        disabled={!availableToSendMessage()}
+                                <button
+                                    className={`
+                                        text-white bg-blue-500 hover:bg-blue-600 rounded-full p-1
+                                        disabled:cursor-not-allowed disabled:opacity-25
+                                    `}
+                                    onClick={() => sendMessage()}
+                                    disabled={!availableToSendMessage()}
                                 >
-                                    <ArrowUpIcon className={`size-5`}/>
+                                    <ArrowUpIcon className={`size-5`} />
                                 </button>
                             </div>
                         </div>
