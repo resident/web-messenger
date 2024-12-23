@@ -18,7 +18,7 @@ export default function Main({ auth, ...props }) {
         >
             <Head title="Main" />
 
-            <div className={`grid grid-cols-1 md:grid-cols-[15rem,1fr]`}>
+            <div className={`grid grid-cols-1 md:grid-cols-[20rem,1fr]`}>
                 <div
                     className={`
                         h-[calc(100dvh-4.1rem)] sm:h-[calc(100dvh-8.1rem)]

@@ -125,9 +125,9 @@ export default function ChatStatus({ ...props }) {
         if (memberCount > 2) {
             return (
                 <div>
-                    <span className="text-gray-500 text-sm">{memberCount} members</span>
+                    <span className="text-sm">{memberCount} members</span>
                     &nbsp;
-                    <span className="text-gray-500 text-sm">{onlineCount} online</span>
+                    <span className="text-sm">{onlineCount} online</span>
                 </div>
             );
         } else if (memberCount === 2) {

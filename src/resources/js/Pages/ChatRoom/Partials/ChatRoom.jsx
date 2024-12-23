@@ -241,7 +241,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     const onUserOnlineStatusChanged = (e) => {
         const { user_id, is_online, last_seen_at } = e;
-        console.log(e);
         setChatRooms(prev =>
             prev.map(cr => cr.id === chatRoom.id ? {
                 ...cr,
@@ -368,68 +367,52 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     return (
         <div
-            className={`flex min-w-min bg-blue-400 hover:bg-blue-300 rounded-md cursor-pointer group ${className}`}
+            //${activeChatRoom?.id === chatRoom.id ? 'bg-gradient-to-b from-[#BFDBFE] via-white to-white' : 'bg-gradient-to-b from-[#3B82F6] hover:from-blue-300 via-blue-300 hover:via-blue-100 to-blue-300  hover:to-blue-100'}
+            className={`flex min-w-min 
+                ${activeChatRoom?.id === chatRoom.id ? 'bg-[#BFDBFE]' : 'bg-[#3B82F6] hover:bg-blue-300'}
+                rounded-lg cursor-pointer group ${className} overflow-hidden`}
             onClick={onClickHandler}
         >
-            <div className={`
-                relative max-w-12 min-w-12 max-h-12 min-h-12 mr-3
-                items-center justify-center`
-            }>
-                <div className="relative bg-lime-300 rounded-full overflow-hidden w-full h-full">
-                    {users.length === 2 && otherUser && (
-                        otherUser?.avatar?.path ? (
-                            <img
-                                src={`${import.meta.env.VITE_AVATARS_STORAGE}/${otherUser.avatar.path}`}
-                                className="absolute inset-0 w-full h-full object-cover"
-                            />
-                        ) : null
-                    )}
-                    {users.length > 2 && renderCollage()}
-                </div>
-                {users.length === 2 && otherUser && (
-                    <span
-                        className={`
-                            absolute bottom-0 right-0 w-3 h-3 rounded-full
-                            ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}
-                    />
-                )}
-            </div>
-
             <div className={`w-full`}>
                 <div className={`flex justify-between`}>
-                    <div className={`flex gap-1 text-nowrap`}>
-                        <span className={`font-bold `}>
+                    <div>
+                        {chatRoom.unread_count > 0 && (
+                            <div
+                                className="bg-red-500 text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5">
+                                {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`flex gap-[14px] mt-2.5 mb-2`}>
+                        <span
+                            className={`font-bold text-lg text-nowrap 
+                                ${activeChatRoom?.id === chatRoom.id ? 'text-black' : 'text-[#e0f4ff] group-hover:text-black'}`
+                            }>
                             {users.length === 2
                                 ? truncate(otherUser?.name ?? '', 15)
                                 : truncate(chatRoom.title, 15)
                             }
                         </span>
 
-                        {lastMessage && (<span className={`text-sm`}>{prettyCreatedAt(lastMessage.created_at)}</span>)}
-                    </div>
-
-                    <div className={`flex gap-0.5`}>
-                        {chatRoom.unread_count > 0 && (
-                            <div
-                                className="bg-blue-500 text-white text-xs px-1 rounded-full inline-flex items-center justify-center h-4 min-w-4">
-                                {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
+                        <div className={`relative size-[53px] mr-[15px] items-center justify-center`}>
+                            <div className="relative bg-blue-300 rounded-full overflow-hidden w-full h-full">
+                                {users.length === 2 && otherUser && (
+                                    otherUser?.avatar?.path ? (
+                                        <img
+                                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${otherUser.avatar.path}`}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                        />
+                                    ) : null
+                                )}
+                                {users.length > 2 && renderCollage()}
                             </div>
-                        )}
-                    </div>
-
-                    <div className={`flex gap-2`}>
-                        <span
-                            className={`font-bold text-2xl text-nowrap text-blue-100 group-hover:text-black`}>{truncate(chatRoom.title, 15)}</span>
-
-                        <div className={`size-12 mr-3 bg-blue-300 rounded-full relative`}>
-                            {lastMessage.user.avatar &&
-                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${lastMessage.user.avatar.path}`}
-                                    alt="avatar"
-                                    className="size-12 object-cover rounded-full" />)
-                            }
-
-                            {chatRoom.users.length === 2 && isOnline && (
-                                <span className={`absolute top-0 right-0 w-3 h-3 rounded-full bg-blue-500`}></span>
+                            {users.length === 2 && otherUser && (
+                                <span
+                                    className={`
+                                        absolute top-0 right-0 size-2 rounded-full bg-blue-500 ring-white ring-2
+                                    `}
+                                />
                             )}
                         </div>
                     </div>
@@ -437,19 +420,27 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
                 </div>
 
-                {lastMessage && !lastMessage.message_iv && (
-                    <div className={`
-                            flex justify-between text-gray-600 bg-blue-300 group-hover:bg-white rounded-md text-sm p-1
+
+                <div className={`
+                            flex justify-between text-gray-600 
+                            ${activeChatRoom?.id === chatRoom.id ? 'bg-white' : 'rounded-t-lg bg-blue-300 group-hover:bg-blue-100'} 
+                            text-sm py-[2px] px-3
                             ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
                         `}
-                    >
-                        <div>
-                            {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
-                        </div>
+                >
+                    {!lastMessage || lastMessage.message_iv ? (
+                        <div className="italic">No messages...</div>
+                    ) : (
+                        <div className="flex justify-between w-full">
+                            <div>
+                                {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
+                            </div>
 
-                        <div>{prettyCreatedAt(lastMessage.created_at)}</div>
-                    </div>
-                )}
+                            <div>{prettyCreatedAt(lastMessage.created_at)}</div>
+                        </div>
+                    )
+                    }
+                </div>
             </div>
         </div>
     );
