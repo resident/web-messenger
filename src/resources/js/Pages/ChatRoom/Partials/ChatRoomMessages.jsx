@@ -1183,9 +1183,9 @@ export default function ChatRoomMessages({ ...props }) {
         }, 600);
     };
 
-    //const availableToSendMessage = () => {
-    //    return (message.trim().length || messageAttachments.length) && !sendingMessage && initialLoading === 2;
-    //};
+    const availableToSendMessage = () => {
+        return (message.trim().length || messageAttachments.length) && !sendingMessage && initialLoading === 2;
+    };
 
     const saveMessageInputSelectionState = () => {
         setMessageSelectionStart(messageInputRef.current.selectionStart);
@@ -1194,7 +1194,9 @@ export default function ChatRoomMessages({ ...props }) {
 
     const handleKeyDown = (e) => {
         if (e.ctrlKey && e.key === 'Enter') {
-            sendMessage();
+            if (availableToSendMessage()) {
+                sendMessage();
+            }
         }
 
         saveMessageInputSelectionState();
@@ -1543,9 +1545,13 @@ export default function ChatRoomMessages({ ...props }) {
                             />
 
                             <div className={``}>
-                                <button className={`text-white bg-blue-500 hover:bg-blue-600 rounded-full p-1`}
+                                <button
+                                    className={`
+                                        text-white bg-blue-500 hover:bg-blue-600 rounded-full p-1
+                                        disabled:cursor-not-allowed disabled:opacity-25
+                                    `}
                                     onClick={() => sendMessage()}
-                                //disabled={!availableToSendMessage()}
+                                    disabled={!availableToSendMessage()}
                                 >
                                     <ArrowUpIcon className={`size-5`} />
                                 </button>

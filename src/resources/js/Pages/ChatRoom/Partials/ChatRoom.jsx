@@ -295,14 +295,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         return formatDate(inputDate);
     }
 
-    const removeChatRoom = async (e) => {
-        e.stopPropagation();
-
-        await axios.delete(route('chat_rooms.destroy', chatRoom.id));
-
-        router.visit(route('main'));
-    };
-
     // Коллаж
     const getCollageAvatars = () => {
         if (users.length <= 2) return [];
@@ -368,8 +360,8 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     return (
         <div
             //${activeChatRoom?.id === chatRoom.id ? 'bg-gradient-to-b from-[#BFDBFE] via-white to-white' : 'bg-gradient-to-b from-[#3B82F6] hover:from-blue-300 via-blue-300 hover:via-blue-100 to-blue-300  hover:to-blue-100'}
-            className={`flex min-w-min 
-                ${activeChatRoom?.id === chatRoom.id ? 'bg-[#BFDBFE]' : 'bg-[#3B82F6] hover:bg-blue-300'}
+            className={`flex min-w-min
+                ${activeChatRoom?.id === chatRoom.id ? 'bg-blue-200' : 'bg-blue-400 hover:bg-blue-200'}
                 rounded-lg cursor-pointer group ${className} overflow-hidden`}
             onClick={onClickHandler}
         >
@@ -378,7 +370,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                     <div>
                         {chatRoom.unread_count > 0 && (
                             <div
-                                className="bg-red-500 text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5">
+                                className="bg-blue-500 text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5">
                                 {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
                             </div>
                         )}
@@ -422,8 +414,8 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
 
                 <div className={`
-                            flex justify-between text-gray-600 
-                            ${activeChatRoom?.id === chatRoom.id ? 'bg-white' : 'rounded-t-lg bg-blue-300 group-hover:bg-blue-100'} 
+                            flex justify-between text-gray-600 rounded-lg
+                            ${activeChatRoom?.id === chatRoom.id ? 'bg-white' : 'bg-blue-300 group-hover:bg-blue-100'}
                             text-sm py-[2px] px-3
                             ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
                         `}
