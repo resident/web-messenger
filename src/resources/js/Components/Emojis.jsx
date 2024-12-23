@@ -47,7 +47,7 @@ export default function Emojis({onSmileSelected: onEmojiSelected = (emoji) => nu
         <div className={`relative`}>
             <div
                 className={`
-                    absolute -top-[21rem] -left-0 bg-gray-200 rounded-md p-3 shadow-md overflow-y-auto w-64 h-64
+                    absolute -top-[17rem] -left-0 bg-gray-200 rounded-md p-3 shadow-md overflow-y-auto w-64 h-64
                     ${showSmiles ? 'block' : 'hidden'}
                 `}
             >
@@ -59,8 +59,8 @@ export default function Emojis({onSmileSelected: onEmojiSelected = (emoji) => nu
 
             <div
                 className={`
-                    flex gap-2 bg-gray-200 hover:bg-indigo-600 hover:text-white cursor-pointer p-3 rounded-full relative
-                    ${showSmiles && 'bg-indigo-500 hover:bg-indigo-600 text-white'}
+                    flex gap-2 text-blue-500 hover:text-blue-600 cursor-pointer rounded-full relative
+                    ${showSmiles && 'text-blue-600 hover:text-blue-700'}
                 `}
                 onClick={toggleShowSmiles}
             >

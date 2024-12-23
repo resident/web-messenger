@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link } from '@inertiajs/react';
+import {Link} from '@inertiajs/react';
 import RotateUserRsaKeys from "@/Components/RotateUserRsaKeys.jsx";
-import { ApplicationContextProvider } from "@/Components/ApplicationContext.jsx";
+import {ApplicationContextProvider} from "@/Components/ApplicationContext.jsx";
 import InactivityTracker from "@/Components/InactivityTracker.jsx";
 import VisibilityTracker from "@/Components/VisibilityTracker.jsx";
 import UserStatusTracker from "@/Components/UserStatusTracker.jsx";
 import SyncUserRsaKeys from "@/Components/SyncUserRsaKeys.jsx";
 import LoadChatRooms from "@/Components/LoadChatRooms.jsx";
 import UserCalls from "@/Components/UserCalls.jsx";
+import {Cog8ToothIcon} from "@heroicons/react/24/solid/index.js";
 
-export default function Authenticated({ user, header, children }) {
+export default function Authenticated({user, header, children}) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
     const [activeChatRoom, setActiveChatRoom] = useState(null);
@@ -25,7 +26,7 @@ export default function Authenticated({ user, header, children }) {
     const [outputCall, setOutputCall] = useState(null);
 
     const [contextMenuVisible, setContextMenuVisible] = useState(false);
-    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [contextMenuPosition, setContextMenuPosition] = useState({x: 0, y: 0});
     const [contextMenuTarget, setContextMenuTarget] = useState(null);
 
     useEffect(() => {
@@ -33,7 +34,7 @@ export default function Authenticated({ user, header, children }) {
     }, []);
 
     return (
-        <div className="sm:p-6 lg:p-8 min-h-dvh bg-gradient-to-b from-gray-100 to-gray-300">
+        <div className="sm:p-6 lg:p-8 min-h-dvh bg-gradient-to-b from-blue-500 to-blue-900">
             <ApplicationContextProvider value={{
                 user,
                 chatRooms, setChatRooms,
@@ -50,27 +51,27 @@ export default function Authenticated({ user, header, children }) {
                 contextMenuPosition, setContextMenuPosition,
                 contextMenuTarget, setContextMenuTarget,
             }}>
-                <SyncUserRsaKeys />
-                <LoadChatRooms />
-                <RotateUserRsaKeys />
-                <InactivityTracker />
-                <VisibilityTracker />
-                <UserStatusTracker />
-                <UserCalls />
+                <SyncUserRsaKeys/>
+                <LoadChatRooms/>
+                <RotateUserRsaKeys/>
+                <InactivityTracker/>
+                <VisibilityTracker/>
+                <UserStatusTracker/>
+                <UserCalls/>
 
                 <div className="max-w-7xl mx-auto text-gray-900">
                     <div
                         className={`
                             h-dvh sm:h-[calc(100dvh-4rem)]
                             overflow-auto
-                            bg-cyan-800 sm:p-2
+                            bg-blue-900 sm:p-2
                             shadow-sm sm:rounded-lg
                         `}>
 
                         {/* Logo, Header, Menu Button */}
                         <div className={`flex gap-2 p-2 sm:p-0 justify-between mb-2`}>
                             <Link href="/">
-                                <ApplicationLogo className={`block h-9 w-auto fill-current text-white`} />
+                                <ApplicationLogo className={`block h-9 w-auto fill-current text-white`}/>
                             </Link>
 
                             {header &&
@@ -82,38 +83,7 @@ export default function Authenticated({ user, header, children }) {
                                     </div>
                                 </header>}
 
-                            <div className="flex items-center">
-                                <button
-                                    onClick={() => {
-                                        setShowingNavigationDropdown((previousState) => !previousState)
-                                    }}
-                                    className={`
-                                                    inline-flex items-center justify-center p-2 rounded-md
-                                                    text-gray-400 bg-gray-100
-                                                    hover:text-gray-500 hover:bg-gray-200
-                                                    focus:outline-none focus:bg-gray-200 focus:text-gray-500
-                                                    transition duration-150 ease-in-out
-                                                `}
-                                >
-                                    <svg className="h-6 w-6" stroke="currentColor" fill="none"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M4 6h16M4 12h16M4 18h16"
-                                        />
-                                        <path
-                                            className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M6 18L18 6M6 6l12 12"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
+                            <div></div>
                         </div>
 
                         <div
@@ -124,62 +94,69 @@ export default function Authenticated({ user, header, children }) {
                             `}>
 
                             {/* Menu */}
-                            <div className={`
-                                py-3 md:px-3 bg-cyan-800
-                                ${showingNavigationDropdown ? 'block' : 'hidden'}
-                            `}>
-                                <div className={``}>
-                                    <div className="p-4">
-                                        <div
-                                            className="font-medium text-base text-gray-100">{user.name}</div>
-                                        <div
-                                            className="font-medium text-sm text-gray-200">{user.email}</div>
-                                    </div>
-
-                                    <nav>
-                                        <div className="space-y-1">
-                                            <ResponsiveNavLink href={route('main')}
-                                                active={route().current('main')}
-                                            >
-                                                Main
-                                            </ResponsiveNavLink>
+                            <div className={`flex flex-col justify-between py-3 md:px-3 bg-blue-950`}>
+                                <div>
+                                    <div className={`${showingNavigationDropdown ? 'block' : 'hidden'}`}>
+                                        <div className="p-4">
+                                            <div
+                                                className="font-medium text-base text-gray-100">{user.name}</div>
+                                            <div
+                                                className="font-medium text-sm text-gray-200">{user.email}</div>
                                         </div>
 
-                                        <div className="space-y-1">
-                                            <ResponsiveNavLink href={route('chat_rooms.create')}
-                                                active={route().current('chat_rooms.create')}
-                                            >
-                                                Create Chat
-                                            </ResponsiveNavLink>
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <ResponsiveNavLink href={route('contact.show')}
-                                                active={route().current('contscts.show')}
-                                            >
-                                                Contacts
-                                            </ResponsiveNavLink>
-                                        </div>
-
-                                        <div>
-
-
-                                            <div className="">
-                                                <ResponsiveNavLink
-                                                    href={route('profile.edit')}
-                                                    active={route().current('profile.edit')}
+                                        <nav>
+                                            <div className="space-y-1">
+                                                <ResponsiveNavLink href={route('main')}
+                                                                   active={route().current('main')}
                                                 >
-                                                    Profile
-                                                </ResponsiveNavLink>
-
-                                                <ResponsiveNavLink method="post" href={route('logout')}
-                                                    as="button"
-                                                >
-                                                    Log Out
+                                                    Main
                                                 </ResponsiveNavLink>
                                             </div>
-                                        </div>
-                                    </nav>
+
+                                            <div className="space-y-1">
+                                                <ResponsiveNavLink href={route('chat_rooms.create')}
+                                                                   active={route().current('chat_rooms.create')}
+                                                >
+                                                    Create Chat
+                                                </ResponsiveNavLink>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <ResponsiveNavLink href={route('contact.show')}
+                                                                   active={route().current('contscts.show')}
+                                                >
+                                                    Contacts
+                                                </ResponsiveNavLink>
+                                            </div>
+
+                                            <div>
+
+
+                                                <div className="">
+                                                    <ResponsiveNavLink
+                                                        href={route('profile.edit')}
+                                                        active={route().current('profile.edit')}
+                                                    >
+                                                        Profile
+                                                    </ResponsiveNavLink>
+
+                                                    <ResponsiveNavLink method="post" href={route('logout')}
+                                                                       as="button"
+                                                    >
+                                                        Log Out
+                                                    </ResponsiveNavLink>
+                                                </div>
+                                            </div>
+                                        </nav>
+                                    </div>
+                                </div>
+
+                                <div className={`text-white`}>
+                                    <Cog8ToothIcon className={`size-5 cursor-pointer`}
+                                                   onClick={() => {
+                                                       setShowingNavigationDropdown((previousState) => !previousState)
+                                                   }}
+                                    />
                                 </div>
                             </div>
 
