@@ -115,20 +115,20 @@ export default function TwoFactoAuthForm({className, ...props}) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium text-gray-900">Two-Factor Authentication</h2>
+                <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm">
                     Add an extra layer of security to your account by enabling two-factor authentication (2FA). After
                     activation, you will be required to provide an additional verification code from your mobile device
                     or authenticator app when logging in.
                 </p>
             </header>
 
-            <h2 className={`mt-3 text-lg font-medium text-gray-900 ${isEnabled && 'hidden'}`}>Step: {step}</h2>
+            <h2 className={`mt-3 text-lg font-medium ${isEnabled && 'hidden'}`}>Step: {step}</h2>
 
             <div className={`mt-6 space-y-6 ${step !== 1 && 'hidden'}`}>
                 <div>
-                    <InputLabel htmlFor="password" value="Current Password"/>
+                    <InputLabel className={`text-white`} htmlFor="password" value="Current Password"/>
 
                     <TextInput
                         id="password"
@@ -147,8 +147,11 @@ export default function TwoFactoAuthForm({className, ...props}) {
 
                 <div className="flex items-center gap-4">
                     {isEnabled ?
-                        (<DangerButton onClick={disableTwoFactorAuth} disabled={processing}>Disable</DangerButton>) :
-                        (<PrimaryButton onClick={enableTwoFactorAuth} disabled={processing}>Enable</PrimaryButton>)
+                        (<DangerButton className={`!bg-red-400 hover:!bg-red-600`}
+                                       onClick={disableTwoFactorAuth} disabled={processing}>Disable</DangerButton>) :
+                        (<PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                        onClick={enableTwoFactorAuth}
+                                        disabled={processing}>Enable</PrimaryButton>)
                     }
                 </div>
             </div>
@@ -175,8 +178,10 @@ export default function TwoFactoAuthForm({className, ...props}) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <SecondaryButton onClick={back} disabled={processing}>Back</SecondaryButton>
-                    <PrimaryButton onClick={getRecoveryCodes} disabled={processing}>Next</PrimaryButton>
+                    <SecondaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                     onClick={back} disabled={processing}>Back</SecondaryButton>
+                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                   onClick={getRecoveryCodes} disabled={processing}>Next</PrimaryButton>
                 </div>
             </div>
 
@@ -192,14 +197,16 @@ export default function TwoFactoAuthForm({className, ...props}) {
                 <p>Save your recovery codes</p>
 
                 <div className="flex items-center gap-4">
-                    <SecondaryButton onClick={back} disabled={processing}>Back</SecondaryButton>
-                    <PrimaryButton onClick={() => setStep(4)} disabled={processing}>Next</PrimaryButton>
+                    <SecondaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                     onClick={back} disabled={processing}>Back</SecondaryButton>
+                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                   onClick={() => setStep(4)} disabled={processing}>Next</PrimaryButton>
                 </div>
             </div>
 
             <div className={`mt-6 space-y-6 ${step !== 4 && 'hidden'}`}>
                 <div>
-                    <InputLabel htmlFor="2fa_code" value="2FA Code"/>
+                    <InputLabel className={`text-white`} htmlFor="2fa_code" value="2FA Code"/>
 
                     <TextInput
                         id="2fa_code"
@@ -215,8 +222,10 @@ export default function TwoFactoAuthForm({className, ...props}) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <SecondaryButton onClick={back} disabled={processing}>Back</SecondaryButton>
-                    <PrimaryButton onClick={confirmTwoFactorAuth} disabled={processing}>Finish</PrimaryButton>
+                    <SecondaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                     onClick={back} disabled={processing}>Back</SecondaryButton>
+                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`} onClick={confirmTwoFactorAuth}
+                                   disabled={processing}>Finish</PrimaryButton>
                 </div>
 
 
