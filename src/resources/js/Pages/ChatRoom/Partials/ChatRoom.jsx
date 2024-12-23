@@ -17,14 +17,36 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     const [chatRoomKey, setChatRoomKey] = useState(null);
     const [lastMessage, setLastMessage] = useState(chatRoom.last_message);
-    const [isOnline, setIsOnline] = useState(chatRoom.is_online);
+    const [users, setUsers] = useState(chatRoom.users);
+
+    const [isOnline, setIsOnline] = useState(false);
+    const [members, setMembers] = useState(chatRoom.users.length);
 
     const activeChatRoomRef = useRef(activeChatRoom);
     const chatRoomRef = useRef(chatRoom);
-
     const chatRoomKeyRef = useRef(chatRoomKey);
 
     const channel = `chat-room.${chatRoom.id}`;
+
+    const [otherUser, setOtherUser] = useState(null);
+
+    useEffect(() => {
+        setUsers(chatRoom.users);
+        setMembers(chatRoom.users.length);
+        if (chatRoom.users.length === 2) {
+            setOtherUser(chatRoom.users.find(u => u.id !== user.id));
+        } else {
+            setOtherUser(null);
+        }
+    }, [chatRoom.users]);
+
+    useEffect(() => {
+        if (otherUser) {
+            setIsOnline(otherUser.is_online);
+        } else {
+            setIsOnline(false);
+        }
+    }, [otherUser]);
 
     useEffect(() => {
         if (userPrivateKey) {
@@ -78,10 +100,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     useEffect(() => {
         chatRoomRef.current = chatRoom;
     }, [chatRoom]);
-
-    useEffect(() => {
-        setIsOnline(chatRoom.is_online);
-    }, [chatRoom.is_online]);
 
     const decryptAndSetLastMessage = (chatRoomKey, message) => {
         ChatRoomMessage.decryptMessage(chatRoomKey, message).then((dMessage) => {
@@ -221,15 +239,14 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
     const onUserOnlineStatusChanged = (e) => {
         const { user_id, is_online, last_seen_at } = e;
-        const otherUser = chatRoomRef.current.users.find(u => u.id !== user.id);
-        if (otherUser?.id === user_id) {
-            setChatRooms(cr => cr.id === chatRoomRef.current.id ? {
+        console.log(e);
+        setChatRooms(prev =>
+            prev.map(cr => cr.id === chatRoom.id ? {
                 ...cr,
-                is_online: is_online,
-                last_seen_at: last_seen_at,
-            } : cr);
-            setIsOnline(is_online);
-        }
+                users: cr.users.map(user => user.id === user_id
+                    ? { ...user, is_online, last_seen_at }
+                    : user)
+            } : cr));
     };
 
     useEffect(() => {
@@ -285,15 +302,94 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         router.visit(route('main'));
     };
 
+    // Коллаж
+    const getCollageAvatars = () => {
+        if (users.length <= 2) return [];
+        let prioritizedUser = null;
+        if (lastMessage?.user_id) {
+            const found = users.find(u => u.id === lastMessage.user_id && u.avatar?.path);
+            if (found) {
+                prioritizedUser = found;
+            }
+        }
+
+        let withAvatars = users.filter(u => u.avatar?.path);
+        if (prioritizedUser) {
+            withAvatars = withAvatars.filter(u => u.id !== prioritizedUser.id);
+            withAvatars.unshift(prioritizedUser);
+        }
+
+        return withAvatars.slice(0, 4);
+    }
+
+    const renderCollage = () => {
+        const collage = getCollageAvatars();
+        const count = collage.length;
+        if (count === 0) {
+            return null;
+        }
+
+        if (users.length > 2 && count === 1) {
+            return (
+                <>
+                    <img
+                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </>
+            )
+        }
+
+        return (
+            <div className="w-full h-full relative">
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 z-0" />
+
+                <div className="absolute left-0 top-0 w-1/2 h-full">
+                    <img
+                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                </div>
+
+                <div className="absolute left-1/2 top-0 w-1/2 h-full flex flex-col items-center justify-evenly">
+                    {count > 1 && collage.slice(1).map((u, idx) => (
+                        <img
+                            key={u.id}
+                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${u.avatar.path}`}
+                            className="w-full h-full object-cover"
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div
             className={`flex min-w-min p-2 hover:bg-gray-100 cursor-pointer group ${className}`}
             onClick={onClickHandler}
         >
-            <div className={`min-w-12 min-h-12 max-w-12 max-h-12 mr-3 bg-lime-300 rounded-full relative`}>
-                {chatRoom.users.length === 2 && (
+            <div className={`
+                relative max-w-12 min-w-12 max-h-12 min-h-12 mr-3
+                items-center justify-center`
+            }>
+                <div className="relative bg-lime-300 rounded-full overflow-hidden w-full h-full">
+                    {users.length === 2 && otherUser && (
+                        otherUser?.avatar?.path ? (
+                            <img
+                                src={`${import.meta.env.VITE_AVATARS_STORAGE}/${otherUser.avatar.path}`}
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                        ) : null
+                    )}
+                    {users.length > 2 && renderCollage()}
+                </div>
+                {users.length === 2 && otherUser && (
                     <span
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                        className={`
+                            absolute bottom-0 right-0 w-3 h-3 rounded-full
+                            ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}
+                    />
                 )}
             </div>
 
@@ -301,9 +397,9 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 <div className={`flex justify-between`}>
                     <div className={`flex gap-1 text-nowrap`}>
                         <span className={`font-bold `}>
-                            {chatRoom.users.length === 2
-                                && truncate(chatRoom.users.find(u => u.id !== user.id).name, 15)
-                                || truncate(chatRoom.title, 15)
+                            {users.length === 2
+                                ? truncate(otherUser?.name ?? '', 15)
+                                : truncate(chatRoom.title, 15)
                             }
                         </span>
 

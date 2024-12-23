@@ -30,7 +30,7 @@ final class ChatRoomRepository
         //Log::info('Fetching chat rooms for user', ['userId' => $user->id]);
         $chatRooms = $user->chatRooms()
             ->with([
-                'users',
+                'users' => fn($q) => $q->with(['avatar']),
                 'messages' => fn($q) => $q->with(['user.avatar', 'attachments'])->latest()->take(1)
             ])
             ->orderByDesc('id')

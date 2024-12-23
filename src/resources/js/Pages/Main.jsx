@@ -56,7 +56,7 @@ export default function Main({ auth, ...props }) {
 
                                 <div>{chatRoom.title}</div>
 
-                                <ChatStatus currentUserId={auth.user.id} chatRoom={chatRoom} />
+                                <ChatStatus chatRoom={chatRoom} />
 
                                 <ChatRoomMenu />
                             </div>

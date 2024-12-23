@@ -504,14 +504,14 @@ export default forwardRef(function ChatMessage({
                 >
                     {(messageType === 'last' || messageType === 'singular') ? (
                         <div
-                            className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
+                            className={`relative min-w-12 min-h-12 max-w-12 max-h-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
                         rounded-full overflow-hidden
                         hidden sm:block`}
                         >
                             {message.user.avatar &&
                                 (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
                                     alt="avatar"
-                                    className="w-full h-full object-cover" />
+                                    className="absolute inset-0 w-full h-full object-cover" />
                                 )
                             }
                         </div>

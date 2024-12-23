@@ -30,6 +30,7 @@ export default function LoadChatRooms({ }) {
     };
 
     const fetchUserStatuses = async () => {
+        // Так, як наприклад працює в телеграмі (онлайн тільки для приватних чатів)
         const currentUserId = user.id;
         const twoUserChatRooms = chatRooms.filter(chatRoom => chatRoom.users.length === 2);
         const userIds = [...new Set(
@@ -39,29 +40,31 @@ export default function LoadChatRooms({ }) {
                     .map(u => u.id)
             )
         )];
+        // У випадку - онлайн для останніх повідомлень
+        /*const currentUserId = user.id;
+        const userIds = [...new Set(
+            chatRooms
+                .map(cr => cr.last_message?.user_id)
+        )];
+        console.log(userIds);*/
 
         const statusResponse = await axios.post(route('users-status.get'), { user_ids: userIds });
         const statuses = statusResponse.data;
 
-        const updatedChatRooms = chatRooms.map(chatRoom => {
-            if (chatRoom.users.length === 2) {
-                const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
-                const status = statuses[otherUser.id];
-
-                return {
-                    ...chatRoom,
-                    is_online: status?.is_online ?? false,
-                    last_seen_at: status?.last_seen_at,
-                };
-            } else {
-                return {
-                    ...chatRoom,
-                    is_online: false,
-                    last_seen_at: null,
-                };
+        const updatedChatRooms = chatRooms.map(cr => {
+            //const status = statuses[cr.last_message]
+            return {
+                ...cr,
+                users: cr.users.map(u => {
+                    const status = statuses[u.id];
+                    return {
+                        ...u,
+                        is_online: status?.is_online ?? false,
+                        last_seen_at: status?.last_seen_at ?? null,
+                    };
+                }),
             }
         });
-
         setChatRooms(() => updatedChatRooms);
     };
 

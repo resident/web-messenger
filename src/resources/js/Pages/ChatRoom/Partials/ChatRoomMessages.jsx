@@ -892,7 +892,7 @@ export default function ChatRoomMessages({ ...props }) {
         setErrors({ ...errors, message: '' });
 
         const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
-        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id);
+        const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id) || allMessagesRefs.current.length === 0;
         //console.log("SendingMessage:", {
         //    allMessages: allMessagesRefs.current,
         //    allMessagesHere: allMessages,
@@ -1123,7 +1123,7 @@ export default function ChatRoomMessages({ ...props }) {
 
             if (remaining <= bufferSize) {
                 const startId = messages[messages.length - 1]?.id
-                if (startId && startId !== lastMessage.id) {
+                if (startId && startId !== lastMessage?.id) {
                     loadMore(true, 20, startId, false, true);
                 } else if (remaining > 0) {
 
