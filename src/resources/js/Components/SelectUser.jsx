@@ -62,10 +62,10 @@ export default function SelectUser({label = 'User Name', buttonText = 'Select', 
 
     return (
         <div>
-            <InputLabel htmlFor="name" value={label}/>
+            <InputLabel className={`text-white`} htmlFor="name" value={label}/>
 
             <div className={`flex gap-2 my-1`}>
-                <div className="relative w-64" ref={userRef}>
+                <div className="relative w-full" ref={userRef}>
                     <TextInput
                         id="name"
                         className={`w-full ${showContacts && 'rounded-b-none'}`}
@@ -94,7 +94,9 @@ export default function SelectUser({label = 'User Name', buttonText = 'Select', 
                     </div>
                 </div>
 
-                <PrimaryButton disabled={name.length === 0} onClick={selectUser}>{buttonText}</PrimaryButton>
+                <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                               disabled={name.length === 0}
+                               onClick={selectUser}>{buttonText}</PrimaryButton>
             </div>
 
             <InputError message={nameError} className="my-2"/>

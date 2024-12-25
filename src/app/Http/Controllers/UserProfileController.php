@@ -11,6 +11,8 @@ final class UserProfileController extends Controller
 {
     public function show(User $user): InertiaResponse
     {
+        $user->load(['avatar']);
+
         return inertia("UserProfile/Show", compact('user'));
     }
 }

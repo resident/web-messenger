@@ -11,7 +11,7 @@ export default function ResponsiveNavLink({active = false, className = '', child
                         focus:text-indigo-800 focus:bg-indigo-100 focus:border-indigo-700
                     `
                     : `
-                        border-blue-900
+                        border-blue-800
                         bg-[#0F59A6]
                         hover:text-blue-400 hover:border-blue-400
                         focus:text-blue-500 focus:bg-gray-50 focus:border-blue-500
