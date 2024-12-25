@@ -91,7 +91,7 @@ export default function Authenticated({user, header, children}) {
                             {/* Menu */}
                             <div className={`flex flex-col justify-between py-3 md:px-3 bg-blue-950`}>
                                 <div>
-                                    <div className={`${showingNavigationDropdown ? 'block' : 'hidden'}`}>
+                                    <div className={`mb-3 ${showingNavigationDropdown ? 'block' : 'hidden'}`}>
                                         <div className="p-4">
                                             <div
                                                 className="font-medium text-base text-gray-100">{user.name}</div>
@@ -118,7 +118,7 @@ export default function Authenticated({user, header, children}) {
 
                                             <div>
                                                 <ResponsiveNavLink href={route('contact.show')}
-                                                                   active={route().current('contscts.show')}
+                                                                   active={route().current('contact.show')}
                                                 >
                                                     Contacts
                                                 </ResponsiveNavLink>
@@ -144,7 +144,7 @@ export default function Authenticated({user, header, children}) {
                                     </div>
                                 </div>
 
-                                <div className={`text-white`}>
+                                <div className={`flex justify-end md:justify-start px-3 md:px-0 text-white`}>
                                     <Cog8ToothIcon className={`size-5 cursor-pointer`}
                                                    onClick={() => {
                                                        setShowingNavigationDropdown((previousState) => !previousState)
@@ -159,8 +159,6 @@ export default function Authenticated({user, header, children}) {
                                 h-[calc(100dvh-4.1rem)] sm:h-[calc(100dvh-8.1rem)]
                                 overflow-auto
                             `}>
-
-
                                 {children}
                             </main>
                         </div>
