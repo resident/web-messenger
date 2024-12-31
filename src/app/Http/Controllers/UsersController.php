@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UsersController extends Controller
 {
@@ -21,5 +22,16 @@ class UsersController extends Controller
         }
 
         return response()->json($user);
+    }
+
+    public function search(string $name): JsonResponse
+    {
+        $users = User::query()
+            ->where('name', 'LIKE', "%{$name}%")
+            ->with('avatar')
+            ->orderByRaw("CASE WHEN name = ? THEN 1 ELSE 2 END", [$name])
+            ->limit(10)
+            ->get();
+        return response()->json($users);
     }
 }

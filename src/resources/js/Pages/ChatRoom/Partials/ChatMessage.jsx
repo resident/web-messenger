@@ -36,12 +36,14 @@ export default forwardRef(function ChatMessage({
     ...props
 }, ref) {
     const {
+        user,
         userPrivateKey, safeViewIsOn, userIsOnline,
         contextMenuVisible, setContextMenuVisible,
         contextMenuPosition, setContextMenuPosition,
         contextMenuTarget, setContextMenuTarget,
         chatRooms, setChatRooms,
     } = useContext(ApplicationContext);
+    const [chatRoom, setChatRoom] = useState(props.chatRoom);
     const { chatRoomKey } = useContext(ChatRoomContext);
 
     const messageRef = ref ? ref : useRef();
@@ -62,6 +64,8 @@ export default forwardRef(function ChatMessage({
     const [seenSent, setSeenSent] = useState(false);
     const [isLoadingSeenByUsers, setIsLoadingSeenByUsers] = useState(false);
     const [seenByError, setSeenByError] = useState(false);
+
+    const pivot = chatRoom?.users.find(u => u.id === user.id)?.pivot;
 
     useEffect(() => {
         const avatarsStorage = import.meta.env.VITE_AVATARS_STORAGE;
@@ -163,12 +167,20 @@ export default forwardRef(function ChatMessage({
         setShowForwardingModal(true);
     };
 
+    const canDeleteMessage = () => {
+        if (self) return true;
+        if (pivot?.permissions?.includes('delete_messages_of_others') || pivot?.role_name === 'owner') return true;
+        return false;
+    }
+
     const handleDeleteMessage = () => {
+        if (!canDeleteMessage) return;
         hideMenuContext();
         removeMessage();
     };
 
     const removeMessage = () => {
+        if (!canDeleteMessage) return;
         const userConfirmed = confirm('Are you sure?');
 
         if (!userConfirmed) return;
@@ -345,12 +357,12 @@ export default forwardRef(function ChatMessage({
                 icon: <Checkmarks />,
                 onClick: handleStatusClick,
             }] : []),
-            {
+            ...(canDeleteMessage() ? [{
                 label: 'Delete',
                 icon: <TrashIcon className="size-4" />,
                 color: 'text-red-500',
                 onClick: handleDeleteMessage,
-            },
+            }] : []),
         ];
         return options;
     };

@@ -1,24 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import InputError from '@/Components/InputError.jsx';
 import InputLabel from '@/Components/InputLabel.jsx';
 import PrimaryButton from '@/Components/PrimaryButton.jsx';
 import TextInput from '@/Components/TextInput.jsx';
 import Select from '@/Components/Select.jsx';
-import {Head, useForm} from '@inertiajs/react';
-import {Transition} from '@headlessui/react';
+import { Head, useForm } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 import SelectUser from "@/Components/SelectUser.jsx";
 import AESKeyGenerator from "@/Encryption/AESKeyGenerator.js";
 import RSAEncryptor from "@/Encryption/RSAEncryptor.js";
 
-export default function Create({auth}) {
+export default function Create({ auth }) {
     const usersSelect = useRef();
 
     const [chatRoomKey, setChatRoomKey] = useState("");
 
-    const {data, setData, errors, post, reset, processing, recentlySuccessful} = useForm({
+    const { data, setData, errors, post, reset, processing, recentlySuccessful } = useForm({
         title: '',
         users: [],
+        shouldRedirect: true,
     });
 
     useEffect(() => {
@@ -78,7 +79,7 @@ export default function Create({auth}) {
             user={auth.user}
             header="Chat Rooms"
         >
-            <Head title="Create Chat Room"/>
+            <Head title="Create Chat Room" />
 
             <div className="px-3 py-1 bg-blue-300 h-full">
                 <div className="max-w-7xl mx-auto h-full">
@@ -87,7 +88,7 @@ export default function Create({auth}) {
 
                             <form onSubmit={createChatRoom} className="mt-6 space-y-6">
                                 <div>
-                                    <InputLabel className={`text-white`} htmlFor="title" value="Title"/>
+                                    <InputLabel className={`text-white`} htmlFor="title" value="Title" />
 
                                     <TextInput
                                         id="title"
@@ -97,13 +98,13 @@ export default function Create({auth}) {
                                         className="mt-1 block w-full"
                                     />
 
-                                    <InputError message={errors.title} className="mt-2"/>
+                                    <InputError message={errors.title} className="mt-2" />
                                 </div>
 
-                                <SelectUser onUserSelected={addUser} buttonText="Add"/>
+                                <SelectUser onUserSelected={addUser} buttonText="Add" />
 
                                 <div>
-                                    <InputLabel className={`text-white`} htmlFor="users" value="Users"/>
+                                    <InputLabel className={`text-white`} htmlFor="users" value="Users" />
 
                                     <Select
                                         ref={usersSelect}
@@ -115,17 +116,17 @@ export default function Create({auth}) {
                                         ))}
                                     </Select>
 
-                                    <InputError message={errors.users} className="mt-2"/>
+                                    <InputError message={errors.users} className="mt-2" />
 
                                     <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
-                                                   disabled={data.users.length === 0}
-                                                   onClick={removeUser}
+                                        disabled={data.users.length === 0}
+                                        onClick={removeUser}
                                     >-</PrimaryButton>
                                 </div>
 
                                 <div className="flex items-center gap-4">
                                     <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
-                                                   disabled={processing}>Create</PrimaryButton>
+                                        disabled={processing}>Create</PrimaryButton>
 
                                     <Transition
                                         show={recentlySuccessful}

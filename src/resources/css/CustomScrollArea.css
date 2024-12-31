@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-scroll-area {
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.custom-scroll-area::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.custom-scroll-area-thumb-container {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.custom-scroll-area-thumb {
+    position: absolute;
+    right: 2px;
+    width: 6px;
+    background-color: #ccc;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.custom-scroll-area.scrolling .custom-scroll-area-thumb,
+.custom-scroll-area-thumb.is-dragging {
+    opacity: 1;
+}
+
+.custom-scroll-area-content {
+    padding-right: 12px;
+}

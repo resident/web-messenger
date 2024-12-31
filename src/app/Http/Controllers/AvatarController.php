@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AvatarRequest;
 use App\Models\Avatar;
 use App\Models\User;
+use App\Models\ChatRoom;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -46,8 +47,15 @@ final class AvatarController extends Controller
         }
     }
 
-    private function removeAvatar(User $user){
+    private function removeAvatar(User $user)
+    {
         Storage::delete("public/avatars/{$user->avatar->path}");
         $user->avatar->delete();
+    }
+
+    public function getAvatars(ChatRoom $chatRoom)
+    {
+        $avatars = $chatRoom->users()->with('avatar')->get();
+        return response()->json($avatars);
     }
 }

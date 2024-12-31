@@ -75,7 +75,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
     {
         return $this->belongsToMany(ChatRoom::class)
             ->using(ChatRoomUser::class)
-            ->withPivot(['chat_room_key', 'last_read_at', 'muted']);
+            ->withPivot(['chat_room_key', 'last_read_at', 'muted', 'role_name', 'permissions']);
     }
 
     /**

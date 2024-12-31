@@ -1,38 +1,36 @@
-import {EllipsisHorizontalIcon} from "@heroicons/react/24/outline/index.js";
+import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline/index.js";
 import Checkbox from "@/Components/Checkbox.jsx";
-import {useContext, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { useContext, useState } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import axios from "axios";
-import {router} from "@inertiajs/react";
+import { router } from "@inertiajs/react";
+import ChatRoomInfoModal from "./Modals/ChatRoomInfoModal.jsx";
+import {
+    InformationCircleIcon
+} from '@heroicons/react/24/outline'
 
-export default function ChatRoomMenu({chatRoom}) {
-    const {safeViewIsOn, setSafeViewIsOn} = useContext(ApplicationContext);
+export default function ChatRoomMenu({ chatRoom }) {
+    const { safeViewIsOn, setSafeViewIsOn } = useContext(ApplicationContext);
 
     const [menuIsHidden, setMenuIsHidden] = useState(true);
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     const toggleMenu = () => {
         setMenuIsHidden(!menuIsHidden);
     }
 
+    const onShowInfo = () => {
+        setShowInfoModal(true);
+        setMenuIsHidden(true);
+    }
+
     const onSafeViewChanged = (e) => {
         const safeViewIsOn = e.target.checked;
 
-        axios.put(route('user-settings.update'), {safe_view_is_on: safeViewIsOn})
+        axios.put(route('user-settings.update'), { safe_view_is_on: safeViewIsOn })
             .then(() => {
                 setSafeViewIsOn(safeViewIsOn);
             });
-    };
-
-    const removeChatRoom = async (e) => {
-        e.stopPropagation();
-
-        const result = confirm('Delete this chat room?');
-
-        if (result) {
-            await axios.delete(route('chat_rooms.destroy', chatRoom.id));
-
-            router.visit(route('main'));
-        }
     };
 
     return (
@@ -59,12 +57,19 @@ export default function ChatRoomMenu({chatRoom}) {
                             onChange={onSafeViewChanged}
                         />
                     </div>
-
-                    <div className={`bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer`}
-                         onClick={removeChatRoom}
+                    <div
+                        className="bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center"
+                        onClick={onShowInfo}
                     >
-                        Delete
+                        <InformationCircleIcon className="size-6 pb-[2px]" />
+                        Info
                     </div>
+                    {showInfoModal && (
+                        <ChatRoomInfoModal
+                            initialChatRoom={chatRoom}
+                            onClose={() => setShowInfoModal(false)}
+                        />
+                    )}
                 </div>
             </div>
         </div>

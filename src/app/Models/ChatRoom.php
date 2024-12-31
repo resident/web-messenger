@@ -34,7 +34,7 @@ class ChatRoom extends Model
     {
         return $this->belongsToMany(User::class)
             ->using(ChatRoomUser::class)
-            ->withPivot(['chat_room_key', 'last_read_at', 'muted']);
+            ->withPivot(['chat_room_key', 'last_read_at', 'muted', 'role_name', 'permissions']);
     }
 
     public function messages(): HasMany

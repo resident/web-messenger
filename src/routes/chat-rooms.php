@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Events\ChatRoomCreated;
 use App\Http\Controllers\ChatRoomMessagesController;
 use App\Http\Controllers\ChatRoomsController;
+use App\Http\Controllers\AvatarController;
+use App\Models\ChatRoom;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/chat-rooms/list', [ChatRoomsController::class, 'list'])->name('chat_rooms.list');
@@ -17,6 +20,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::delete('/chat-rooms/{chatRoom}', [ChatRoomsController::class, 'destroy'])
         ->whereUuid('chatRoom')->name('chat_rooms.destroy');
+
+
+
+    Route::put('/chat-rooms/{chatRoom}/manage-roles/{userToUpdate}', [ChatRoomsController::class, 'updateUserRoleAndPermissions'])
+        ->whereUuid('chatRoom')->name('chat_rooms.manage_roles');
+
+    Route::get('/chat-rooms/{chatRoom}/users', [ChatRoomsController::class, 'getUsers'])
+        ->whereUuid('chatRoom')->name('chat_rooms.get_users');
+
+    Route::delete('/chat-rooms/{chatRoom}/users/{userToRemove}', [ChatRoomsController::class, 'removeUser'])
+        ->whereUuid('chatRoom')->name('chat_rooms.remove_user');
+
+    Route::post('/chat-rooms/{chatRoom}/users/{userToAdd}', [ChatRoomsController::class, 'addUser'])
+        ->whereUuid('chatRoom')->name('chat_rooms.add_user');
+    Route::get('/chat-rooms/{chatRoom}/users/avatars', [AvatarController::class, 'getAvatars'])
+        ->whereUuid('chatRoom')->name('chat_rooms.avatars');
+    Route::get('/chat-rooms/{chatRoom}', [ChatRoomsController::class, 'getChatRoom'])
+        ->whereUuid('chatRoom')->name('chat_rooms.get_chat_room');
+
+
 
     Route::get('/chat-rooms/{chatRoom}/messages/{count?}/{startId?}', [ChatRoomMessagesController::class, 'index'])
         ->whereUuid(['chatRoom', 'startId'])

@@ -29,6 +29,7 @@ class StoreChatRoomRequest extends FormRequest
             'users.*.id' => 'required|integer|min:1',
             'users.*.name' => 'required|string|max:256',
             'users.*.chat_room_key' => 'required|string|max:2048',
+            'shouldRedirect' => 'sometimes|boolean',
         ];
     }
 }

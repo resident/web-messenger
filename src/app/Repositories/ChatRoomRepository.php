@@ -68,6 +68,30 @@ final class ChatRoomRepository
         return $chatRooms;
     }
 
+    public function getChatRoom(ChatRoom $chatRoom, User $user): ChatRoom
+    {
+        $chatRoom->load([
+            'users.avatar',
+            'messages' => fn($q) => $q->with(['user.avatar', 'attachments'])->latest()->take(1),
+        ]);
+
+        $pivot = $chatRoom->users->where('id', $user->id)->first()?->pivot;
+        $chatRoom->last_read_at = $pivot?->last_read_at;
+        $chatRoom->muted = $pivot?->muted ?? false;
+
+        $chatRoom->last_message = $chatRoom->messages->first();
+
+        $lastReadAt = $chatRoom->last_read_at;
+        $unreadCount = $this->getUnreadCount($chatRoom, $lastReadAt, $user);
+        $chatRoom->unread_count = $unreadCount;
+
+        if ($chatRoom->unread_count > 1) {
+            $chatRoom->setRelation('messages', collect([]));
+        }
+
+        return $chatRoom;
+    }
+
     public function updateLastReadAt(User $user, ChatRoom $chatRoom, string $newLastReadAt)
     {
         if ($newLastReadAt) {
