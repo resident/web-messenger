@@ -17,12 +17,14 @@ final class ChatRoomCreated implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
+    public string $chatRoomId;
+
     /**
      * Create a new event instance.
      */
-    public function __construct(public readonly ChatRoom $chatRoom)
+    public function __construct(protected ChatRoom $chatRoom)
     {
-        $this->chatRoom->loadMissing(['users', 'messages' => fn($q) => $q->latest()->take(1)]);
+        $this->chatRoomId = $chatRoom->id;
     }
 
     /**

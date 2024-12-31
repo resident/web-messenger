@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Dto\ChatRoomMessageAttachmentDto;
 use App\Dto\ChatRoomMessageDto;
+use App\Enums\ChatRoomPermissionEnum;
+use App\Enums\ChatRoomRoleEnum;
 use App\Enums\MessageStatusEnum;
 use App\Events\ChatRoomMessageRemoved;
 use App\Events\ChatRoomMessageSent;
@@ -104,11 +106,12 @@ class ChatRoomMessagesController extends Controller
         $lastMessage = $chatRoomMessageRepository->getLastMessage($chatRoom);
         /*Log::info('Fetched last message for chat room via repository', [
             'chatRoomId' => $chatRoom->id,
+            'lastMessage' => $lastMessage,
             'lastMessageId' => $lastMessage?->id,
             'lastMessageContent' => $lastMessage?->content,
             'lastMessageTime' => $lastMessage?->created_at,
         ]);*/
-        return $lastMessage;
+        return response()->json($lastMessage);
     }
 
     /**
@@ -277,6 +280,18 @@ class ChatRoomMessagesController extends Controller
         ChatRoomMessage $message,
         ChatRoomMessageService $messageService,
     ): JsonResponse {
+        $user = request()->user();
+        if ($message->user_id !== $user->id) {
+            $pivot = $chatRoom->users()->where('user_id', $user->id)->first()?->pivot;
+
+            if (
+                !$pivot ||
+                $pivot->role_name !== ChatRoomRoleEnum::OWNER->value &&
+                !$pivot->can(ChatRoomPermissionEnum::DELETE_MESSAGES_OF_OTHERS->value)
+            ) {
+                abort(403, 'Access denied');
+            }
+        }
         $messageDto = ChatRoomMessageDto::fromArray($message->toArray());
 
         $isDeleted = $messageService->deleteMessage($message);

@@ -6,6 +6,7 @@ import ChatRoomMessages from "@/Pages/ChatRoom/Partials/ChatRoomMessages.jsx";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline/index.js";
 import ChatStatus from '@/Pages/ChatRoom/Partials/ChatStatus.jsx';
 import ChatRoomMenu from "@/Pages/ChatRoom/Partials/ChatRoomMenu.jsx";
+import ChatRoomTitle from '@/Pages/ChatRoom/Partials/ChatRoomTitle.jsx';
 
 export default function Main({ auth, ...props }) {
     const [chatRoom, setChatRoom] = useState(props.chatRoom);
@@ -34,6 +35,7 @@ export default function Main({ auth, ...props }) {
                         });
                     }}
                         activeChatRoom={chatRoom}
+                        onActiveChatRoomInvalidated={() => setChatRoom(null)}
                     />
                 </div>
 
@@ -59,9 +61,7 @@ export default function Main({ auth, ...props }) {
                                 <div className={`flex gap-5`}>
                                     <ChatStatus chatRoom={chatRoom} />
 
-                                    <div className={`text-3xl`}>
-                                        {chatRoom.title}
-                                    </div>
+                                    <ChatRoomTitle chatRoom={chatRoom} />
 
                                     <ChatRoomMenu chatRoom={chatRoom} />
                                 </div>

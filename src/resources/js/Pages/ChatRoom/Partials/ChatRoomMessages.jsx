@@ -46,6 +46,10 @@ export default function ChatRoomMessages({ ...props }) {
 
     const [cacheLoading, setCacheLoading] = useState(false);
 
+    const pivot = chatRoom?.users.find(u => u.id === user.id)?.pivot;
+    const canManageAutoDelete = pivot?.permissions?.includes('set_auto_delete') || pivot?.role_name === 'owner';
+    const chatRoomKeyRef = useRef(chatRoomKey);
+
     // 0 - базова
     // 1 - Початок процесу завантаження повідомлень
     // 2 - Кінець процесу завантаження повідомлень
@@ -153,6 +157,7 @@ export default function ChatRoomMessages({ ...props }) {
         const channelName = `chat-room.${chatRoom.id}`;
         const channel = Echo.private(channelName);
         let isMounted = true;
+        chatRoomKeyRef.current = chatRoomKey;
 
         if (chatRoomKey) {
             const decryptMessages = async () => {
@@ -190,11 +195,9 @@ export default function ChatRoomMessages({ ...props }) {
             channel
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
-                .stopListening('ChatRoomUpdated')
                 .stopListening('ChatRoomMessageStatusUpdated')
                 .listen('ChatRoomMessageSent', onChatRoomMessageSent) // у випадку активності чата (тобто цей чат відкритий) контроль над ChatRoomMessageSent перехватується цим компонентом
                 .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved) // так само
-                .listen('ChatRoomUpdated', onChatRoomUpdated)
                 .listen('ChatRoomMessageStatusUpdated', onChatRoomMessageStatusUpdated);
         } else {
             setAllMessages([]);
@@ -204,7 +207,6 @@ export default function ChatRoomMessages({ ...props }) {
             channel
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
-                .stopListening('ChatRoomUpdated')
                 .stopListening('ChatRoomMessageStatusUpdated');
 
             isMounted = false;
@@ -320,8 +322,9 @@ export default function ChatRoomMessages({ ...props }) {
     }, [allMessages, windowMessages]);
 
     useLayoutEffect(() => {
-        if (shouldScroll && scrollTo === "bottom" && messageRefs.current.length > 0) {
-            const lastMessageEl = messageRefs.current[messageRefs.current.length - 1];
+        const nonNullRefs = messageRefs.current.filter(el => el);
+        if (shouldScroll && scrollTo === "bottom" && nonNullRefs.length > 0) {
+            const lastMessageEl = nonNullRefs[nonNullRefs.length - 1];
             if (lastMessageEl) {
                 lastMessageEl.scrollIntoView({ behavior: 'instant', block: 'start' });
             }
@@ -506,11 +509,11 @@ export default function ChatRoomMessages({ ...props }) {
     const onChatRoomMessageSent = (e) => {
         (async () => {
             try {
-                const dMessage = await ChatRoomMessage.decryptMessage(chatRoomKey, e.message);
+                const dMessage = await ChatRoomMessage.decryptMessage(chatRoomKeyRef.current, e.message);
 
                 const wasAtBottom = (lastKnownWindowStartIndexRef.current + VISIBLE_COUNT >= allMessagesRefs.current.length);
 
-                const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === chatRoomRef.current.last_message?.id);
+                const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === chatRoomRef.current.last_message?.id) || allMessagesRefs.current.length === 0;
 
                 const { scrollTop, scrollHeight, clientHeight } = messagesRef.current || {};
                 const isNearBottom = scrollHeight - (scrollTop + clientHeight) <= 200;
@@ -523,7 +526,7 @@ export default function ChatRoomMessages({ ...props }) {
                             if (cr.id === chatRoomRef.current.id) {
                                 const isUserMessage = dMessage.user_id === user.id;
                                 let isNewer = true;
-                                if (cr.last_message) {
+                                if (cr?.last_message?.created_at) {
                                     isNewer = new Date(dMessage.created_at) > new Date(cr.last_message.created_at);
                                 }
 
@@ -610,45 +613,116 @@ export default function ChatRoomMessages({ ...props }) {
         })();
     };
 
+    const removeQueueRef = useRef([]);
+
+    const handleRemoveQueueFlush = async () => {
+        const removedMessages = [...removeQueueRef.current];
+        removeQueueRef.current = [];
+
+        if (removedMessages.length === 0) return;
+
+        removedMessages.sort((a, b) =>
+            new Date(a.createdAt) - new Date(b.createdAt)
+        );
+
+        let needNewLastMessage = false;
+        let newestRemoved = null;
+
+        removedMessages.forEach(msg => {
+            if (chatRoomRef.current.last_message?.id === msg.id) {
+                needNewLastMessage = true;
+            }
+            if (!newestRemoved || new Date(msg.createdAt) > new Date(newestRemoved.createdAt)) {
+                newestRemoved = msg;
+            }
+        });
+
+        if (needNewLastMessage) {
+            const allCurrent = messagesRefs.current;
+            const oldestRemovedMessage = removedMessages.reduce((oldest, current) =>
+                new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest
+            );
+            const oldestRemovedTimestamp = new Date(oldestRemovedMessage.createdAt);
+
+            const sortedCurrentMessages = [...allCurrent].sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            );
+            let newLastMessage = sortedCurrentMessages.find(
+                (msg) => {
+                    return new Date(msg.created_at) < oldestRemovedTimestamp;
+                }
+            );
+
+            if (!newLastMessage) {
+                const res = await axios.get(route("chat_rooms.messages.get_last_message", {
+                    chatRoom: chatRoom.id
+                }));
+                newLastMessage = res.data;
+            }
+
+            setChatRooms((prev) =>
+                prev.map((cr) =>
+                    cr.id === chatRoomRef.current.id
+                        ? { ...cr, last_message: newLastMessage }
+                        : cr
+                )
+            );
+        }
+
+        const unreadDecrementCount = removedMessages.reduce((count, msg) => {
+            const wasUnread =
+                new Date(msg.created_at) > new Date(chatRoomRef.current.last_read_at + "Z") &&
+                msg.user_id !== user.id;
+
+            return wasUnread ? count + 1 : count;
+        }, 0);
+
+        if (unreadDecrementCount > 0) {
+            setChatRooms((prev) =>
+                prev.map((cr) => {
+                    if (cr.id === chatRoomRef.current.id) {
+                        const newUnreadCount = Math.max(
+                            (chatRoomRef.current.unread_count || 0) - unreadDecrementCount,
+                            0
+                        );
+                        return { ...cr, unread_count: newUnreadCount };
+                    }
+                    return cr;
+                })
+            );
+        }
+
+        const existingAll = allMessagesRefs.current;
+        let removeCountBeforeWindow = 0;
+
+        for (const rm of removedMessages) {
+            const rmIndex = existingAll.findIndex(m => m.id === rm.id);
+            if (rmIndex !== -1) {
+                removeCountBeforeWindow++;
+            }
+        }
+
+        setWindowStartIndex(prev => Math.max(0, prev - removeCountBeforeWindow));
+
+        setAllMessages((prev) =>
+            prev.filter((m) => !removedMessages.some((rm) => rm.id === m.id))
+        );
+    }
+
+    const debouncedRemoveFlush = useRef(
+        debounce(() => {
+            handleRemoveQueueFlush();
+        }, 200)
+    ).current;
+
+    const handleChatRoomMessageRemovedBase = (message) => {
+        removeQueueRef.current.push(message);
+    }
+
     const onChatRoomMessageRemoved = (e) => {
-        (async () => {
-            const messageToRemove = e.message;
-
-            const messagesArray = messagesRefs.current;
-            const messageId = messagesArray.findIndex(m => m.id === messageToRemove.id);
-
-            if (chatRoomRef.current.last_message?.id === messageToRemove.id) {
-                const previousMessage = messageId !== -1 ? messagesArray[messageId - 1] : null;
-                const newLastMessage = previousMessage
-                    ? previousMessage
-                    : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom.id })).then(res => res.data);
-
-                setChatRooms(prev =>
-                    prev.map(cr => cr.id === chatRoomRef.current.id ? { ...cr, last_message: newLastMessage } : cr)
-                );
-            }
-
-            const check = new Date(messageToRemove.createdAt) > new Date(chatRoomRef.current.last_read_at + "Z") && messageToRemove.user_id !== user.id;
-            if (check) {
-                setChatRooms(prev =>
-                    prev.map(cr => {
-                        if (cr.id === chatRoomRef.current.id) {
-                            const newUnreadCount = Math.max((chatRoomRef.current.unread_count || 0) - 1, 0);
-                            return { ...cr, unread_count: newUnreadCount }
-                        }
-                        return cr;
-                    })
-                );
-            }
-
-            if (messageId !== -1) {
-                removeMessage(messageToRemove);
-            }
-        })();
-    };
-
-    const onChatRoomUpdated = (e) => {
-        setChatRoom({ ...chatRoom, ...e.chatRoom });
+        const messageToRemove = e.message;
+        handleChatRoomMessageRemovedBase(messageToRemove);
+        debouncedRemoveFlush();
     };
 
     const onChatRoomMessageStatusUpdated = (e) => {
@@ -824,7 +898,7 @@ export default function ChatRoomMessages({ ...props }) {
                     prev.map(cr => {
                         if (cr.id === chatRoom.id) {
                             let isNewer = true;
-                            if (cr.last_message) {
+                            if (cr?.last_message?.created_at) {
                                 isNewer = new Date(decryptedMessage.created_at) > new Date(cr.last_message.created_at);
                             }
                             return {
@@ -1520,7 +1594,11 @@ export default function ChatRoomMessages({ ...props }) {
                                 setSelectedFiles={setMessageAttachments}
                             />
 
-                            <AutoDeleteSettings />
+                            <AutoDeleteSettings
+                                chatRoom={chatRoom}
+                                mode="inline"
+                                canManageAutoDelete={canManageAutoDelete}
+                            />
 
                             <RecordAudioMessage
                                 selectedFiles={messageAttachments}

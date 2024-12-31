@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/contact/delete', [ContactController::class, 'delete'])->name('contact.delete');
 
     Route::get('/users/{name}', [UsersController::class, 'get'])->name('users.get');
+    Route::get('/users/search/{name}', [UsersController::class, 'search'])->name('users.search');
 
     Route::put('/rotate-keys', [RotateKeysController::class, 'update'])->name('rotate-keys.update');
 

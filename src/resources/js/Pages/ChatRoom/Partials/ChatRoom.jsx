@@ -3,6 +3,9 @@ import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import { default as CommonChatRoom } from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
 import Utils from "@/Common/Utils.js";
+import ChatAvatar from "./ChatAvatar";
+import { router } from "@inertiajs/react";
+import debounce from "lodash.debounce";
 
 export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
     const {
@@ -59,9 +62,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     }, [userPrivateKey]);
 
     useEffect(() => {
-        if (!chatRoom.last_message) return;
-
-        if (chatRoom.last_message.message_iv && chatRoomKey) {
+        if (chatRoom.last_message?.message_iv && chatRoomKey) {
             (async () => {
                 ChatRoomMessage.decryptMessage(chatRoomKey, chatRoom.last_message).then((dMessage) => {
                     setChatRooms(prev =>
@@ -87,9 +88,11 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                     .stopListening('ChatRoomMessageSent')
                     .stopListening('ChatRoomMessageRemoved')
                     .stopListening('UserOnlineStatusChanged')
+                    .stopListening('ChatRoomUpdated')
                     .listen('ChatRoomMessageSent', onChatRoomMessageSent)
                     .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
-                    .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
+                    .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged)
+                    .listen('ChatRoomUpdated', onChatRoomUpdated);
             }
         }
         activeChatRoomRef.current = activeChatRoom;
@@ -133,7 +136,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             // Більше ніж 1 непрочитаних повідомлень -- вважаємо потім у ChatRoomMessages як initialLoading, тобто щоб всі повідомлення грузило там.
             // Оскільки це викликається тільки один раз при відображенні чату, то логіка використовується тільки для початкового завантаження
             // Саме 1 повідомлення через те, що з нього треба буде починати показувати сам чат. Якщо ж там буде наприклад непрочитаних 3, а завантажиться останнє з них, то два догрузяться потім, але тоді вже скорлл буде не з них, хоча мав би з них починатись
-            if (chatRoom.last_message.message_iv) {
+            if (chatRoom.last_message?.message_iv) {
                 if (isActiveRoom) {
                     decryptAndSetLastMessage(chatRoomKey, chatRoom.last_message);
                 } else {
@@ -181,12 +184,17 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                             ? [...cr.messages, dMessage]
                             : [...cr.messages];
 
+                        let isNewer = true;
+                        if (cr?.last_message?.created_at) {
+                            isNewer = new Date(dMessage.created_at) > new Date(cr.last_message.created_at);
+                        }
+
                         return {
                             ...cr,
                             messages: updatedMessages,
                             unread_count: newUnreadCount,
                             last_read_at: isUserMessage ? dMessage.created_at : cr.last_read_at,
-                            last_message: dMessage,
+                            last_message: isNewer ? dMessage : cr.last_message,
                         };
                     }
                     return cr;
@@ -203,40 +211,127 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         });
     };
 
+    const removeQueueRef = useRef([]);
+
+    const handleRemoveQueueFlush = async () => {
+        const removedMessages = [...removeQueueRef.current];
+        removeQueueRef.current = [];
+
+        if (removedMessages.length === 0) return;
+
+        removedMessages.sort((a, b) =>
+            new Date(a.createdAt) - new Date(b.createdAt)
+        );
+
+        let needNewLastMessage = false;
+        let newestRemoved = null;
+        removedMessages.forEach(msg => {
+            if (chatRoomRef.current.last_message?.id === msg.id) {
+                needNewLastMessage = true;
+            }
+            if (
+                !newestRemoved ||
+                new Date(msg.createdAt) > new Date(newestRemoved.createdAt)
+            ) {
+                newestRemoved = msg;
+            }
+        });
+
+        let newLastMessage = chatRoomRef.current.last_message;
+        if (needNewLastMessage) {
+            const allCurrent = chatRoomRef.current.messages;
+            const oldestRemovedMessage = removedMessages.reduce((oldest, current) =>
+                new Date(current.createdAt) < new Date(oldest.createdAt)
+                    ? current
+                    : oldest
+            );
+
+            const oldestRemovedTimestamp = new Date(oldestRemovedMessage.createdAt);
+            const sortedCurrentMessages = [...allCurrent].sort(
+                (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            );
+            newLastMessage = sortedCurrentMessages.find(
+                (msg) => new Date(msg.created_at) < oldestRemovedTimestamp
+            );
+
+            if (!newLastMessage) {
+                const res = await axios.get(
+                    route("chat_rooms.messages.get_last_message", {
+                        chatRoom: chatRoom.id,
+                    })
+                );
+                newLastMessage = Object.keys(res.data).length === 0 ? null : res.data;
+            }
+
+            setChatRooms(prev =>
+                prev.map(cr =>
+                    cr.id === chatRoomRef.current.id
+                        ? { ...cr, last_message: newLastMessage }
+                        : cr
+                )
+            );
+        }
+
+        const unreadDecrementCount = removedMessages.reduce((count, msg) => {
+            const wasUnread =
+                new Date(msg.createdAt) >
+                new Date(chatRoomRef.current.last_read_at + "Z") &&
+                msg.userId !== user.id;
+            return wasUnread ? count + 1 : count;
+        }, 0);
+
+        if (unreadDecrementCount > 0) {
+            setChatRooms(prev =>
+                prev.map(cr => {
+                    if (cr.id === chatRoomRef.current.id) {
+                        const newUnreadCount = Math.max(
+                            (chatRoomRef.current.unread_count || 0) -
+                            unreadDecrementCount,
+                            0
+                        );
+                        return { ...cr, unread_count: newUnreadCount };
+                    }
+                    return cr;
+                })
+            );
+        }
+
+        let updatedMessages = chatRoomRef.current.messages.filter(m => !removedMessages.some(rm => m.id === rm.id));
+        const newUnreadCount = Math.max(
+            (chatRoomRef.current.unread_count || 0) -
+            unreadDecrementCount,
+            0
+        );
+        if (updatedMessages.length === 0 && newUnreadCount < 2 && newLastMessage) {
+            updatedMessages = [newLastMessage];
+        }
+
+        setChatRooms(prev =>
+            prev.map(cr => cr.id === chatRoomRef.current.id ?
+                { ...cr, messages: updatedMessages } : cr)
+        );
+    }
+
+    const debouncedRemoveFlush = useRef(
+        debounce(() => {
+            handleRemoveQueueFlush();
+        }, 200)
+    ).current;
+
+    const handleChatRoomMessageRemovedBase = (message) => {
+        removeQueueRef.current.push(message);
+    }
+
     const onChatRoomMessageRemoved = (e) => {
-        (async () => {
-            const messageToRemove = e.message;
+        const messageToRemove = e.message;
 
-            const currentActiveChatRoom = activeChatRoomRef.current;
-            if (currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id) {
-                return;
-            }
+        const currentActiveChatRoom = activeChatRoomRef.current;
+        if (currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id) {
+            return;
+        }
 
-            const messageId = chatRoomRef.current.messages.findIndex(m => m.id === messageToRemove.id);
-
-            if (chatRoomRef.current.last_message?.id === messageToRemove.id) {
-                const previousMessage = messageId !== -1 ? chatRoomRef.current.messages[messageId - 1] : null;
-                const newLastMessage = previousMessage
-                    ? previousMessage
-                    : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom.id })).then(res => res.data);
-                let updatedMessages = chatRoomRef.current.messages.filter(m => m.id !== messageToRemove.id);
-                if (updatedMessages.length === 0) {
-                    updatedMessages = [newLastMessage];
-                }
-
-                setChatRooms(prev =>
-                    prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        { ...cr, messages: [...updatedMessages], last_message: { ...newLastMessage } } : cr)
-                );
-            }
-
-            if (new Date(messageToRemove.createdAt) > new Date(chatRoomRef.current.last_read_at + "Z") && messageToRemove.user_id !== user.id) {
-                setChatRooms(prev =>
-                    prev.map(cr => cr.id === chatRoomRef.current.id ?
-                        { ...cr, unread_count: Math.max((chatRoomRef.current.unread_count || 0) - 1, 0) } : cr)
-                );
-            }
-        })();
+        handleChatRoomMessageRemovedBase(messageToRemove);
+        debouncedRemoveFlush();
     };
 
     const onUserOnlineStatusChanged = (e) => {
@@ -250,19 +345,75 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             } : cr));
     };
 
+    const onChatRoomUpdated = (e) => {
+        if (e.changes.is_deleted || e.changes.deleted_user?.id === user.id) {
+            const currentActiveChatRoom = activeChatRoomRef.current;
+            if (currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id) {
+                router.get(route('main'), {}, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                    only: []
+                });
+            }
+            setChatRooms(prev => prev.filter(cr => cr.id !== e.chatRoomId));
+        } else {
+            const { updated_user, added_user, deleted_user, ...restChanges } = e.changes;
+
+            setChatRooms(prev => prev.map(cr => {
+                if (cr.id !== e.chatRoomId) {
+                    return cr;
+                }
+
+                let updatedUsers = cr.users;
+                if (updated_user) {
+                    updatedUsers = cr.users.map(u =>
+                        u.id === updated_user.id
+                            ? {
+                                ...u,
+                                pivot: {
+                                    ...u.pivot,
+                                    role_name: updated_user.role_name,
+                                    permissions: updated_user.permissions,
+                                }
+                            }
+                            : u
+                    );
+                }
+                if (added_user) {
+                    const alreadyExists = updatedUsers.some(u => u.id === added_user.id);
+                    if (!alreadyExists) {
+                        updatedUsers = [...updatedUsers, added_user];
+                    }
+                }
+                if (deleted_user) {
+                    updatedUsers = updatedUsers.filter(u => u.id !== deleted_user.id)
+                }
+
+                return {
+                    ...cr,
+                    ...restChanges,
+                    users: updatedUsers,
+                };
+            }));
+        }
+    };
+
     useEffect(() => {
         //console.log("Calling here:", { chatRoomKey });
         Echo.private(channel)
             .listen('ChatRoomMessageSent', onChatRoomMessageSent)
             .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
-            .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
+            .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged)
+            .listen('ChatRoomUpdated', onChatRoomUpdated);
 
         return () => {
             //console.log("Closing here");
             Echo.private(channel)
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
-                .stopListening('UserOnlineStatusChanged');
+                .stopListening('UserOnlineStatusChanged')
+                .stopListening('ChatRoomUpdated');
         };
     }, []);
 
@@ -295,68 +446,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         return formatDate(inputDate);
     }
 
-    // Коллаж
-    const getCollageAvatars = () => {
-        if (users.length <= 2) return [];
-        let prioritizedUser = null;
-        if (lastMessage?.user_id) {
-            const found = users.find(u => u.id === lastMessage.user_id && u.avatar?.path);
-            if (found) {
-                prioritizedUser = found;
-            }
-        }
-
-        let withAvatars = users.filter(u => u.avatar?.path);
-        if (prioritizedUser) {
-            withAvatars = withAvatars.filter(u => u.id !== prioritizedUser.id);
-            withAvatars.unshift(prioritizedUser);
-        }
-
-        return withAvatars.slice(0, 4);
-    }
-
-    const renderCollage = () => {
-        const collage = getCollageAvatars();
-        const count = collage.length;
-        if (count === 0) {
-            return null;
-        }
-
-        if (users.length > 2 && count === 1) {
-            return (
-                <>
-                    <img
-                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                </>
-            )
-        }
-
-        return (
-            <div className="w-full h-full relative">
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300 z-0" />
-
-                <div className="absolute left-0 top-0 w-1/2 h-full">
-                    <img
-                        src={`${import.meta.env.VITE_AVATARS_STORAGE}/${collage[0].avatar.path}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                    />
-                </div>
-
-                <div className="absolute left-1/2 top-0 w-1/2 h-full flex flex-col items-center justify-evenly">
-                    {count > 1 && collage.slice(1).map((u, idx) => (
-                        <img
-                            key={u.id}
-                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${u.avatar.path}`}
-                            className="w-full h-full object-cover"
-                        />
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div
             //${activeChatRoom?.id === chatRoom.id ? 'bg-gradient-to-b from-[#BFDBFE] via-white to-white' : 'bg-gradient-to-b from-[#3B82F6] hover:from-blue-300 via-blue-300 hover:via-blue-100 to-blue-300  hover:to-blue-100'}
@@ -388,24 +477,13 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                         </span>
 
                         <div className={`relative size-[53px] mr-[15px] items-center justify-center`}>
-                            <div className="relative bg-blue-300 rounded-full overflow-hidden w-full h-full">
-                                {users.length === 2 && otherUser && (
-                                    otherUser?.avatar?.path ? (
-                                        <img
-                                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${otherUser.avatar.path}`}
-                                            className="absolute inset-0 w-full h-full object-cover"
-                                        />
-                                    ) : null
-                                )}
-                                {users.length > 2 && renderCollage()}
-                            </div>
-                            {users.length === 2 && otherUser && (
-                                <span
-                                    className={`
-                                        absolute top-0 right-0 size-2 rounded-full bg-blue-500 ring-white ring-2
-                                    `}
-                                />
-                            )}
+                            <ChatAvatar
+                                users={users}
+                                localUser={user}
+                                lastMessage={lastMessage}
+                                size="full"
+                                showOnlineBadgeForSecondUser={isOnline}
+                            />
                         </div>
                     </div>
 
@@ -420,12 +498,12 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                             ${safeViewIsOn && 'blur-sm group-hover:blur-0'}
                         `}
                 >
-                    {!lastMessage || lastMessage.message_iv ? (
+                    {(!lastMessage || Object.keys(lastMessage).length === 0 || lastMessage.message_iv) ? (
                         <div className="italic">No messages...</div>
                     ) : (
                         <div className="flex justify-between w-full">
                             <div>
-                                {lastMessage.user.name}: {truncate(lastMessage.message, 20)}
+                                {lastMessage?.user?.name}: {truncate(lastMessage.message, 20)}
                             </div>
 
                             <div>{prettyCreatedAt(lastMessage.created_at)}</div>

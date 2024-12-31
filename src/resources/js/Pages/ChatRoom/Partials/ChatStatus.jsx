@@ -132,7 +132,7 @@ export default function ChatStatus({ ...props }) {
             );
         } else if (memberCount === 2) {
             if (isOnline) {
-                return <span className="text-green-500">Online</span>
+                return <span className="text-blue-500">Online</span>
             } else if (lastSeenAt) {
                 const lastSeenDate = new Date(lastSeenAt + 'Z');
                 const diffTime = currentDate - lastSeenDate;

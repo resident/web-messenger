@@ -1,39 +1,35 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 import { PlusIcon } from "@heroicons/react/24/outline/index.js";
 import { router } from "@inertiajs/react";
 
-export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeChatRoomM = null }) {
+export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeChatRoomM = null, onActiveChatRoomInvalidated }) {
     const {
         user,
+        activeChatRoom,
         chatRooms, setChatRooms,
     } = useContext(ApplicationContext);
 
-    const onChatRoomCreated = async (e) => {
-        const chatRoom = e.chatRoom;
-        const currentUserId = user.id;
+    const [chatRoomsH, setChatRoomsH] = useState(chatRooms);
 
-        if (chatRoom.users.length === 2) {
-            const otherUser = chatRoom.users.find(u => u.id !== currentUserId);
+    useEffect(() => {
+        setChatRoomsH(chatRooms);
 
-            const statusResponse = await axios.get(route('user-status.get', { userId: otherUser.id }));
-            const status = statusResponse.data;
-
-            const updatedChatRoom = {
-                ...chatRoom,
-                is_online: status?.is_online ?? false,
-                last_seen_at: status?.last_seen_at,
-            };
-
-            setChatRooms(rooms => [updatedChatRoom, ...rooms]);
-        } else {
-            setChatRooms(rooms => [{
-                ...chatRoom,
-                is_online: false,
-                last_seen_at: null,
-            }, ...rooms]);
+        if (activeChatRoom) {
+            const isActiveChatRoomValid = chatRooms.some(cr => cr.id === activeChatRoom.id);
+            if (!isActiveChatRoomValid) {
+                onActiveChatRoomInvalidated();
+            }
         }
+    }, [chatRooms, activeChatRoom]);
+
+    const onChatRoomCreated = async (e) => {
+        const chatRoomId = e.chatRoomId;
+        axios.get(route('chat_rooms.get_chat_room', { chatRoom: chatRoomId })).then(response => {
+            const fetchedChatRoom = response.data;
+            setChatRooms(rooms => [fetchedChatRoom, ...rooms]);
+        });
     };
 
     const onUserChatRoomUnreadCountUpdated = async (e) => {
@@ -46,14 +42,15 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
             unread_count: unreadCount,
             last_read_at: lastReadAt
         } : cr));
-    }
+    };
 
     useEffect(() => {
         const channel = `chat-rooms.${user.id}`;
 
         Echo.private(channel)
             .listen('ChatRoomCreated', onChatRoomCreated)
-            .listen('UserChatRoomUnreadCountUpdated', onUserChatRoomUnreadCountUpdated);
+            .listen('UserChatRoomUnreadCountUpdated', onUserChatRoomUnreadCountUpdated)
+            .listen('ChatRoomAdded', onChatRoomCreated);
 
         return () => {
             Echo.leave(channel);
@@ -69,7 +66,7 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
                 <PlusIcon className={`size-6 stroke-[2px] text-white`} />
             </div>
 
-            {chatRooms.map((chatRoom) => (
+            {chatRoomsH.map((chatRoom) => (
                 <div key={chatRoom.id}>
                     <ChatRoom
                         key={chatRoom.id}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Events;
 
 use App\Models\ChatRoom;
@@ -9,7 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ChatRoomUpdated implements ShouldBroadcast
+final class ChatRoomAdded implements ShouldBroadcast
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -22,7 +24,7 @@ class ChatRoomUpdated implements ShouldBroadcast
      */
     public function __construct(
         ChatRoom $chatRoom,
-        public readonly array $changes = []
+        public readonly int $userId
     ) {
         $this->chatRoomId = $chatRoom->id;
     }
@@ -35,17 +37,7 @@ class ChatRoomUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("chat-room.{$this->chatRoomId}"),
+            new PrivateChannel("chat-rooms.{$this->userId}")
         ];
-    }
-
-    public function broadcastWith(): array
-    {
-        $data = [
-            'chatRoomId' => $this->chatRoomId,
-            'changes' => $this->changes,
-        ];
-
-        return $data;
     }
 }
