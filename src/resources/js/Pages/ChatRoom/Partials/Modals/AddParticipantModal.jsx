@@ -124,15 +124,33 @@ export default function AddParticipantModal({ chatRoom, onClose }) {
                 chat_room_key: newlyEncryptedKey,
             });
 
-            const { id, added_user } = resp.data;
+            const { id, added_user, updated_user } = resp.data;
             setChatRooms(prev => prev.map(cr => {
                 if (cr.id !== id) return cr;
-                if (cr.users.some(u => u.id === added_user.id)) {
-                    return cr;
+
+                let updatedUsers = cr.users;
+                if (updated_user) {
+                    updatedUsers = cr.users.map(user =>
+                        user.id === updated_user.id
+                            ? {
+                                ...user,
+                                pivot: {
+                                    ...user.pivot,
+                                    role_name: updated_user.role_name,
+                                    permissions: updated_user.permissions,
+                                },
+                            }
+                            : user
+                    );
                 }
+
+                if (added_user && !updatedUsers.some(u => u.id === added_user.id)) {
+                    updatedUsers = [...updatedUsers, added_user];
+                }
+
                 return {
                     ...cr,
-                    users: [...cr.users, added_user],
+                    users: updatedUsers,
                 };
             }));
 

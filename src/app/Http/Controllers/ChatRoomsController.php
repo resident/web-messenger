@@ -287,8 +287,10 @@ class ChatRoomsController extends Controller
             abort(409, 'User already in chat');
         }
 
-        DB::transaction(function () use ($chatRoom, $userToAdd, $currentUser, $chatRoomService, $data) {
-            $count = $chatRoom->users()->count();
+        $updatedUser = null;
+
+        DB::transaction(function () use (&$updatedUser, $chatRoom, $userToAdd, $currentUser, $chatRoomService, $data) {
+            $count = $chatRoom->users()->wherePivot('role_name', ChatRoomRoleEnum::OWNER->value)->count();
             if ($count === 2) {
                 $allUsers = $chatRoom->users()->get();
                 [$owner, $member] = $allUsers->partition(fn($user) => $user->id === $currentUser->id);
@@ -301,6 +303,11 @@ class ChatRoomsController extends Controller
                     'role_name' => ChatRoomRoleEnum::MEMBER->value,
                     'permissions' => [],
                 ]);
+                $updatedUser = [
+                    'id' => $member->first()->id,
+                    'role_name' => ChatRoomRoleEnum::MEMBER->value,
+                    'permissions' => [],
+                ];
             }
 
             $chatRoomService->addUser($chatRoom, $userToAdd, $data['chat_room_key']);
@@ -316,14 +323,20 @@ class ChatRoomsController extends Controller
         $userToAddWithPivot->last_seen_at = $userStatus?->last_seen_at;
 
         $changes = ['added_user' => $userToAddWithPivot];
+        $response = [
+            'id' => $chatRoom->id,
+            'added_user' => $userToAddWithPivot,
+        ];
+
+        if ($updatedUser !== null) {
+            $changes['updated_user'] = $updatedUser;
+            $response['updated_user'] = $updatedUser;
+        }
 
         broadcast(new ChatRoomUpdated($chatRoom, $changes))->toOthers();
         broadcast(new ChatRoomAdded($chatRoom, $userToAddWithPivot->id))->toOthers();
 
-        return response()->json([
-            'id' => $chatRoom->id,
-            'added_user' => $userToAddWithPivot,
-        ]);
+        return response()->json($response);
     }
 
     public function removeUser(Request $request, ChatRoom $chatRoom, User $userToRemove, ChatRoomService $chatRoomService): JsonResponse

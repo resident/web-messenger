@@ -186,7 +186,8 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
 
                         let isNewer = true;
                         if (cr?.last_message?.created_at) {
-                            isNewer = new Date(dMessage.created_at) > new Date(cr.last_message.created_at);
+                            const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
+                            isNewer = timeDifference < 1000;
                         }
 
                         return {

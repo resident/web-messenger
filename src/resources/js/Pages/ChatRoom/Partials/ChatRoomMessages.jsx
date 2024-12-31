@@ -527,7 +527,8 @@ export default function ChatRoomMessages({ ...props }) {
                                 const isUserMessage = dMessage.user_id === user.id;
                                 let isNewer = true;
                                 if (cr?.last_message?.created_at) {
-                                    isNewer = new Date(dMessage.created_at) > new Date(cr.last_message.created_at);
+                                    const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
+                                    isNewer = timeDifference < 1000;
                                 }
 
                                 // У випадку, якщо ми біля низу і тоді автоматично прочитується повідомлення, last_read_at можна не записувати, оскільки це буде відповідати observer і onMessageRead
@@ -585,7 +586,8 @@ export default function ChatRoomMessages({ ...props }) {
                                 const newUnreadCount = isUserMessage ? 0 : (cr.unread_count || 0) + 1;
                                 let isNewer = true;
                                 if (cr.last_message) {
-                                    isNewer = new Date(dMessage.created_at) > new Date(cr.last_message.created_at);
+                                    const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
+                                    isNewer = timeDifference < 1000;
                                 }
                                 return {
                                     ...cr,
@@ -827,11 +829,12 @@ export default function ChatRoomMessages({ ...props }) {
         //if (isLoadingMoreRef.current !== 0) return;
         //if (messagesLoading) return;
 
-        const messageTime = new Date(message.created_at);
-        const lastReadTime = new Date(chatRoomRef.current.last_read_at + ".000Z");
+        const messageTime = new Date(message.created_at).getTime();
+        const lastReadTime = new Date(chatRoomRef.current.last_read_at + ".000Z").getTime();
+        const threshold = 999;
 
         // Повідомлення вже було прочитано
-        if (messageTime <= lastReadTime) {
+        if (messageTime <= lastReadTime + threshold) {
             return;
         }
 
@@ -899,7 +902,8 @@ export default function ChatRoomMessages({ ...props }) {
                         if (cr.id === chatRoom.id) {
                             let isNewer = true;
                             if (cr?.last_message?.created_at) {
-                                isNewer = new Date(decryptedMessage.created_at) > new Date(cr.last_message.created_at);
+                                const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(decryptedMessage.created_at).getTime();
+                                isNewer = timeDifference < 1000;
                             }
                             return {
                                 ...cr,
@@ -930,7 +934,8 @@ export default function ChatRoomMessages({ ...props }) {
                         if (cr.id === chatRoom.id) {
                             let isNewer = true;
                             if (cr.last_message) {
-                                isNewer = new Date(messageData.created_at) > new Date(cr.last_message.created_at);
+                                const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(messageData.created_at).getTime();
+                                isNewer = timeDifference < 1000;
                             }
                             return {
                                 ...cr,
@@ -1004,7 +1009,8 @@ export default function ChatRoomMessages({ ...props }) {
                 if (cr.id === chatRoom.id) {
                     let isNewer = true;
                     if (cr.last_message) {
-                        isNewer = new Date(placeholderMessage.created_at) > new Date(cr.last_message.created_at);
+                        const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(placeholderMessage.created_at).getTime();
+                        isNewer = timeDifference < 1000;
                     }
                     return {
                         ...cr,
