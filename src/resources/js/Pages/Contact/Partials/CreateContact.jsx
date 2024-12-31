@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, {useRef, useState} from 'react';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 import axios from 'axios';
 import InputError from '@/Components/InputError';
 
-export default function CreateContact({ auth, showModal, setShowModal, onAdded }) {
+export default function CreateContact({auth, showModal, setShowModal, onAdded}) {
     const [error, setError] = useState(null);
     const userNameInput = useRef();
 
@@ -20,8 +20,7 @@ export default function CreateContact({ auth, showModal, setShowModal, onAdded }
         } catch (error) {
             console.error('Error adding contact:', error);
             setError(error.response.data.error)
-        }
-        finally {
+        } finally {
             userNameInput.current.value = '';
         }
     };
@@ -34,13 +33,13 @@ export default function CreateContact({ auth, showModal, setShowModal, onAdded }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await addContact({ contact_name: userNameInput.current.value });
+        await addContact({contact_name: userNameInput.current.value});
     };
 
     return (
         <Modal show={showModal} onClose={() => reset()}>
             <form onSubmit={handleSubmit} className="p-6">
-                <InputLabel htmlFor="contact_name" value="Contact Name" />
+                <InputLabel htmlFor="contact_name" value="Contact Name"/>
                 <TextInput
                     id="contact_name"
                     ref={userNameInput}
@@ -49,13 +48,14 @@ export default function CreateContact({ auth, showModal, setShowModal, onAdded }
                     placeholder="Enter contact name"
                 />
                 <div className={`mt-6 flex ${error ? 'justify-between' : 'justify-end'}`}>
-                    <InputError message={error} />
+                    <InputError message={error}/>
                     <div className='flex'>
-                        <PrimaryButton type="button" className="mr-3" onClick={() => {
-                            reset();
-                        }}
+                        <PrimaryButton type="button"
+                                       className="mr-3 !bg-blue-400 hover:!bg-blue-600"
+                                       onClick={reset}
                         >Cancel</PrimaryButton>
-                        <PrimaryButton type="submit">Save</PrimaryButton>
+                        <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                       type="submit">Save</PrimaryButton>
                     </div>
 
                 </div>

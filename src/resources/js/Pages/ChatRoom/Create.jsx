@@ -81,14 +81,14 @@ export default function Create({ auth }) {
         >
             <Head title="Create Chat Room" />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
+            <div className="px-3 py-1 bg-blue-300 h-full">
+                <div className="max-w-7xl mx-auto h-full">
+                    <div className="bg-blue-500 overflow-hidden shadow-sm sm:rounded-2xl h-full">
+                        <div className="p-6">
 
                             <form onSubmit={createChatRoom} className="mt-6 space-y-6">
                                 <div>
-                                    <InputLabel htmlFor="title" value="Title" />
+                                    <InputLabel className={`text-white`} htmlFor="title" value="Title" />
 
                                     <TextInput
                                         id="title"
@@ -104,7 +104,7 @@ export default function Create({ auth }) {
                                 <SelectUser onUserSelected={addUser} buttonText="Add" />
 
                                 <div>
-                                    <InputLabel htmlFor="users" value="Users" />
+                                    <InputLabel className={`text-white`} htmlFor="users" value="Users" />
 
                                     <Select
                                         ref={usersSelect}
@@ -118,13 +118,15 @@ export default function Create({ auth }) {
 
                                     <InputError message={errors.users} className="mt-2" />
 
-                                    <PrimaryButton disabled={data.users.length === 0}
+                                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                        disabled={data.users.length === 0}
                                         onClick={removeUser}
                                     >-</PrimaryButton>
                                 </div>
 
                                 <div className="flex items-center gap-4">
-                                    <PrimaryButton disabled={processing}>Create</PrimaryButton>
+                                    <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
+                                        disabled={processing}>Create</PrimaryButton>
 
                                     <Transition
                                         show={recentlySuccessful}
