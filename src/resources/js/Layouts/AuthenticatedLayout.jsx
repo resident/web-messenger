@@ -33,6 +33,10 @@ export default function Authenticated({user, header, children}) {
         Echo.registerAxiosRequestInterceptor();
     }, []);
 
+    const toggleMenu = () => {
+        setShowingNavigationDropdown((previousState) => !previousState)
+    };
+
     return (
         <div className="sm:p-6 lg:p-8 min-h-dvh bg-gradient-to-b from-blue-500 to-blue-900">
             <ApplicationContextProvider value={{
@@ -83,13 +87,20 @@ export default function Authenticated({user, header, children}) {
                                     </div>
                                 </header>}
 
-                            <div></div>
+                            <div className={`md:invisible`}>
+                                <Cog8ToothIcon className={`size-8 cursor-pointer text-white`}
+                                               onClick={toggleMenu}
+                                />
+                            </div>
                         </div>
 
                         <div className={`grid grid-cols-1 md:grid-cols-[auto,1fr]`}>
 
                             {/* Menu */}
-                            <div className={`flex flex-col justify-between py-3 md:px-3 bg-blue-950`}>
+                            <div className={`
+                                    ${showingNavigationDropdown ? 'flex' : 'hidden md:flex'}
+                                    flex-col justify-between py-3 md:px-3 bg-blue-950
+                                `}>
                                 <div>
                                     <div className={`mb-3 ${showingNavigationDropdown ? 'block' : 'hidden'}`}>
                                         <div className="p-4">
@@ -144,11 +155,10 @@ export default function Authenticated({user, header, children}) {
                                     </div>
                                 </div>
 
-                                <div className={`flex justify-end md:justify-start px-3 md:px-0 text-white`}>
+                                <div
+                                    className={`hidden md:flex justify-end md:justify-start px-3 md:px-0 text-white`}>
                                     <Cog8ToothIcon className={`size-5 cursor-pointer`}
-                                                   onClick={() => {
-                                                       setShowingNavigationDropdown((previousState) => !previousState)
-                                                   }}
+                                                   onClick={toggleMenu}
                                     />
                                 </div>
                             </div>

@@ -16,7 +16,7 @@ export default function Edit({auth, mustVerifyEmail, status}) {
             <Head title="Profile"/>
 
             <div className={`
-                    p-1 max-w-7xl mx-auto space-y-6 bg-blue-300 text-white
+                    p-1 max-w-7xl mx-auto space-y-6 bg-white text-white
                 `}>
                 <div className={`space-y-2 px-2 py-4 bg-white rounded-lg`}>
                     <div className="p-4 sm:p-8 bg-blue-500 shadow sm:rounded-lg">
