@@ -44,7 +44,7 @@ export default function ChatRoomMenu({ chatRoom }) {
 
             <div className={`
                     absolute top-11 right-0 bg-blue-400 shadow-2xl whitespace-nowrap border-4 border-white text-white
-                    rounded-lg
+                    rounded-lg z-40
                     ${menuIsHidden ? 'hidden' : ''}
                 `}>
                 <div className={`flex  flex-col gap-2 p-2`}>
