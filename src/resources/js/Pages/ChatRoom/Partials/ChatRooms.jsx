@@ -44,13 +44,35 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
         } : cr));
     };
 
+    const onUserOnlineStatusChanged = (e) => {
+        const { user_id, is_online, last_seen_at } = e;
+        console.log("ChatRooms changed:", { e });
+
+        setChatRooms(prev =>
+            prev.map(cr => {
+                const updatedUsers = cr.users.map(u => {
+                    if (u.id === user_id) {
+                        return {
+                            ...u,
+                            is_online,
+                            last_seen_at
+                        };
+                    }
+                    return u;
+                });
+                return { ...cr, users: updatedUsers };
+            })
+        );
+    };
+
     useEffect(() => {
         const channel = `chat-rooms.${user.id}`;
 
         Echo.private(channel)
             .listen('ChatRoomCreated', onChatRoomCreated)
             .listen('UserChatRoomUnreadCountUpdated', onUserChatRoomUnreadCountUpdated)
-            .listen('ChatRoomAdded', onChatRoomCreated);
+            .listen('ChatRoomAdded', onChatRoomCreated)
+            .listen("UserOnlineStatusChanged", onUserOnlineStatusChanged);
 
         return () => {
             Echo.leave(channel);

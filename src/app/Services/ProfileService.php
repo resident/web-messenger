@@ -9,6 +9,7 @@ use App\Repositories\ProfileRepository;
 use App\Dto\UserStatusDto;
 use App\Enums\VisibilityPrivacyEnum;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use App\Repositories\UserSettingsRepository;
 use Illuminate\Support\Facades\Cache;
 
@@ -108,14 +109,21 @@ final class ProfileService
             return true;
         }
 
+        $targetUser = app(UserRepository::class)->getUserById($targetUserId);
+        if (!$targetUser) {
+            return false;
+        }
+
         $settings = $this->userSettingsRepository->getUserSettingsByUserId($targetUserId);
 
         switch ($settings->status_visibility) {
             case VisibilityPrivacyEnum::EVERYONE:
                 return true;
             case VisibilityPrivacyEnum::CONTACTS:
-                // return {contacts logic}
-                return true;
+                return $targetUser
+                    ->contacts()
+                    ->where('users.id', $currentUser->id)
+                    ->exists();
             case VisibilityPrivacyEnum::NOBODY:
                 return false;
             default:

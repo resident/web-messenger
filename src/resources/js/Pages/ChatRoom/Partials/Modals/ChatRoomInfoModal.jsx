@@ -109,7 +109,7 @@ export default function ChatRoomInfoModal({ initialChatRoom, onClose }) {
                     <div className="mt-2 text-lg">{chatTitle}</div>
                     <div className="mt-1">
                         {chatRoom && (
-                            <ChatStatus chatRoom={chatRoom} />
+                            <ChatStatus backgroundMode="white" chatRoom={chatRoom} />
                         )}
                     </div>
                 </div>

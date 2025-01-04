@@ -9,7 +9,6 @@ use App\Enums\VisibilityPrivacyEnum;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Repositories\UserSettingsRepository;
-use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -20,7 +19,6 @@ use Throwable;
 final class UserOnlineStatusChanged implements ShouldBroadcast
 {
     use Dispatchable;
-    use InteractsWithSockets;
     use SerializesModels;
 
     public UserStatusDto $userStatus;
@@ -51,21 +49,11 @@ final class UserOnlineStatusChanged implements ShouldBroadcast
 
     private function fillChannelsForContacts(): void
     {
-        Log::debug("Not implemented yet.");
-        /*$contacts = $this->user->contacts()->pluck('id')->toArray();
+        $contacts = $this->user->contacts()->pluck('users.id')->toArray();
 
         foreach ($contacts as $contactId) {
-            $this->channels[] = new PrivateChannel("user-status.$contactId");
+            $this->channels[] = new PrivateChannel("chat-rooms.$contactId");
         }
-
-        $chatRooms = $this->user->chatRooms()
-            ->whereDoesntHave('users', function ($query) use ($contacts) {
-                $query->whereNotIn('users.id', $contacts);
-            })->pluck('id')->toArray();
-
-        foreach ($chatRooms as $chatRoomId) {
-            $this->channels[] = new PrivateChannel("chat-room.$chatRoomId");
-        }*/
     }
 
     /**
@@ -90,9 +78,11 @@ final class UserOnlineStatusChanged implements ShouldBroadcast
                     $this->fillChannelsForEveryone();
                     break;
                 case VisibilityPrivacyEnum::CONTACTS:
+                    $this->channels[] = new PrivateChannel("chat-rooms.$userId");
                     $this->fillChannelsForContacts();
                     break;
                 case VisibilityPrivacyEnum::NOBODY:
+                    $this->channels[] = new PrivateChannel("chat-rooms.$userId");
                     break;
                 default:
                     Log::debug("Invalid Visibility Privacy Enum");
