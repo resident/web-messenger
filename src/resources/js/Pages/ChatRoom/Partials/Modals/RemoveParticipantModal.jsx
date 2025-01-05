@@ -98,7 +98,7 @@ export default function RemoveParticipantModal({ chatRoom, onClose }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <CustomScrollArea maxHeight="256px">
+                <CustomScrollArea className="h-64">
                     {filteredParticipants.map((p) => {
                         const roleName = p.pivot.role_name;
                         const roleBadge = !roleName || roleName === 'member' ? '' : roleName;

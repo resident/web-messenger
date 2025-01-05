@@ -4,10 +4,13 @@ import "../../css/CustomScrollArea.css";
 export default function CustomScrollArea({
     children,
     className = "",
+    className2 = "",
+    classNameThumb = "bg-[#ccc] w-[6px]",
     style = {},
-    maxHeight = "160px",
+    handleScroll = null,
+    externalContainerRef = null,
 }) {
-    const containerRef = useRef(null);
+    const containerRef = externalContainerRef || useRef(null);
     const thumbRef = useRef(null);
 
     const [isDragging, setIsDragging] = useState(false);
@@ -15,7 +18,10 @@ export default function CustomScrollArea({
     const [scrollStartTop, setScrollStartTop] = useState(0);
 
     const [isScrolling, setIsScrolling] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const scrollTimeoutRef = useRef(null);
+
+    const frameRequestedRef = useRef(false);
 
     const resetScrollTimeout = useCallback(() => {
         if (scrollTimeoutRef.current) {
@@ -24,12 +30,13 @@ export default function CustomScrollArea({
         setIsScrolling(true);
         scrollTimeoutRef.current = setTimeout(() => {
             setIsScrolling(false);
-        }, 300);
+        }, 500);
     }, []);
 
     const updateThumb = useCallback(() => {
         const container = containerRef.current;
         const thumb = thumbRef.current;
+        frameRequestedRef.current = false;
         if (!container || !thumb) return;
 
         const { scrollTop, scrollHeight, clientHeight } = container;
@@ -55,11 +62,18 @@ export default function CustomScrollArea({
     }, []);
 
     const onScroll = useCallback(() => {
+        if (handleScroll) {
+            handleScroll();
+        }
         if (!isDragging) {
-            updateThumb();
+            if (!frameRequestedRef.current) {
+                frameRequestedRef.current = true;
+                window.requestAnimationFrame(updateThumb);
+            }
+            //updateThumb();
         }
         resetScrollTimeout();
-    }, [isDragging, updateThumb]);
+    }, [isDragging, updateThumb, handleScroll, resetScrollTimeout]);
 
     const onMouseDownThumb = (e) => {
         e.preventDefault();
@@ -135,7 +149,7 @@ export default function CustomScrollArea({
         };
     }, [isDragging, onMouseMove, onMouseUp]);
 
-    useEffect(() => {
+    /*useEffect(() => {
         const handleMouseMove = () => resetScrollTimeout();
         const container = containerRef.current;
 
@@ -148,23 +162,42 @@ export default function CustomScrollArea({
                 container.removeEventListener("mousemove", handleMouseMove);
             }
         }
-    }, [resetScrollTimeout]);
+    }, [resetScrollTimeout]);*/
+
+    useEffect(() => {
+        const handleMouseEnter = () => setIsHovered(true);
+        const handleMouseLeave = () => setIsHovered(false);
+
+        const container = containerRef.current;
+
+        if (container) {
+            container.addEventListener("mouseenter", handleMouseEnter);
+            container.addEventListener("mouseleave", handleMouseLeave);
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener("mouseenter", handleMouseEnter);
+                container.removeEventListener("mouseleave", handleMouseLeave);
+            }
+        };
+    }, []);
 
     return (
         <div
-            className={`custom-scroll-area overflow-y-auto ${isScrolling ? "scrolling" : ""} ${className}`}
-            style={{ maxHeight, ...style }}
+            className={`custom-scroll-area overflow-y-auto ${isScrolling || isHovered ? "scrolling" : ""} ${className}`}
+            style={{ ...style }}
             ref={containerRef}
         >
             <div className="custom-scroll-area-thumb-container">
                 <div
-                    className="custom-scroll-area-thumb"
+                    className={`custom-scroll-area-thumb ${classNameThumb}`}
                     ref={thumbRef}
                     onMouseDown={onMouseDownThumb}
                 />
             </div>
 
-            <div className="custom-scroll-area-content">
+            <div className={`custom-scroll-area-content ${className2}`}>
                 {children}
             </div>
         </div>
