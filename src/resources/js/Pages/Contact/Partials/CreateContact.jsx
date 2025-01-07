@@ -37,9 +37,9 @@ export default function CreateContact({auth, showModal, setShowModal, onAdded}) 
     };
 
     return (
-        <Modal show={showModal} onClose={() => reset()}>
+        <Modal show={showModal} className="!bg-[#2889EE] rounded-[28px] md:w-1/2 lg:w-full" onClose={() => reset()}>
             <form onSubmit={handleSubmit} className="p-6">
-                <InputLabel htmlFor="contact_name" value="Contact Name"/>
+                <InputLabel htmlFor="contact_name" value="Add contacts" className="text-white text-xl"/>
                 <TextInput
                     id="contact_name"
                     ref={userNameInput}
