@@ -226,6 +226,7 @@ class ChatRoomMessagesController extends Controller
         ChatRoomMessage $message,
         ForwardChatRoomMessageRequest $request,
         ChatRoomMessageService $messageService,
+        ChatRoomRepository $repository,
     ): JsonResponse {
         $messageDto = ChatRoomMessageDto::fromArray([
             'user_id' => $request->user()->id,
@@ -257,7 +258,9 @@ class ChatRoomMessagesController extends Controller
 
         $newMessage = $messageService->createMessageWithAttachments($messageDto, $attachmentsDto);
 
-        $newMessage->load(['user', 'attachments']);
+        $newMessage->load(['user.avatar', 'attachments']);
+
+        $repository->updateLastReadAt($request->user(), $chatRoom, $newMessage->created_at);
 
         broadcast(new ChatRoomMessageSent($newMessage));
 

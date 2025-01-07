@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use InvalidArgumentException;
 
 final class ChatRoomRepository
 {
@@ -92,11 +93,15 @@ final class ChatRoomRepository
         return $chatRoom;
     }
 
-    public function updateLastReadAt(User $user, ChatRoom $chatRoom, string $newLastReadAt)
+    public function updateLastReadAt(User $user, ChatRoom $chatRoom, $newLastReadAt)
     {
-        if ($newLastReadAt) {
+        if ($newLastReadAt instanceof Carbon) {
+            $newLastReadAt = $newLastReadAt->format('Y-m-d H:i:s');
+        } elseif (is_string($newLastReadAt)) {
             $parsedDate = Carbon::parse($newLastReadAt);
             $newLastReadAt = $parsedDate->format('Y-m-d H:i:s');
+        } else {
+            throw new InvalidArgumentException('Invalid type for $newLastReadAt');
         }
         /*Log::info('Updating last_read_at', [
             'userId' => $user->id,

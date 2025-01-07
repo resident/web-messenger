@@ -1,9 +1,9 @@
 import ChatMessage from "@/Pages/ChatRoom/Partials/ChatMessage.jsx";
 import SelectAttachments from "@/Pages/ChatRoom/Partials/SelectAttachments.jsx";
 import AutoDeleteSettings from "@/Pages/ChatRoom/Partials/AutoDeleteSettings.jsx";
-import {ChatRoomContextProvider} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
-import {useContext, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
-import {ApplicationContext} from "@/Components/ApplicationContext.jsx";
+import { ChatRoomContextProvider } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import Emojis from "@/Components/Emojis.jsx";
 import ChatRoom from "@/Common/ChatRoom.js";
 import ChatRoomMessage from "@/Common/ChatRoomMessage.js";
@@ -13,9 +13,10 @@ import Utils from "@/Common/Utils.js";
 import useStorage from "@/Common/LocalStorage";
 import isEqual from 'lodash.isequal';
 import debounce from "lodash.debounce";
-import {ArrowUpIcon} from "@heroicons/react/24/outline/index.js";
+import { ArrowUpIcon } from "@heroicons/react/24/outline/index.js";
+import CustomScrollArea from "@/Components/CustomScrollArea";
 
-export default function ChatRoomMessages({...props}) {
+export default function ChatRoomMessages({ ...props }) {
     const {
         user,
         userPrivateKey,
@@ -68,7 +69,7 @@ export default function ChatRoomMessages({...props}) {
     const [pendingShift, setPendingShift] = useState(null);
 
     const STORAGE_KEY = `chatRoomStates`;
-    const {getChatState, setChatState, removeChatState} = useStorage(STORAGE_KEY);
+    const { getChatState, setChatState, removeChatState } = useStorage(STORAGE_KEY);
     const [restoringState, setRestoringState] = useState(1);
     const lastKnownScrollTopRef = useRef(0);
     const lastKnownWindowStartIndexRef = useRef(windowStartIndex);
@@ -185,7 +186,7 @@ export default function ChatRoomMessages({...props}) {
                 if (chatRoom.messages.length === 0) {
                     //console.log("There are no messages");
                     setRestoringState(0);
-                    loadMessages(20, null, false, false, false);
+                    loadMessages(50, null, false, false, false);
                 } else {
                     setCacheLoading(true);
                     decryptMessages();
@@ -221,14 +222,14 @@ export default function ChatRoomMessages({...props}) {
 
         if (manual) {
             const prevCount = allMessages.length;
-            setPendingShift({direction: upperLoad ? "up" : "down", prevCount});
+            setPendingShift({ direction: upperLoad ? "up" : "down", prevCount });
             isLoadingMoreRef.current = 1;
             loadMessages(count, startId, upperLoad, lowerLoad);
         } else {
             // Найбільш вірогідно викликається при автоматичному запуску, тобто коли нам треба довантажити повідомлення
             // Коли заходимо у чат і кількість недостатня (до 20)
             // Коли скролимо вниз і тоді знову треба завантажувати (можливо в майбутньому замість last_message буде last_messages ~ 5-6 повідомлень, щоб було краще з візуальної точки зору)
-            if (messages.length >= 20) {
+            if (messages.length >= 10) {
                 setInitialLoading(2);
                 //setRestoringState(1);
                 isLoadingMoreRef.current = 0;
@@ -239,11 +240,11 @@ export default function ChatRoomMessages({...props}) {
             const unreadCount = messages.filter(
                 m => new Date(m.created_at) > new Date(chatRoom.last_read_at)
             ).length;
-            const n = Math.min(unreadCount, 10);
-            const messagesToLoad = 20 - n;
+            const n = Math.min(unreadCount, 25);
+            const messagesToLoad = 50 - n;
 
             startId = messages[0]?.id;
-            setPendingShift({direction: upperLoad ? "up" : "down", prevCount: allMessages.length});
+            setPendingShift({ direction: upperLoad ? "up" : "down", prevCount: allMessages.length });
             isLoadingMoreRef.current = 1;
             loadMessages(messagesToLoad, startId, upperLoad, lowerLoad);
         }
@@ -267,22 +268,22 @@ export default function ChatRoomMessages({...props}) {
         if (isLoadingMoreRef.current === 2) {
             isLoadingMoreRef.current = 0;
 
-            const shift = 10;
+            const shift = 20;
             const loaded = allMessages.length - pendingShift.prevCount;
 
             if (pendingShift && pendingShift.direction === "up") {
                 if (allMessages.length > VISIBLE_COUNT) {
                     if (windowStartIndex > shift) {
-                        setWindowStartIndex(prev => Math.max(0, prev - shift + (loaded >= shift ? loaded : 0)));
+                        //setWindowStartIndex(prev => Math.max(0, prev - shift + (loaded >= shift ? loaded : 0)));
                     } else {
-                        setWindowStartIndex(prev => Math.min(prev + loaded, prev + shift));
+                        //setWindowStartIndex(prev => Math.min(prev + loaded, prev + shift));
                     }
                 }
                 setPendingShift(null);
             } else if (pendingShift && pendingShift.direction === "down") {
                 if (allMessages.length > VISIBLE_COUNT) {
                     if (windowStartIndex + VISIBLE_COUNT >= (allMessages.length - loaded)) {
-                        setWindowStartIndex(prev => Math.min(prev + shift, allMessages.length - VISIBLE_COUNT));
+                        //setWindowStartIndex(prev => Math.min(prev + shift, allMessages.length - VISIBLE_COUNT));
                     } else {
                         //
                     }
@@ -308,7 +309,7 @@ export default function ChatRoomMessages({...props}) {
                 allMessages[allMessages.length - 1]);
         if (check) {
             setChatRooms(prev =>
-                prev.map(cr => cr.id === chatRoom.id ? {...cr, messages: allMessages} : cr)
+                prev.map(cr => cr.id === chatRoom.id ? { ...cr, messages: allMessages } : cr)
             );
         }
     }, [allMessages, windowMessages]);
@@ -326,7 +327,7 @@ export default function ChatRoomMessages({...props}) {
         if (shouldScroll && scrollTo === "bottom" && nonNullRefs.length > 0) {
             const lastMessageEl = nonNullRefs[nonNullRefs.length - 1];
             if (lastMessageEl) {
-                lastMessageEl.scrollIntoView({behavior: 'instant', block: 'start'});
+                lastMessageEl.scrollIntoView({ behavior: 'instant', block: 'start' });
             }
             setScrollTo(null);
             setShouldScroll(false);
@@ -355,12 +356,6 @@ export default function ChatRoomMessages({...props}) {
                         return await ChatRoomMessage.decryptMessage(chatRoomKey, message);
                     })
                 );
-                if (initialLoading === 0) {
-                    setInitialLoading(1);
-                }
-                if (isLoadingMoreRef.current === 1) {
-                    isLoadingMoreRef.current = 2;
-                }
 
                 if (upperload) {
                     setAllMessages(prev => addUniqueMessages(prev, loadedMessages, true));
@@ -370,7 +365,16 @@ export default function ChatRoomMessages({...props}) {
                     setAllMessages(() => loadedMessages);
                 }
             })
+            .catch(error => {
+                console.error("Error:", { error });
+            })
             .finally(() => {
+                if (initialLoading === 0) {
+                    setInitialLoading(1);
+                }
+                if (isLoadingMoreRef.current === 1) {
+                    isLoadingMoreRef.current = 2;
+                }
                 setMessagesLoading(false);
             });
     };
@@ -442,7 +446,7 @@ export default function ChatRoomMessages({...props}) {
     const scrollToLastMessage = (isVirtualizing, isLastMessageLoaded, sendingMessage = null) => {
         if (chatRoomRef.current.unread_count > 0) {
             setChatRooms(prev =>
-                prev.map(cr => cr.id === chatRoom.id ? {...cr, unread_count: 0} : cr)
+                prev.map(cr => cr.id === chatRoom.id ? { ...cr, unread_count: 0 } : cr)
             );
         }
         //console.log("Is Last Message loaded?", { isLastMessageLoaded });
@@ -515,7 +519,7 @@ export default function ChatRoomMessages({...props}) {
 
                 const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === chatRoomRef.current.last_message?.id) || allMessagesRefs.current.length === 0;
 
-                const {scrollTop, scrollHeight, clientHeight} = messagesRef.current || {};
+                const { scrollTop, scrollHeight, clientHeight } = messagesRef.current || {};
                 const isNearBottom = scrollHeight - (scrollTop + clientHeight) <= 200;
 
                 const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
@@ -665,7 +669,7 @@ export default function ChatRoomMessages({...props}) {
             setChatRooms((prev) =>
                 prev.map((cr) =>
                     cr.id === chatRoomRef.current.id
-                        ? {...cr, last_message: newLastMessage}
+                        ? { ...cr, last_message: newLastMessage }
                         : cr
                 )
             );
@@ -687,7 +691,7 @@ export default function ChatRoomMessages({...props}) {
                             (chatRoomRef.current.unread_count || 0) - unreadDecrementCount,
                             0
                         );
-                        return {...cr, unread_count: newUnreadCount};
+                        return { ...cr, unread_count: newUnreadCount };
                     }
                     return cr;
                 })
@@ -731,7 +735,7 @@ export default function ChatRoomMessages({...props}) {
         const updatedMessage = e.message;
 
         setAllMessages(prev => prev.map(
-            msg => msg.id === updatedMessage.id ? {...msg, status: updatedMessage.status} : msg
+            msg => msg.id === updatedMessage.id ? { ...msg, status: updatedMessage.status } : msg
         ));
     };
 
@@ -769,7 +773,7 @@ export default function ChatRoomMessages({...props}) {
             );
             const lastReadAtTime = normalizeToSimpleFormat(newestMessage.created_at);
 
-            axios.post(route('chat_rooms.last_read_at.update', {chatRoom: chatRoom.id}), {
+            axios.post(route('chat_rooms.last_read_at.update', { chatRoom: chatRoom.id }), {
                 last_read_at: lastReadAtTime,
             }).then(() => {
                 scheduleLastReadAtMessagesRef.current = new Set(Array.from(scheduleLastReadAtMessagesRef.current).filter(
@@ -891,7 +895,7 @@ export default function ChatRoomMessages({...props}) {
             ChatRoomMessage.sendMessage(messageData.message, chatRoom, chatRoomKey, messageData.attachments, progress => {
                 setAllMessages(prev =>
                     prev.map(msg =>
-                        msg.id === messageData.id ? {...msg, uploadProgress: progress} : msg
+                        msg.id === messageData.id ? { ...msg, uploadProgress: progress } : msg
                     )
                 );
             }).then(async response => {
@@ -947,7 +951,7 @@ export default function ChatRoomMessages({...props}) {
                 );
                 setAllMessages(prev =>
                     prev.map((msg) =>
-                        msg.id === messageData.id ? {...msg, errorPending: error.message} : msg
+                        msg.id === messageData.id ? { ...msg, errorPending: error.message } : msg
                     )
                 );
             }).finally(() => {
@@ -955,7 +959,7 @@ export default function ChatRoomMessages({...props}) {
             });
         } catch (e) {
             if (e instanceof ProgressEvent) {
-                setErrors({...errors, message: e.target.error.message});
+                setErrors({ ...errors, message: e.target.error.message });
             }
             setSendingMessage(false);
         }
@@ -973,10 +977,16 @@ export default function ChatRoomMessages({...props}) {
     // Створюємо плейсхолдер для надісланого повідомлення
     const sendMessage = async () => {
         setSendingMessage(true);
-        setErrors({...errors, message: ''});
+        setErrors({ ...errors, message: '' });
 
         const isVirtualizing = allMessagesRefs.current.length > VISIBLE_COUNT;
         const isLastMessageLoaded = allMessagesRefs.current.some(m => m.id === lastMessage?.id) || allMessagesRefs.current.length === 0;
+        if (isLastMessageLoaded && isVirtualizing) {
+            setWindowStartIndex(prev => {
+                const newIndex = Math.max(0, allMessagesRefs.current.length - VISIBLE_COUNT + 1);
+                return newIndex;
+            });
+        }
         //console.log("SendingMessage:", {
         //    allMessages: allMessagesRefs.current,
         //    allMessagesHere: allMessages,
@@ -1020,7 +1030,7 @@ export default function ChatRoomMessages({...props}) {
                 return cr
             })
         );
-
+        setShouldPreventShift(true);
         setAllMessages(prev => addUniqueMessages(prev, [placeholderMessage], false));
         setDebouncedPendingSendQueue(prevQueue => [...prevQueue, placeholderMessage]);
         debouncedSendMessages();
@@ -1057,6 +1067,7 @@ export default function ChatRoomMessages({...props}) {
 
     useEffect(() => {
         if (anchorMessageIdRef.current && messagesRef.current && windowMessages.length > 0 && !shouldPreventShift) {
+            //console.log("Making a shift beginning:", { scrollTop: messagesRef.current.scrollTop });
             const anchorId = anchorMessageIdRef.current;
             const globalIndex = allMessages.findIndex(m => m.id === anchorId);
             if (globalIndex !== -1 && messageRefs.current[globalIndex]) {
@@ -1066,6 +1077,7 @@ export default function ChatRoomMessages({...props}) {
 
                 const diff = currentOffset - anchorOffsetRef.current;
                 messagesRef.current.scrollTop = messagesRef.current.scrollTop + diff;
+                //console.log("Making a shift end:", { scrollTop: messagesRef.current.scrollTop, diff });
             }
         }
         anchorMessageIdRef.current = null;
@@ -1124,7 +1136,7 @@ export default function ChatRoomMessages({...props}) {
 
     const messagesScrollHandler = () => {
         if (messagesLoading && isLoadingMoreRef.current !== 0) {
-            const {scrollTop, scrollHeight, clientHeight} = messagesRef.current;
+            let { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
 
             lastKnownScrollTopRef.current = scrollTop;
             if (windowMessages.length > 0) {
@@ -1155,7 +1167,7 @@ export default function ChatRoomMessages({...props}) {
             !messagesRef.current
         ) return;
 
-        const {scrollTop, scrollHeight, clientHeight} = messagesRef.current;
+        const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
         //console.log("MessagesRef:", { messagesRef });
 
         lastKnownScrollTopRef.current = scrollTop;
@@ -1178,22 +1190,20 @@ export default function ChatRoomMessages({...props}) {
         //    clientHeight,
         //})
 
-        const bufferSize = 20; // Airbag
+        const bufferSize = 0; // Airbag
 
         if (atTop && scrollState !== 'upper') {
             //console.log("We're going upper");
             setScrollState('upper');
             setAnchorMessage(true);
 
-            if (windowStartIndex > 0) {
-                setWindowStartIndex(prev => Math.max(0, prev - 10));
-            }
-
             if (windowStartIndex <= bufferSize) {
                 const startId = messages[0]?.id;
                 if (startId) {
                     loadMore(true, 20, startId, true, false, false);
                 }
+            } else {
+                setWindowStartIndex(prev => Math.max(0, prev - 20));
             }
         } else if (atBottom && scrollState !== 'bottom') {
             //console.log("We're going lower");
@@ -1203,13 +1213,6 @@ export default function ChatRoomMessages({...props}) {
             const totalCount = allMessages.length;
             const remaining = totalCount - (windowStartIndex + VISIBLE_COUNT);
 
-            if (remaining > 0) {
-                setWindowStartIndex(prev => {
-                    const shift = Math.min(remaining, 10);
-                    return Math.min(prev + shift, Math.max(0, totalCount - VISIBLE_COUNT));
-                });
-            }
-
             if (remaining <= bufferSize) {
                 const startId = messages[messages.length - 1]?.id
                 if (startId && startId !== lastMessage?.id) {
@@ -1217,6 +1220,11 @@ export default function ChatRoomMessages({...props}) {
                 } else if (remaining > 0) {
 
                 }
+            } else {
+                setWindowStartIndex(prev => {
+                    const shift = Math.min(remaining, 20);
+                    return Math.min(prev + shift, Math.max(0, totalCount - VISIBLE_COUNT));
+                });
             }
         } else if (!atTop && !atBottom && scrollState !== 'middle') {
             setScrollState('middle');
@@ -1242,12 +1250,12 @@ export default function ChatRoomMessages({...props}) {
                     const previousMessage = (messageId !== -1 && messagesArray.length > 1) ? messagesArray[messageId - 1] : null;
                     const newLastMessage = previousMessage
                         ? previousMessage
-                        : await axios.get(route("chat_rooms.messages.get_last_message", {chatRoom: chatRoom})).then(res => res.data);
+                        : await axios.get(route("chat_rooms.messages.get_last_message", { chatRoom: chatRoom })).then(res => res.data);
 
                     setChatRooms(prev =>
                         prev.map(cr => cr.id === chatRoomRef.current.id ? {
                             ...cr,
-                            last_message: {...newLastMessage}
+                            last_message: { ...newLastMessage }
                         } : cr)
                     );
                 }
@@ -1311,6 +1319,10 @@ export default function ChatRoomMessages({...props}) {
     }, [initialLoading, allMessages]);
 
     useEffect(() => {
+        //console.log("WindowStartIndex:", {
+        //    lastWSI: lastKnownWindowStartIndexRef.current,
+        //    windowStartIndex,
+        //});
         lastKnownWindowStartIndexRef.current = windowStartIndex;
     }, [windowStartIndex]);
 
@@ -1321,10 +1333,6 @@ export default function ChatRoomMessages({...props}) {
             messageId: messageId,
             //
         };
-        /*console.log("Saving:", {
-            state,
-            message: allMessagesRefs.current.find(m => m.id === messageId)
-        });*/
         setChatState(chatRoomRef.current.id, state);
     };
 
@@ -1342,29 +1350,13 @@ export default function ChatRoomMessages({...props}) {
     }, [chatRoom.id]);
 
     useLayoutEffect(() => {
-        /*console.log("Restoring?:", {
-            restoringState,
-            chatRoomKey,
-            allMessages,
-        });*/
         if (restoringState === 1 && chatRoomKey && allMessages.length > 0 && messagesRef.current) {
             try {
-                //console.log("Restoring:", {
-                //    chatRoomId: chatRoom.id,
-                //});
                 const savedState = getChatState(chatRoom.id);
-                //console.log("SavedState:", savedState);
                 if (savedState) {
-                    const {scrollTop, messageId} = savedState;
-                    //console.log("Saved is:", {
-                    //    scrollTop,
-                    //    messageId,
-                    //    allMessages,
-                    //    check: allMessages.some(m => m.id === messageId),
-                    //});
+                    const { scrollTop, messageId } = savedState;
                     if (allMessages.some(m => m.id === messageId)) {
                         const currentIndex = allMessages.findIndex(m => m.id === messageId);
-                        //console.log("CurrentIndex:", currentIndex);
                         if (chatRoom.unread_count > 0) {
                             const firstUnreadIndex = allMessages.findIndex(
                                 m => new Date(m.created_at) > new Date(chatRoom.last_read_at + "Z")
@@ -1377,7 +1369,6 @@ export default function ChatRoomMessages({...props}) {
                                 setWindowStartIndex(newWindowStartIndex);
 
                                 requestAnimationFrame(() => {
-                                    //console.log("Is there such a message?", messageEl);
                                     if (messageEl) {
                                         const messageHeight = messageEl.getBoundingClientRect().height;
                                         messagesRef.current.scrollTop = scrollTop - messageHeight;
@@ -1387,9 +1378,6 @@ export default function ChatRoomMessages({...props}) {
 
                                     lastKnownAnchorMessageIdRef.current = messageId;
                                     lastKnownScrollTopRef.current = scrollTop;
-                                    //console.log("Hello2", {
-                                    //    messagesRefNewScrollTop: messagesRef.current.scrollTop,
-                                    //});
                                 });
                                 setRestoringState(0);
                                 return;
@@ -1398,35 +1386,20 @@ export default function ChatRoomMessages({...props}) {
                         setWindowStartIndex(currentIndex);
 
                         requestAnimationFrame(() => {
-                            //console.log("Lucky!");
                             if (messagesRef.current) {
-                                //console.log("They are here:", {
-                                //    currentScrollTop: messagesRef.current.scrollTop,
-                                //    newScrollTop: scrollTop,
-                                //});
                                 messagesRef.current.scrollTop = scrollTop;
                                 lastKnownAnchorMessageIdRef.current = messageId;
                                 lastKnownScrollTopRef.current = scrollTop;
-                                //console.log("Hello:", {
-                                //    messagesRefNewScrollTop: messagesRef.current.scrollTop,
-                                //});
                             }
                         });
                     } else {
-                        //console.log("Not today:", {
-                        //    scrollTop: scrollTop,
-                        //    messageId: messageId,
-                        //});
-                        removeChatState(chatRoom.id);
+                        //removeChatState(chatRoom.id);
                         requestAnimationFrame(() => {
                             messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
                         });
                     }
                 } else {
-                    //console.log("Not today:", {
-                    //    savedState,
-                    //});
-                    removeChatState(chatRoom.id);
+                    //removeChatState(chatRoom.id);
                     requestAnimationFrame(() => {
                         messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
                     });
@@ -1486,11 +1459,11 @@ export default function ChatRoomMessages({...props}) {
             })
         })
         let outputElements = [];
-        if (initialLoading !== 2 && allMessages.length < 20) {
+        /*if (initialLoading !== 2 && allMessages.length < 3) {
             outputElements.push(
                 ...[...Array(2)].map((_, index) => (
                     <div key={`skeleton-left-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                        className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1500,7 +1473,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(4)].map((_, index) => (
                     <div key={`skeleton-right-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                        className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1510,7 +1483,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(3)].map((_, index) => (
                     <div key={`skeleton-left-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
+                        className="first:mt-auto flex items-end max-w-xl self-start animate-pulse space-x-3 group ml-4">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1520,7 +1493,7 @@ export default function ChatRoomMessages({...props}) {
                 )),
                 [...Array(2)].map((_, index) => (
                     <div key={`skeleton-right-${index}`}
-                         className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
+                        className="first:mt-auto flex items-end max-w-xl self-end animate-pulse space-x-3 group mr-3">
                         <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                         <div className="flex-1 space-y-4 py-1 w-40">
                             <div className="h-4 bg-gray-300 rounded w-1/2"></div>
@@ -1529,7 +1502,7 @@ export default function ChatRoomMessages({...props}) {
                     </div>
                 )),
             );
-        }
+        }*/
 
         windowMessages.forEach((message, i) => {
             const processedMessage = processedMessages.find(m => m.id === message.id);
@@ -1540,7 +1513,7 @@ export default function ChatRoomMessages({...props}) {
                 const messageDate = processedMessage.showDate;
                 const isSameYear = messageDate.getFullYear() === now.getFullYear();
 
-                let dateFormatOptions = {month: 'long', day: 'numeric'};
+                let dateFormatOptions = { month: 'long', day: 'numeric' };
                 if (!isSameYear) {
                     dateFormatOptions.year = 'numeric';
                 }
@@ -1578,19 +1551,33 @@ export default function ChatRoomMessages({...props}) {
     }, [windowMessages, initialLoading, restoringState, allMessages]);
 
     return (
-        <ChatRoomContextProvider value={{chatRoom, chatRoomKey}}>
+        <ChatRoomContextProvider value={{ chatRoom, chatRoomKey }}>
             <div className={`bg-white p-1`}>
                 <div className={`bg-white rounded-lg p-3`}>
+                    {restoringState ? (
+                        <div className={`
+                            h-[calc(100dvh-15.5rem)] sm:h-[calc(100dvh-16.9rem)]
+                            overflow-y-auto
+                            flex flex-col-reverse py-3 bg-white
+                        `}
+                        >
+                        </div>
+                    ) : null}
                     <div
                         className={`
-                        h-[calc(100dvh-15.5rem)] sm:h-[calc(100dvh-16.9rem)]
-                        overflow-y-auto
-                        flex flex-col py-3 ${restoringState ? 'hidden md:block' : ''}
-                    `}
-                        ref={messagesRef}
-                        onScroll={messagesScrollHandler}
+                            h-[calc(100dvh-15.5rem)] sm:h-[calc(100dvh-16.9rem)] flex flex-col-reverse
+                            ${restoringState ? 'hidden' : ''}
+                        `}
                     >
-                        {computedMessages}
+                        <CustomScrollArea
+                            className={``}
+                            className2="flex flex-col w-full"
+                            externalContainerRef={messagesRef}
+                            handleScroll={messagesScrollHandler}
+                        >
+                            {computedMessages}
+
+                        </CustomScrollArea>
                     </div>
 
                     <div className={`pt-2 flex flex-col sm:flex-row gap-1 items-center`}>
@@ -1613,7 +1600,7 @@ export default function ChatRoomMessages({...props}) {
                         </div>
 
                         <div className="flex items-center rounded-full bg-gray-200 p-1 pb-0 w-full">
-                            <div><Emojis onSmileSelected={insertEmoji}/></div>
+                            <div><Emojis onSmileSelected={insertEmoji} /></div>
 
                             <textarea
                                 className={`
@@ -1637,7 +1624,7 @@ export default function ChatRoomMessages({...props}) {
                                     onClick={() => sendMessage()}
                                     disabled={!availableToSendMessage()}
                                 >
-                                    <ArrowUpIcon className={`size-5`}/>
+                                    <ArrowUpIcon className={`size-5`} />
                                 </button>
                             </div>
                         </div>

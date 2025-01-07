@@ -23,8 +23,6 @@
 .custom-scroll-area-thumb {
     position: absolute;
     right: 2px;
-    width: 6px;
-    background-color: #ccc;
     border-radius: 4px;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
@@ -36,5 +34,5 @@
 }
 
 .custom-scroll-area-content {
-    padding-right: 12px;
+    padding-right: 8px;
 }

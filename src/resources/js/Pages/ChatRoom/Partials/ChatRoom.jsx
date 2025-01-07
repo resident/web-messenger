@@ -7,7 +7,12 @@ import ChatAvatar from "./ChatAvatar";
 import { router } from "@inertiajs/react";
 import debounce from "lodash.debounce";
 
-export default function ChatRoom({ className = '', chatRoom, onClickHandler = chatRoom => null }) {
+export default function ChatRoom({
+    className = '',
+    chatRoom,
+    onClickHandler = chatRoom => null,
+    subscribeToEvents = true
+}) {
     const {
         userPrivateKey,
         user,
@@ -79,6 +84,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     }, [chatRoom.last_message, chatRoomKey]);
 
     useEffect(() => {
+        if (!subscribeToEvents) return;
         // Це був активний чат
         if (activeChatRoomRef.current?.id === chatRoom?.id) {
             // Якщо та, що оновилась, вже не наша -- оновимо прослуховування
@@ -87,10 +93,12 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                 Echo.private(channel)
                     .stopListening('ChatRoomMessageSent')
                     .stopListening('ChatRoomMessageRemoved')
+                    .stopListening('ChatRoomMessageStatusUpdated')
                     .stopListening('UserOnlineStatusChanged')
                     .stopListening('ChatRoomUpdated')
                     .listen('ChatRoomMessageSent', onChatRoomMessageSent)
                     .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
+                    .listen('ChatRoomMessageStatusUpdated', onChatRoomMessageStatusUpdated)
                     .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged)
                     .listen('ChatRoomUpdated', onChatRoomUpdated);
             }
@@ -183,7 +191,6 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
                         const updatedMessages = (isUserMessage || newUnreadCount < 10)
                             ? [...cr.messages, dMessage]
                             : [...cr.messages];
-
                         let isNewer = true;
                         if (cr?.last_message?.created_at) {
                             const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
@@ -335,6 +342,21 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
         debouncedRemoveFlush();
     };
 
+    const onChatRoomMessageStatusUpdated = (e) => {
+        const updatedMessage = e.message;
+
+        const currentActiveChatRoom = activeChatRoomRef.current;
+        if (currentActiveChatRoom && currentActiveChatRoom.id === chatRoomRef.current.id) return;
+
+        setChatRooms(prev =>
+            prev.map(cr => cr.id === chatRoom.id ? {
+                ...cr,
+                messages: cr.messages.map(msg => msg.id === updatedMessage.id
+                    ? { ...msg, status: updatedMessage.status }
+                    : msg)
+            } : cr));
+    };
+
     const onUserOnlineStatusChanged = (e) => {
         const { user_id, is_online, last_seen_at } = e;
         setChatRooms(prev =>
@@ -401,10 +423,12 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
     };
 
     useEffect(() => {
+        if (!subscribeToEvents) return;
         //console.log("Calling here:", { chatRoomKey });
         Echo.private(channel)
             .listen('ChatRoomMessageSent', onChatRoomMessageSent)
             .listen('ChatRoomMessageRemoved', onChatRoomMessageRemoved)
+            .listen('ChatRoomMessageStatusUpdated', onChatRoomMessageStatusUpdated)
             .listen('UserOnlineStatusChanged', onUserOnlineStatusChanged)
             .listen('ChatRoomUpdated', onChatRoomUpdated);
 
@@ -413,6 +437,7 @@ export default function ChatRoom({ className = '', chatRoom, onClickHandler = ch
             Echo.private(channel)
                 .stopListening('ChatRoomMessageSent')
                 .stopListening('ChatRoomMessageRemoved')
+                .stopListening('ChatRoomMessageStatusUpdated')
                 .stopListening('UserOnlineStatusChanged')
                 .stopListening('ChatRoomUpdated');
         };

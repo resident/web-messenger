@@ -21,6 +21,7 @@ import { Link } from "@inertiajs/react";
 import { CheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import CircularProgressBar from "@/Components/CircularProgressBar";
 import ContextMenu from "@/Components/ContextMenu";
+import CustomScrollArea from "@/Components/CustomScrollArea";
 
 export default forwardRef(function ChatMessage({
     className = '',
@@ -217,14 +218,6 @@ export default forwardRef(function ChatMessage({
             ChatRoomMessage.forwardMessage(message, toChatRoom, chatRoomKey, toChatRoomKey).then((response) => {
                 setSuccess('Message forwarded');
 
-                if (chatRooms.length > 0) {
-                    ChatRoomMessage.decryptMessage(toChatRoomKey, response.data).then(message => {
-                        setChatRooms(prev =>
-                            prev.map(cr => cr.id === toChatRoom.id ? { ...cr, messages: [...cr.messages, message] } : cr)
-                        );
-                    })
-                }
-
                 setTimeout(() => closeMessageForwardingModal(), 2000);
             }).catch(error => {
                 setError(error.message);
@@ -400,13 +393,13 @@ export default forwardRef(function ChatMessage({
                 }}
             >
                 <Modal
-                    className={`p-3`}
+                    className={`p-3 w-full sm:max-w-md`}
                     maxWidth="md"
                     show={showForwardingModal}
                     onClose={closeMessageForwardingModal}
                 >
                     {forwardToChatRoom && <div>
-                        <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom} />
+                        <ChatRoom className={`my-2`} chatRoom={forwardToChatRoom} subscribeToEvents={false} />
 
                         <InputError message={error} className="my-2" />
 
@@ -419,10 +412,14 @@ export default forwardRef(function ChatMessage({
                         </div>
 
                         {success && <div className={`mt-2 text-green-600`}>{success}</div>}
-                    </div> || <ChatRooms
-                            onChatRoomClick={chatRoom => {
-                                setForwardToChatRoom(chatRoom);
-                            }} />
+                    </div> || <CustomScrollArea className="h-96">
+                            <ChatRooms
+                                onChatRoomClick={chatRoom => {
+                                    setForwardToChatRoom(chatRoom);
+                                }}
+                                subscribeToEvents={false}
+                            />
+                        </CustomScrollArea>
                     }
                 </Modal>
 
@@ -435,7 +432,7 @@ export default forwardRef(function ChatMessage({
                     <div className="p-4 !pb-0">
                         <h2 className="text-lg font-semibold mb-4">Seen by</h2>
                         <hr />
-                        <div className="mt-4 h-64 sm:h-80 overflow-y-auto">
+                        <CustomScrollArea className="mt-4 h-64 sm:h-80">
                             {isLoadingSeenByUsers ? (
                                 <div className="space-y-4 mt-1">
                                     {[...Array(3)].map((_, index) => (
@@ -478,7 +475,7 @@ export default forwardRef(function ChatMessage({
                             ) : (
                                 <div>No data</div>
                             )}
-                        </div>
+                        </CustomScrollArea>
                         <hr />
                         <div className="flex justify-end pr-3 pt-2">
                             <button
@@ -511,24 +508,27 @@ export default forwardRef(function ChatMessage({
                 <div
                     className={`flex flex-1 ${self ? 'flex-row-reverse' : ''} w-full pl-4 pr-3 ${getMessageYPadding(messageType)} group items-end
                     transition-colors duration-100 ease-in-out
-                    ${contextMenuVisible && contextMenuTarget === message.id ? 'bg-black bg-opacity-10 rounded-r-lg' : ''}`}
+                    ${contextMenuVisible && contextMenuTarget === message.id ? self ? 'bg-black bg-opacity-10 rounded-l-lg' : 'bg-black bg-opacity-10 rounded-r-lg' : ''}`}
                 >
-                    {(messageType === 'last' || messageType === 'singular') ? (
-                        <div
-                            className={`relative size-12 ${self ? 'ml-3' : 'mr-3'} ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
-                        rounded-full overflow-hidden
-                        hidden sm:block`}
-                        >
-                            {message.user.avatar &&
-                                (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
-                                    alt="avatar"
-                                    className="absolute inset-0 w-full h-full object-cover" />
-                                )
+                    <div
+                        className={`
+                            relative size-12 ${self ? 'ml-3' : 'mr-3'} 
+                            ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
+                            rounded-full overflow-hidden
+                            hidden sm:block transform-gpu transition-all duration-300
+                            ${(messageType === 'last' || messageType === 'singular')
+                                ? 'opacity-100 translate-y-0'
+                                : 'opacity-0 -translate-y-[-100%] pointer-events-none'
                             }
-                        </div>
-                    ) : (
-                        <div className={`min-w-12 min-h-12 ${self ? 'ml-3' : 'mr-3'} hidden sm:block`}></div>
-                    )}
+                        `}
+                    >
+                        {message.user.avatar &&
+                            (<img src={`${import.meta.env.VITE_AVATARS_STORAGE}/${message.user.avatar.path}`}
+                                alt="avatar"
+                                className="absolute inset-0 w-full h-full object-cover" />
+                            )
+                        }
+                    </div>
                     <div className={`
                         p-3 break-words max-w-sm sm:max-w-lg min-w-[150px]
                         ${(!self && (messageType === 'top' || messageType === 'singular')) ? 'pb-3' : 'pb-1'}

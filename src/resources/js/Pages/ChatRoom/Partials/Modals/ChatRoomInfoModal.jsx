@@ -109,7 +109,7 @@ export default function ChatRoomInfoModal({ initialChatRoom, onClose }) {
                     <div className="mt-2 text-lg">{chatTitle}</div>
                     <div className="mt-1">
                         {chatRoom && (
-                            <ChatStatus chatRoom={chatRoom} />
+                            <ChatStatus backgroundMode="white" chatRoom={chatRoom} />
                         )}
                     </div>
                 </div>
@@ -141,7 +141,7 @@ export default function ChatRoomInfoModal({ initialChatRoom, onClose }) {
                             Participants ({chatRoom?.users.length})
                         </div>
                     </div>
-                    <CustomScrollArea maxHeight="170px">
+                    <CustomScrollArea className="h-44">
                         {chatRoom?.users.map(u => {
                             const roleName = u.pivot.role_name;
                             const roleBadge = !roleName || roleName === 'member' ? '' : roleName;

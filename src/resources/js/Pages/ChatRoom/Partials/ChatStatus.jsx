@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import axios from "axios";
 
-export default function ChatStatus({ ...props }) {
+export default function ChatStatus({ backgroundMode = "blue", ...props }) {
     const {
         userPrivateKey,
         user,
@@ -89,30 +89,6 @@ export default function ChatStatus({ ...props }) {
         fetchUserStatuses();
     }, [userPrivateKey]);
 
-    /*
-    useEffect(() => {
-        if (chatRoom) {
-            setIsOnline(chatRoom.is_online);
-            setLastSeenAt(chatRoom.last_seen_at);
-        } else {
-            setIsOnline(false);
-            setLastSeenAt(null);
-        }
-
-        //const channel = `chat-room.${chatRoom.id}`;
-        //const subscription = Echo.private(channel);
-
-        //if (memberCount === 2) {
-        //subscription.listen('UserOnlineStatusChanged', onUserOnlineStatusChanged);
-        //}
-
-        // ChatRoomParticipantsChanged?
-
-        //return () => {
-        //    subscription.stopListening('UserOnlineStatusChanged');
-        //};
-    }, [chatRoom.users]);*/
-
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentDate(new Date());
@@ -132,7 +108,7 @@ export default function ChatStatus({ ...props }) {
             );
         } else if (memberCount === 2) {
             if (isOnline) {
-                return <span className="text-blue-500">Online</span>
+                return <span className={`${backgroundMode === "white" ? "text-blue-500" : ""}`}>Online</span>
             } else if (lastSeenAt) {
                 const lastSeenDate = new Date(lastSeenAt + 'Z');
                 const diffTime = currentDate - lastSeenDate;

@@ -229,7 +229,7 @@ export default function AddParticipantModal({ chatRoom, onClose }) {
                     )}
 
                     {searchQuery && (
-                        <CustomScrollArea maxHeight="240px">
+                        <CustomScrollArea className="h-60">
                             {(isSearching || (!isSearching && !searchCompleted)) && (
                                 <div className="italic text-sm text-blue-500">
                                     Searching for "{searchQuery}"...

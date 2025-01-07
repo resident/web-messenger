@@ -4,7 +4,12 @@ import ChatRoom from "@/Pages/ChatRoom/Partials/ChatRoom.jsx";
 import { PlusIcon } from "@heroicons/react/24/outline/index.js";
 import { router } from "@inertiajs/react";
 
-export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeChatRoomM = null, onActiveChatRoomInvalidated }) {
+export default function ChatRooms({
+    onChatRoomClick = chatRoom => null,
+    activeChatRoomM = null,
+    onActiveChatRoomInvalidated,
+    subscribeToEvents = true,
+}) {
     const {
         user,
         activeChatRoom,
@@ -44,13 +49,35 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
         } : cr));
     };
 
+    const onUserOnlineStatusChanged = (e) => {
+        const { user_id, is_online, last_seen_at } = e;
+
+        setChatRooms(prev =>
+            prev.map(cr => {
+                const updatedUsers = cr.users.map(u => {
+                    if (u.id === user_id) {
+                        return {
+                            ...u,
+                            is_online,
+                            last_seen_at
+                        };
+                    }
+                    return u;
+                });
+                return { ...cr, users: updatedUsers };
+            })
+        );
+    };
+
     useEffect(() => {
+        if (!subscribeToEvents) return;
         const channel = `chat-rooms.${user.id}`;
 
         Echo.private(channel)
             .listen('ChatRoomCreated', onChatRoomCreated)
             .listen('UserChatRoomUnreadCountUpdated', onUserChatRoomUnreadCountUpdated)
-            .listen('ChatRoomAdded', onChatRoomCreated);
+            .listen('ChatRoomAdded', onChatRoomCreated)
+            .listen("UserOnlineStatusChanged", onUserOnlineStatusChanged);
 
         return () => {
             Echo.leave(channel);
@@ -58,13 +85,13 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
     }, []);
 
     return (
-        <div className={`p-2 mb-3 flex flex-col gap-y-2`}>
-            <div className={`
+        <div className={`p-2 !pr-px mb-3 flex flex-col gap-y-2`}>
+            {subscribeToEvents ? (<div className={`
                     h-10 bg-blue-400 hover:bg-blue-300 hover:cursor-pointer rounded-md flex justify-center items-center
                 `}
                 onClick={() => router.visit(route('chat_rooms.create'))}>
                 <PlusIcon className={`size-6 stroke-[2px] text-white`} />
-            </div>
+            </div>) : null}
 
             {chatRoomsH.map((chatRoom) => (
                 <div key={chatRoom.id}>
@@ -72,6 +99,7 @@ export default function ChatRooms({ onChatRoomClick = chatRoom => null, activeCh
                         key={chatRoom.id}
                         chatRoom={chatRoom}
                         onClickHandler={() => onChatRoomClick(chatRoom)}
+                        subscribeToEvents={subscribeToEvents}
                     />
                 </div>
             ))}

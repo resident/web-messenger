@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Events\UserDeleted;
+use App\Repositories\UserSettingsRepository;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,9 +22,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $userSettings = app(UserSettingsRepository::class)->getUserSettingsByUserId($request->user()->id);
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'userSettings' => $userSettings,
         ]);
     }
 
