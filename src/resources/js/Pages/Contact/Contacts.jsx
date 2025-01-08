@@ -78,7 +78,7 @@ export default function Contacts({auth}) {
                             className="!bg-[#60A5FA] hover:!bg-blue-600 focus:!bg-blue-600 active:bg-gray-900"
                             onClick={() => setShowModal(true)}
                         >
-                            Add Contacts
+                            Add Contact
                         </PrimaryButton>
                     </div>
                 </div>
