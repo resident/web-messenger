@@ -75,10 +75,10 @@ export default function Contacts({auth}) {
 
                     <div className="flex justify-start mt-3">
                         <PrimaryButton
-                            className="bg-[#60A5FA] hover:!bg-blue-600 focus:!bg-blue-600 active:bg-gray-900"
+                            className="!bg-[#60A5FA] hover:!bg-blue-600 focus:!bg-blue-600 active:bg-gray-900"
                             onClick={() => setShowModal(true)}
                         >
-                            Add Contact
+                            Add Contacts
                         </PrimaryButton>
                     </div>
                 </div>
