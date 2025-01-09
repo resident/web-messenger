@@ -5,6 +5,7 @@ import ContactPreview from './Partials/ContactPreview';
 import PrimaryButton from '@/Components/PrimaryButton';
 import CreateContact from './Partials/CreateContact';
 import TextInput from '@/Components/TextInput';
+import CustomScrollArea from "@/Components/CustomScrollArea.jsx";
 
 export default function Contacts({auth}) {
     const [contacts, setContacts] = useState([]);
@@ -37,42 +38,49 @@ export default function Contacts({auth}) {
             user={auth.user}
             header="Contacts"
         >
-            <div className="bg-white shadow h-full overflow-y-auto">
-                <div className={`grid md:grid-cols-2 h-full`}>
-                    <div className={`p-3`}>
-                        <PrimaryButton className={`!bg-blue-400 hover:!bg-blue-600`}
-                                       onClick={() => setShowModal(true)}>Add Contact</PrimaryButton>
-
-                        <div className="my-2">
-                            <TextInput
-                                placeholder='Filter contacts'
-                                className="w-full"
-                                value={filterQuery}
-                                onChange={e => setFilterQuery(e.target.value)}/>
-                        </div>
-
-                        <CreateContact
-                            showModal={showModal}
-                            setShowModal={setShowModal}
-                            onAdded={setContactAdded}
-                            auth={auth}
+            <div className="bg-[#93C5FD] shadow h-full py-1 px-3">
+                <div className={`flex flex-col bg-[#2889EE] rounded-[28px] p-3 lg:p-10 md:p-7 sm:p-3 gap-3 h-full`}>
+                    <div className="my-2">
+                        <TextInput
+                            placeholder='Filter contacts'
+                            className="w-full"
+                            value={filterQuery}
+                            onChange={e => setFilterQuery(e.target.value)}
                         />
-
-                        <div className="flex flex-col">
-                            {filteredContacts.length > 0 ? (
-                                filteredContacts.map(contact => (
-                                    <ContactPreview
-                                        key={contact.id}
-                                        contact={contact}
-                                        onDelete={handleDelete}/>
-                                ))
-                            ) : (
-                                <h3 className="text-left">No contacts</h3>
-                            )}
-                        </div>
                     </div>
 
-                    <div className={`bg-blue-300 hidden md:block`}></div>
+                    <CreateContact
+                        showModal={showModal}
+                        setShowModal={setShowModal}
+                        onAdded={setContactAdded}
+                        auth={auth}
+                    />
+
+                    <CustomScrollArea
+                        className="bg-white p-3 rounded-[5px] h-full"
+                    >
+                        {filteredContacts.length > 0 ? (
+                            filteredContacts.map(contact => (
+                                <div key={contact.id}>
+                                    <ContactPreview
+                                        contact={contact}
+                                        onDelete={handleDelete}
+                                    />
+                                </div>
+                            ))
+                        ) : (
+                            <h3 className="text-left">No contacts</h3>
+                        )}
+                    </CustomScrollArea>
+
+                    <div className="flex justify-start mt-3">
+                        <PrimaryButton
+                            className="!bg-[#60A5FA] hover:!bg-blue-600 focus:!bg-blue-600 active:bg-gray-900"
+                            onClick={() => setShowModal(true)}
+                        >
+                            Add Contact
+                        </PrimaryButton>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
