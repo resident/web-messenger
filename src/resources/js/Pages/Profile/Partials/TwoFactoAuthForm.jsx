@@ -115,16 +115,16 @@ export default function TwoFactoAuthForm({className, ...props}) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium">Two-Factor Authentication</h2>
+                <h2 className="text-lg font-medium text-white">Two-Factor Authentication</h2>
 
-                <p className="mt-1 text-sm">
+                <p className="mt-1 text-sm text-white">
                     Add an extra layer of security to your account by enabling two-factor authentication (2FA). After
                     activation, you will be required to provide an additional verification code from your mobile device
                     or authenticator app when logging in.
                 </p>
             </header>
 
-            <h2 className={`mt-3 text-lg font-medium ${isEnabled && 'hidden'}`}>Step: {step}</h2>
+            <h2 className={`mt-3 text-lg font-medium text-white ${isEnabled && 'hidden'}`}>Step: {step}</h2>
 
             <div className={`mt-6 space-y-6 ${step !== 1 && 'hidden'}`}>
                 <div>
@@ -156,7 +156,7 @@ export default function TwoFactoAuthForm({className, ...props}) {
                 </div>
             </div>
 
-            <div className={`mt-6 space-y-6 ${step !== 2 && 'hidden'}`}>
+            <div className={`mt-6 space-y-6 text-white ${step !== 2 && 'hidden'}`}>
                 <a href={info.url}>
                     <span dangerouslySetInnerHTML={{__html: info.svg}}></span>
                 </a>
@@ -185,7 +185,7 @@ export default function TwoFactoAuthForm({className, ...props}) {
                 </div>
             </div>
 
-            <div className={`mt-6 space-y-6 ${step !== 3 && 'hidden'}`}>
+            <div className={`mt-6 space-y-6 text-white ${step !== 3 && 'hidden'}`}>
                 <div>
                     {recoveryCodes.map((recoveryCode, i) => (
                         <p key={i}>
