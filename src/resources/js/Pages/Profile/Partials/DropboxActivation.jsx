@@ -26,16 +26,16 @@ export default function DropboxActivation() {
     return (
         <section className="space-y-6">
             <header>
-                <h2 className="text-lg font-medium">
+                <h2 className="text-lg font-medium text-white">
                     Dropbox Sync
                 </h2>
 
                 {accessToken ? (
-                    <p className="mt-1 text-sm">
+                    <p className="mt-1 text-sm text-white">
                         Dropbox sync is currently enabled. You can disable it below.
                     </p>
                 ) : (
-                    <p className="mt-1 text-sm">
+                    <p className="mt-1 text-sm text-white">
                         Dropbox sync is disabled. Enable it to sync your data.
                     </p>
                 )}
