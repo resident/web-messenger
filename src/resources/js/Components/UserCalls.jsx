@@ -271,7 +271,12 @@ export default function () {
             <div className={`${(answered && isVideoCall) && 'hidden'}`}>
                 <div className={`h-[90dvh] flex gap-3 items-center justify-center`}>
                     <div className={`flex flex-col gap-3`}>
-                        <div className={`size-40 rounded-full bg-lime-300`}></div>
+                        {remoteUser?.avatar && <img
+                            src={`${import.meta.env.VITE_AVATARS_STORAGE}/${remoteUser.avatar.path}`}
+                            alt={remoteUser.name}
+                            className="size-40 rounded-full object-cover"
+                        /> || <div className={`size-40 rounded-full bg-blue-300`}></div>}
+
                         <div className={`text-center text-white font-bold text-xl`}>{remoteUser?.name}</div>
                     </div>
                 </div>
