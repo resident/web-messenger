@@ -24,6 +24,7 @@ final class UserOnlineStatusChanged implements ShouldBroadcast
     public UserStatusDto $userStatus;
     private UserRepository $userRepository;
     private UserSettingsRepository $userSettingsRepository;
+    private array $forceChannels = [];
 
     private User $user;
     private array $channels = [];
@@ -31,11 +32,12 @@ final class UserOnlineStatusChanged implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(UserStatusDto $userStatus)
+    public function __construct(UserStatusDto $userStatus, array $forceChannels = [])
     {
         $this->userStatus = $userStatus;
         $this->userRepository = app(UserRepository::class);
         $this->userSettingsRepository = app(UserSettingsRepository::class);
+        $this->forceChannels = $forceChannels;
     }
 
     private function fillChannelsForEveryone(): void
@@ -64,6 +66,10 @@ final class UserOnlineStatusChanged implements ShouldBroadcast
     public function broadcastOn(): array
     {
         try {
+            if (!empty($this->forceChannels)) {
+                return $this->forceChannels;
+            }
+
             $userId = $this->userStatus->user_id;
             $this->user = $this->userRepository->getUserById($this->userStatus->user_id);
 

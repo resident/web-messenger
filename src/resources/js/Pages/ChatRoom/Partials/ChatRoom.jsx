@@ -192,10 +192,10 @@ export default function ChatRoom({
                             ? [...cr.messages, dMessage]
                             : [...cr.messages];
                         let isNewer = true;
-                        if (cr?.last_message?.created_at) {
+                        /*if (cr?.last_message?.created_at) {
                             const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
                             isNewer = timeDifference < 1000;
-                        }
+                        }*/
 
                         return {
                             ...cr,
@@ -485,7 +485,9 @@ export default function ChatRoom({
                     <div>
                         {chatRoom.unread_count > 0 && (
                             <div
-                                className="bg-blue-500 text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5">
+                                className={`${chatRoom.muted ? 'bg-gray-500' : 'bg-blue-500'} 
+                                    text-white mt-2 ml-2 text-xs px-1 rounded-full inline-flex items-center justify-center h-5 min-w-5
+                                `}>
                                 {chatRoom.unread_count > 999 ? '999+' : chatRoom.unread_count}
                             </div>
                         )}

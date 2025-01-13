@@ -16,7 +16,7 @@ const ALL_PERMISSIONS = [
     { key: 'delete_messages_of_others', label: 'Delete messages of others' },
     { key: 'change_chat_info', label: 'Change the chat\'s info (title)' },
     { key: 'add_remove_users', label: 'Add user / Delete user' },
-    { key: 'set_auto_delete', label: 'Set auto-delete of messages' },
+    { key: 'set_auto_remove_timeout', label: 'Set auto-delete of messages' },
 ];
 
 export default function ManageRolesModal({ chatRoom, onClose }) {

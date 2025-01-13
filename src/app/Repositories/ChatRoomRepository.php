@@ -137,6 +137,15 @@ final class ChatRoomRepository
         return $result;
     }
 
+    public function updateMuted(User $user, ChatRoom $chatRoom, bool $muted)
+    {
+        return
+            DB::table('chat_room_user')
+            ->where('chat_room_id', $chatRoom->id)
+            ->where('user_id', $user->id)
+            ->update(['muted' => $muted]);
+    }
+
     public function getUnreadCount(ChatRoom $chatRoom, ?string $lastReadAt, User $user)
     {
         /*Log::debug('Calculating unread count', [

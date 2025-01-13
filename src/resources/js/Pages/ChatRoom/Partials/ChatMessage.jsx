@@ -462,12 +462,21 @@ export default forwardRef(function ChatMessage({
                                         <div>
                                             <div
                                                 className="overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{user.name}</div>
-                                            <div className="text-xs text-gray-500">
-                                                <div className="relative mr-1 pr-5">
-                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-0" />
-                                                    <CheckIcon className="text-blue-500 w-4 h-4 absolute top-0 left-1" />
-                                                </div>
-                                                <span className="pl-6">{formatSeenAt(user.seen_at)}</span>
+                                            <div className="text-xs text-gray-500 flex gap-x-1">
+                                                <svg
+                                                    fill="#3B82F6"
+                                                    className="h-4 stroke-3 ml-1"
+                                                    viewBox="2 1 21 21"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        d="M6.54591047,14.1998821 L14.6192054,6 L16,7.40005893 L6.54591047,17 L1.97366706,12.3500147 L3.35446166,10.9499558 L6.54591047,14.1998821 Z"
+                                                    />
+                                                    <path
+                                                        d="M10.6664523,15.0943204 L12.0462428,13.6932433 L12.5459105,14.1998821 L20.6192054,6 L22,7.40005893 L12.5459105,17 L10.6664523,15.0943204 Z"
+                                                    />
+                                                </svg>
+                                                <span className="">{formatSeenAt(user.seen_at)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -512,7 +521,7 @@ export default forwardRef(function ChatMessage({
                 >
                     <div
                         className={`
-                            relative size-12 ${self ? 'ml-3' : 'mr-3'} 
+                            relative size-11 ${self ? 'ml-3' : 'mr-3'} 
                             ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
                             rounded-full overflow-hidden
                             hidden sm:block transform-gpu transition-all duration-300
@@ -530,13 +539,12 @@ export default forwardRef(function ChatMessage({
                         }
                     </div>
                     <div className={`
-                        p-3 break-words max-w-sm sm:max-w-lg min-w-[150px]
-                        ${(!self && (messageType === 'top' || messageType === 'singular')) ? 'pb-3' : 'pb-1'}
+                        pt-3 pl-3 pr-1 break-words max-w-sm sm:max-w-md min-w-[150px]
                         ${errorPending ? 'bg-red-300' : (self ? 'bg-[#2889EE]' : 'bg-[#073666]')}
                         ${getMessageClasses(self, messageType)}
                     `}>
 
-                        <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'} pr-2 text-white select-text`}>
+                        <div className={`${safeViewIsOn && 'blur-sm group-hover:blur-0'} pr-4 text-white select-text`}>
                             {message.message}
                         </div>
 
@@ -566,20 +574,17 @@ export default forwardRef(function ChatMessage({
                         }
 
                         <div className={`
-                    text-xs font-light text-right flex items-center justify-end min-h-4 min-w-1
+                    text-xs font-light text-right flex items-center justify-end min-h-4 min-w-1 -mt-[3px] mb-1
                     ${self ? (errorPending ? 'text-red-700' : 'text-[#E7E9ED] ') : 'text-[#E7E9ED]'}
                 `}>
                             {(self || (!self && messageType !== 'top' && messageType !== 'singular')) && (
-                                <div>
+                                <div className={!self ? "mr-2" : ""}>
                                     <span>{createdAt.time}</span>
                                 </div>
                             )}
                             {self && (
                                 errorPending ? (
-                                    <div className="flex space-x-1 ml-1">
-                                        <ExclamationCircleIcon
-                                            className="text-red-500 w-4 h-4 cursor-pointer"
-                                        />
+                                    <div className="ml-1">
                                         <ArrowPathIcon
                                             className="text-red-500 w-4 h-4 ml-1 cursor-pointer"
                                             onClick={onRetrySend}
@@ -591,13 +596,26 @@ export default forwardRef(function ChatMessage({
                                         className="w-4 h-4 ml-2 border-2 border-t-transparent border-l-transparent border-gray-800 rounded-full animate-spin"></div>
                                 ) : (
                                     <div
-                                        className={`cursor-pointer flex space-x-[2px] ml-2`}
+                                        className={`${message.status === 'SEEN' ? 'mr-0.5 cursor-pointer' : ''} ml-1 h-4`}
                                         onClick={handleStatusClick}
                                     >
-                                        <div className="size-2 rounded-full bg-[#B9DCFF]"></div>
-                                        <div
-                                            className={`size-2 rounded-full ${message.status === 'SEEN' ? 'bg-[#B9DCFF]' : 'bg-gray-500'}`}
-                                        ></div>
+                                        <svg
+                                            fill="#E7E9ED"
+                                            className="h-4 stroke-3"
+                                            viewBox={`${message.status === 'SEEN' ? '2 1 21 21' : '0 1 21 21'}`}
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M6.54591047,14.1998821 L14.6192054,6 L16,7.40005893 L6.54591047,17 L1.97366706,12.3500147 L3.35446166,10.9499558 L6.54591047,14.1998821 Z"
+                                            />
+                                            {message.status === 'SEEN' ? (
+                                                <path
+                                                    d="M10.6664523,15.0943204 L12.0462428,13.6932433 L12.5459105,14.1998821 L20.6192054,6 L22,7.40005893 L12.5459105,17 L10.6664523,15.0943204 Z"
+                                                />
+                                            ) : null}
+
+                                        </svg>
+
                                     </div>
                                 ))}
                         </div>

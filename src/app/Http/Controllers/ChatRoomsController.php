@@ -82,6 +82,14 @@ class ChatRoomsController extends Controller
         return response()->json(['status' => 'success']);
     }
 
+    public function updateMuted(Request $request, ChatRoom $chatRoom, ChatRoomRepository $repository)
+    {
+        $user = $request->user();
+        $muted = $request->input('muted');
+        $repository->updateMuted($user, $chatRoom, $muted);
+        return response()->json(['status' => 'success']);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
