@@ -1,19 +1,30 @@
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline/index.js";
 import Checkbox from "@/Components/Checkbox.jsx";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { ApplicationContext } from "@/Components/ApplicationContext.jsx";
 import axios from "axios";
 import { router } from "@inertiajs/react";
 import ChatRoomInfoModal from "./Modals/ChatRoomInfoModal.jsx";
 import {
-    InformationCircleIcon
-} from '@heroicons/react/24/outline'
+    InformationCircleIcon,
+    SpeakerWaveIcon,
+    SpeakerXMarkIcon,
+} from '@heroicons/react/24/outline';
 
 export default function ChatRoomMenu({ chatRoom }) {
-    const { safeViewIsOn, setSafeViewIsOn } = useContext(ApplicationContext);
+    const { safeViewIsOn, setSafeViewIsOn, chatRooms, setChatRooms } = useContext(ApplicationContext);
 
     const [menuIsHidden, setMenuIsHidden] = useState(true);
     const [showInfoModal, setShowInfoModal] = useState(false);
+
+    const [isMuted, setIsMuted] = useState(chatRoom.muted);
+
+    useEffect(() => {
+        const updatedChatRoom = chatRooms.find(cr => cr.id === chatRoom.id);
+        if (updatedChatRoom) {
+            setIsMuted(updatedChatRoom.muted);
+        }
+    }, [chatRooms, chatRoom.id]);
 
     const toggleMenu = () => {
         setMenuIsHidden(!menuIsHidden);
@@ -22,6 +33,18 @@ export default function ChatRoomMenu({ chatRoom }) {
     const onShowInfo = () => {
         setShowInfoModal(true);
         setMenuIsHidden(true);
+    }
+
+    const onMutedClick = () => {
+        console.log("OnMutedClick:", isMuted);
+        axios.put(route('chat-rooms.muted.update', { chatRoom: chatRoom.id }), {
+            muted: !isMuted,
+        }).then(() => {
+            console.log("Okay");
+            setChatRooms(prev =>
+                prev.map(cr => cr.id === chatRoom.id ? { ...cr, muted: !isMuted } : cr)
+            );
+        });
     }
 
     const onSafeViewChanged = (e) => {
@@ -56,6 +79,23 @@ export default function ChatRoomMenu({ chatRoom }) {
                             checked={safeViewIsOn}
                             onChange={onSafeViewChanged}
                         />
+                    </div>
+                    <div
+                        className="bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center"
+                        onClick={onMutedClick}
+                    >
+                        {isMuted ? (
+                            <>
+                                <SpeakerWaveIcon className="size-6 pb-[2px]" />
+                                Unmute
+                            </>
+                        ) : (
+                            <>
+                                <SpeakerXMarkIcon className="size-6 pb-[2px]" />
+                                Mute
+                            </>
+                        )}
+
                     </div>
                     <div
                         className="bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center"

@@ -86,4 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chat-rooms/{chatRoom}/last-read-at', [ChatRoomsController::class, 'updateLastReadAt'])
         ->whereUuid('chatRoom')
         ->name('chat_rooms.last_read_at.update');
+    Route::put('/chat-rooms/{chatRoom}/muted', [ChatRoomsController::class, 'updateMuted'])
+        ->whereUuid('chatRoom')
+        ->name('chat-rooms.muted.update');
 });

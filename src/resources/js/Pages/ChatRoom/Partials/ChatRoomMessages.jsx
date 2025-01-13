@@ -48,7 +48,7 @@ export default function ChatRoomMessages({ ...props }) {
     const [cacheLoading, setCacheLoading] = useState(false);
 
     const pivot = chatRoom?.users.find(u => u.id === user.id)?.pivot;
-    const canManageAutoDelete = pivot?.permissions?.includes('set_auto_delete') || pivot?.role_name === 'owner';
+    const canManageAutoDelete = pivot?.permissions?.includes('set_auto_remove_timeout') || pivot?.role_name === 'owner';
     const chatRoomKeyRef = useRef(chatRoomKey);
 
     // 0 - базова
@@ -530,10 +530,10 @@ export default function ChatRoomMessages({ ...props }) {
                             if (cr.id === chatRoomRef.current.id) {
                                 const isUserMessage = dMessage.user_id === user.id;
                                 let isNewer = true;
-                                if (cr?.last_message?.created_at) {
+                                /*if (cr?.last_message?.created_at) {
                                     const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
                                     isNewer = timeDifference < 1000;
-                                }
+                                }*/
 
                                 // У випадку, якщо ми біля низу і тоді автоматично прочитується повідомлення, last_read_at можна не записувати, оскільки це буде відповідати observer і onMessageRead
                                 // Не додається нічого до unread_count, оновлюється останнє повідомлення
@@ -589,10 +589,10 @@ export default function ChatRoomMessages({ ...props }) {
                                 const isUserMessage = dMessage.user_id === user.id;
                                 const newUnreadCount = isUserMessage ? 0 : (cr.unread_count || 0) + 1;
                                 let isNewer = true;
-                                if (cr.last_message) {
+                                /*if (cr.last_message) {
                                     const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(dMessage.created_at).getTime();
                                     isNewer = timeDifference < 1000;
-                                }
+                                }*/
                                 return {
                                     ...cr,
                                     unread_count: newUnreadCount,
@@ -905,10 +905,10 @@ export default function ChatRoomMessages({ ...props }) {
                     prev.map(cr => {
                         if (cr.id === chatRoom.id) {
                             let isNewer = true;
-                            if (cr?.last_message?.created_at) {
+                            /*if (cr?.last_message?.created_at) {
                                 const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(decryptedMessage.created_at).getTime();
                                 isNewer = timeDifference < 1000;
-                            }
+                            }*/
                             return {
                                 ...cr,
                                 last_message: isNewer ? decryptedMessage : cr.last_message,
@@ -937,10 +937,10 @@ export default function ChatRoomMessages({ ...props }) {
                     prev.map(cr => {
                         if (cr.id === chatRoom.id) {
                             let isNewer = true;
-                            if (cr.last_message) {
+                            /*if (cr.last_message) {
                                 const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(messageData.created_at).getTime();
                                 isNewer = timeDifference < 1000;
-                            }
+                            }*/
                             return {
                                 ...cr,
                                 last_message: isNewer ? messageData : cr.last_message,
@@ -1018,10 +1018,10 @@ export default function ChatRoomMessages({ ...props }) {
             prev.map(cr => {
                 if (cr.id === chatRoom.id) {
                     let isNewer = true;
-                    if (cr.last_message) {
+                    /*if (cr.last_message) {
                         const timeDifference = new Date(cr.last_message.created_at).getTime() - new Date(placeholderMessage.created_at).getTime();
                         isNewer = timeDifference < 1000;
-                    }
+                    }*/
                     return {
                         ...cr,
                         last_message: isNewer ? placeholderMessage : cr.last_message,

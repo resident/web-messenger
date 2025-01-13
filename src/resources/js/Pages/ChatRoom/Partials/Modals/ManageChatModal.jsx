@@ -25,7 +25,7 @@ export default function ManageChatModal({ chatRoom, onClose }) {
     const pivot = chatRoom?.users.find(u => u.id === user.id)?.pivot;
     const canChangeTitle = pivot?.permissions?.includes('change_chat_info') || pivot?.role_name === 'owner';
     const canManageRoles = pivot?.permissions?.includes('change_roles_of_others') || pivot?.role_name === 'owner';
-    const canManageAutoDelete = pivot?.permissions?.includes('set_auto_delete') || pivot?.role_name === 'owner';
+    const canManageAutoDelete = pivot?.permissions?.includes('set_auto_remove_timeout') || pivot?.role_name === 'owner';
     const canAddRemoveParticipants = pivot?.permissions?.includes('add_remove_users') || pivot?.role_name === 'owner';
 
     const updateTitle = async () => {
