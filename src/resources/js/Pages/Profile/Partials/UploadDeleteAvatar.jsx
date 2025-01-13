@@ -52,8 +52,8 @@ export default function UploadDeleteAvatar({className = '', user}) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-medium">Upload Avatar</h2>
-                <p className="mt-1 text-sm">
+                <h2 className="text-lg font-medium text-white">Upload Avatar</h2>
+                <p className="mt-1 text-sm text-white">
                     Update your profile picture by uploading an avatar.
                 </p>
             </header>
@@ -70,7 +70,7 @@ export default function UploadDeleteAvatar({className = '', user}) {
                     <input
                         type="file"
                         id="avatar"
-                        className="mt-1 block w-full bg-blue-800"
+                        className="mt-1 block w-full bg-blue-800 text-white"
                         onChange={(e) => setData('avatar', e.target.files[0])}
                         ref={fileInputRef}
                     />
