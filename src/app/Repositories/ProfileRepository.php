@@ -8,6 +8,8 @@ use App\Dto\UserStatusDto;
 use App\Models\Profile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 final class ProfileRepository
 {
@@ -41,12 +43,18 @@ final class ProfileRepository
      */
     public function getUserStatus(int $userId): UserStatusDto
     {
-        $profile = $this->getProfileByUserId($userId);
-        return new UserStatusDto(
-            user_id: $userId,
-            is_online: $profile->is_online,
-            last_seen_at: $profile->last_seen_at?->toDateTimeString(),
-        );
+        try {
+            $profile = $this->getProfileByUserId($userId);
+            return new UserStatusDto(
+                user_id: $userId,
+                is_online: $profile->is_online,
+                last_seen_at: $profile->last_seen_at?->toDateTimeString(),
+            );
+        } catch (Throwable $e) {
+            Log::error('getUserStatus failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return new UserStatusDto($userId, false, null);
+        }
     }
 
     public function getUsersStatus(array $userIds): array
@@ -74,14 +82,20 @@ final class ProfileRepository
      */
     public function updateLastSeenAt(int $userId, bool $isOnline): bool
     {
-        return DB::transaction(
-            function () use ($userId, $isOnline) {
-                $profile = $this->getProfileByUserId($userId);
-                $profile->is_online = $isOnline;
-                $profile->last_seen_at = Carbon::now();
+        try {
+            return DB::transaction(
+                function () use ($userId, $isOnline) {
+                    $profile = $this->getProfileByUserId($userId);
+                    $profile->is_online = $isOnline;
+                    $profile->last_seen_at = Carbon::now();
 
-                return $profile->save();
-            }
-        );
+                    return $profile->save();
+                }
+            );
+        } catch (Throwable $e) {
+            Log::error('updateLastSeenAt failed: ' . $e->getMessage(), ['exception' => $e]);
+        }
+
+        return false;
     }
 }
