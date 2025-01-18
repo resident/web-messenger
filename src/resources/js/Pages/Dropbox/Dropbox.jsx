@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useEffect, useState, React } from 'react';
 import DropboxClient from "@/Common/Dropbox.js";
 import InputError from '@/Components/InputError';
+import DropboxSync from "@/Pages/Dropbox/Partials/DropboxSync.jsx";
 
 export default function Dropbox({ auth }) {
 
@@ -10,7 +11,7 @@ export default function Dropbox({ auth }) {
 
     const clientId = import.meta.env.VITE_DROPBOX_CLIENT_ID;
     const dropbox = new DropboxClient({clientId: clientId});
-   
+
     useEffect(() =>{
         (async () => {
            let token = await dropbox.getAccessToken();
@@ -23,31 +24,32 @@ export default function Dropbox({ auth }) {
                 const error = urlParams.get('error');
                 setAuthError(error)
                 token = await dropbox.getAccessTokenFromUrl();
-                
+
                 if(!token && !error){
                     window.location.href = url;
                 }
-                
+
                 if(token !== undefined){
                     await dropbox.setAccessToken(token);
                     setAccessToken(token)
                 }
             }
-        })(); 
+        })();
     }, []);
 
-    
+
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             header="Dropbox"
         >
-           <div className="flex justify-center">
+            { accessToken !== undefined && <DropboxSync />}
+            <div className="flex justify-center">
                 <div className="bg-white m-5 p-6 rounded-lg shadow-lg max-w-lg w-full">
                     <div className="flex gap-3 justify-center items-center">
                         {accessToken ? (
-                            <h1 className="text-center">Dropbox Activated</h1> 
+                            <h1 className="text-center">Dropbox Activated</h1>
                         ) : ( <h1 className="text-center">{authError ? authError : "Authorizing"}</h1> )}
                     </div>
                     <InputError message='' className="mt-2" />
