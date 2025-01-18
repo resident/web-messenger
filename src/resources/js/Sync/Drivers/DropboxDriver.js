@@ -16,7 +16,7 @@ export default class DropboxDriver extends DriverBase{
             dropbox.filesDownload({ path: '/' + key + '.txt' })
             .then(async (response) => {
                 const fileText = await response.result.fileBlob.text();
-                resolve(JSON.parse(fileText));   
+                resolve(JSON.parse(fileText));
             })
             .catch(error => {
                 console.error('Download error -> ', error)
@@ -30,17 +30,17 @@ export default class DropboxDriver extends DriverBase{
     async set(key, value) {
         const dropbox = await this.#dropboxClient;
         const currentItem = JSON.parse(localStorage.getItem(key)) ?? (await this.get(key)).result;
-        
+
         const result = new Promise((resolve) => {
-            
+
             const currentDate = new Date();
 
             const item = {
                 value,
                 created_at: currentItem?.created_at ?? currentDate.toISOString(),
-                updated_at: currentDate.toISOString(),
+                updated_at: currentItem?.updated_at,
             };
-            
+
             const itemString = JSON.stringify(item);
 
             dropbox.filesUpload({
@@ -55,7 +55,7 @@ export default class DropboxDriver extends DriverBase{
                 console.error('Error uploading file:', error);
                 resolve(false);
             });
-            
+
         });
 
         return this.response(result);
