@@ -92,56 +92,56 @@ export default function ChatRoomInfoModal({ initialChatRoom, onClose }) {
                 <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
             <hr />
-
-            <div className="">
-                <div className="flex flex-col items-center">
-                    <div className="flex justify-center my-4 size-20">
-                        {chatRoom && (
-                            <ChatAvatar
-                                users={chatRoom.users}
-                                localUser={user}
-                                lastMessage={chatRoom.last_message}
-                                size="full"
-                                showOnlineBadgeForSecondUser={false}
-                            />
-                        )}
-                    </div>
-                    <div className="mt-2 text-lg">{chatTitle}</div>
-                    <div className="mt-1">
-                        {chatRoom && (
-                            <ChatStatus backgroundMode="white" chatRoom={chatRoom} />
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-4 mb-1 flex flex-col items-center">
-                    {canManageChat && (
-                        <button
-                            className="w-full hover:bg-blue-100 text-blue-500 py-2 rounded flex items-center justify-center gap-2"
-                            onClick={() => setShowManageChat(true)}
-                        >
-                            <AdjustmentsVerticalIcon className="size-4 pb-[1px]" />
-                            Manage chat
-                        </button>
-                    )}
-                    <button
-                        className="w-full hover:bg-red-100 text-red-500 py-2 rounded flex items-center justify-center gap-2"
-                        onClick={onDeleteClick}
-                    >
-                        <TrashIcon className="size-4 pb-[3px]" />
-                        {isOwner ? "Delete chat" : "Leave chat"}
-                    </button>
-                </div>
-                <hr />
-
-                <div className="pt-4">
-                    <div className="flex items-center mb-2">
-                        <UsersIcon className="size-5 mr-2" />
-                        <div className="font-semibold">
-                            Participants ({chatRoom?.users.length})
+            <CustomScrollArea className="max-h-[80vh]" classNameThumb="bg-[#ccc] w-[4px]">
+                <div className="">
+                    <div className="flex flex-col items-center">
+                        <div className="flex justify-center my-4 size-20">
+                            {chatRoom && (
+                                <ChatAvatar
+                                    users={chatRoom.users}
+                                    localUser={user}
+                                    lastMessage={chatRoom.last_message}
+                                    size="full"
+                                    showOnlineBadgeForSecondUser={false}
+                                />
+                            )}
+                        </div>
+                        <div className="mt-2 text-lg">{chatTitle}</div>
+                        <div className="mt-1">
+                            {chatRoom && (
+                                <ChatStatus backgroundMode="white" chatRoom={chatRoom} />
+                            )}
                         </div>
                     </div>
-                    <CustomScrollArea className="h-44">
+
+                    <div className="mt-4 mb-1 flex flex-col items-center">
+                        {canManageChat && (
+                            <button
+                                className="w-full hover:bg-blue-100 text-blue-500 py-2 rounded flex items-center justify-center gap-2"
+                                onClick={() => setShowManageChat(true)}
+                            >
+                                <AdjustmentsVerticalIcon className="size-4 pb-[1px]" />
+                                Manage chat
+                            </button>
+                        )}
+                        <button
+                            className="w-full hover:bg-red-100 text-red-500 py-2 rounded flex items-center justify-center gap-2"
+                            onClick={onDeleteClick}
+                        >
+                            <TrashIcon className="size-4 pb-[3px]" />
+                            {isOwner ? "Delete chat" : "Leave chat"}
+                        </button>
+                    </div>
+                    <hr />
+
+                    <div className="pt-4">
+                        <div className="flex items-center mb-2">
+                            <UsersIcon className="size-5 mr-2" />
+                            <div className="font-semibold">
+                                Participants ({chatRoom?.users.length})
+                            </div>
+                        </div>
+
                         {chatRoom?.users.map(u => {
                             const roleName = u.pivot.role_name;
                             const roleBadge = !roleName || roleName === 'member' ? '' : roleName;
@@ -155,9 +155,11 @@ export default function ChatRoomInfoModal({ initialChatRoom, onClose }) {
                                 />
                             );
                         })}
-                    </CustomScrollArea>
+
+                    </div>
                 </div>
-            </div>
+            </CustomScrollArea>
+
 
             {showDeleteConfirm && (
                 <Modal show={true} onClose={() => setShowDeleteConfirm(false)} maxWidth="sm" className="p-4 !pb-2 w-full sm:max-w-md">

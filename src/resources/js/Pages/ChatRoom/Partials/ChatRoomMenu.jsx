@@ -36,11 +36,9 @@ export default function ChatRoomMenu({ chatRoom }) {
     }
 
     const onMutedClick = () => {
-        console.log("OnMutedClick:", isMuted);
         axios.put(route('chat-rooms.muted.update', { chatRoom: chatRoom.id }), {
             muted: !isMuted,
         }).then(() => {
-            console.log("Okay");
             setChatRooms(prev =>
                 prev.map(cr => cr.id === chatRoom.id ? { ...cr, muted: !isMuted } : cr)
             );
@@ -66,22 +64,21 @@ export default function ChatRoomMenu({ chatRoom }) {
             />
 
             <div className={`
-                    absolute top-11 right-0 bg-blue-400 shadow-2xl whitespace-nowrap border-4 border-white text-white
+                    absolute top-11 right-0 bg-blue-400 shadow-2xl whitespace-nowrap border-2 border-white text-white
                     rounded-lg z-40
                     ${menuIsHidden ? 'hidden' : ''}
                 `}>
                 <div className={`flex  flex-col gap-2 p-2`}>
                     <div
-                        className={`bg-blue-800 hover:bg-blue-900 p-2 select-none flex flex-nowrap gap-2 items-center`}>
-                        <span>Safe View</span>
-
+                        className={`p-2 select-none flex flex-nowrap gap-2 items-center`}>
                         <Checkbox
                             checked={safeViewIsOn}
                             onChange={onSafeViewChanged}
                         />
+                        <span>Safe View</span>
                     </div>
                     <div
-                        className="bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center"
+                        className="hover:bg-[#80B7FB] p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center rounded-lg"
                         onClick={onMutedClick}
                     >
                         {isMuted ? (
@@ -98,7 +95,7 @@ export default function ChatRoomMenu({ chatRoom }) {
 
                     </div>
                     <div
-                        className="bg-blue-800 hover:bg-blue-900 p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center"
+                        className="hover:bg-[#80B7FB] p-2 select-none cursor-pointer flex flex-nowrap gap-1 items-center rounded-lg"
                         onClick={onShowInfo}
                     >
                         <InformationCircleIcon className="size-6 pb-[2px]" />

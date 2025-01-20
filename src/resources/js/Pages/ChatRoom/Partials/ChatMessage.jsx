@@ -321,9 +321,20 @@ export default forwardRef(function ChatMessage({
 
     const Checkmarks = () => {
         return (
-            <div className="relative pr-4">
-                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-0 transform -translate-y-1/2" />
-                <CheckIcon className="text-blue-500 w-4 h-4 absolute top-1/2 left-1 transform -translate-y-1/2" />
+            <div className="relative">
+                <svg
+                    fill="#3B82F6"
+                    className="h-4 stroke-3"
+                    viewBox="2 1 21 21"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        d="M6.54591047,14.1998821 L14.6192054,6 L16,7.40005893 L6.54591047,17 L1.97366706,12.3500147 L3.35446166,10.9499558 L6.54591047,14.1998821 Z"
+                    />
+                    <path
+                        d="M10.6664523,15.0943204 L12.0462428,13.6932433 L12.5459105,14.1998821 L20.6192054,6 L22,7.40005893 L12.5459105,17 L10.6664523,15.0943204 Z"
+                    />
+                </svg>
             </div>
         );
     }
@@ -549,25 +560,21 @@ export default forwardRef(function ChatMessage({
                         </div>
 
                         {message.attachments?.length > 0 &&
-                            <div className={`flex flex-wrap my-2 ${safeViewIsOn && 'blur-lg group-hover:blur-0'}`}>
+                            <div className={`flex flex-wrap ${message.attachments?.length === 1 && message.attachments[0]?.mime_type?.split('/')[0] === 'audio' ? '' : 'mb-2'} pr-2 ${safeViewIsOn && 'blur-lg group-hover:blur-0'}`}>
                                 {isPlaceholder ? (
                                     <div
-                                        className={`relative ${errorPending ? 'bg-red-100' : 'bg-blue-100'} rounded-md p-4 flex items-center w-full`}>
-                                        <DocumentIcon className="w-6 h-6 text-gray-500 mr-2" />
-                                        <span className="text-gray-700 mr-2">Attachments...</span>
-                                        <div
-                                            className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
-                                            {errorPending ? (
-                                                <ExclamationCircleIcon className="w-6 h-6" />
-                                            ) : (
-                                                <CircularProgressBar className="w-6 h-6" progress={uploadProgress}
-                                                    size={24} strokeWidth={4} />
-                                            )}
-                                        </div>
+                                        className={`relative rounded-md p-2 ${errorPending ? 'text-gray-700' : 'text-blue-100'} flex items-center w-full`}>
+                                        <DocumentIcon className="w-6 h-6 mr-2" />
+                                        <span className="mr-2">Attachments...</span>
                                     </div>
                                 ) : (
                                     message.attachments.map((attachment, i) => (
-                                        <ChatMessageAttachment key={i} attachment={attachment} />
+                                        <div className="w-full" key={i}>
+                                            <ChatMessageAttachment attachment={attachment} self={self} />
+                                            {i < message.attachments.length - 1 && (
+                                                <hr className="h-px bg-blue-400 my-1 border-0 w-full" />
+                                            )}
+                                        </div>
                                     ))
                                 )}
                             </div>
@@ -586,14 +593,14 @@ export default forwardRef(function ChatMessage({
                                 errorPending ? (
                                     <div className="ml-1">
                                         <ArrowPathIcon
-                                            className="text-red-500 w-4 h-4 ml-1 cursor-pointer"
+                                            className="text-red-500 w-4 h-4 cursor-pointer"
                                             onClick={onRetrySend}
                                             title="Retry sending"
                                         />
                                     </div>
                                 ) : isPlaceholder ? (
                                     <div
-                                        className="w-4 h-4 ml-2 border-2 border-t-transparent border-l-transparent border-gray-800 rounded-full animate-spin"></div>
+                                        className="w-3 h-3 mx-1 border-2 border-t-transparent border-l-transparent border-blue-100 rounded-full animate-spin"></div>
                                 ) : (
                                     <div
                                         className={`${message.status === 'SEEN' ? 'mr-0.5 cursor-pointer' : ''} ml-1 h-4`}
