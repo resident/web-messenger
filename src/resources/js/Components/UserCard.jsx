@@ -80,11 +80,11 @@ export default function UserCard({
             onClick={handleClick}
         >
             <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 bg-blue-300 rounded-full overflow-hidden">
+                <div className="relative min-w-12 w-12 min-h-12 h-12 bg-blue-300 rounded-full overflow-hidden">
                     {user?.avatar?.path && (
                         <img
                             src={`${import.meta.env.VITE_AVATARS_STORAGE}/${user.avatar.path}`}
-                            className="absolute inset-0 w-full h-full object-cover"
+                            className="absolute inset-0 w-12 h-12 object-cover"
                             alt="avatar"
                         />
                     )}

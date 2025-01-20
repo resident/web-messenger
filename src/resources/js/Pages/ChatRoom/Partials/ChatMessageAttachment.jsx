@@ -1,11 +1,12 @@
-import {useContext, useEffect, useState} from "react";
-import {ChatRoomContext} from "@/Pages/ChatRoom/ChatRoomContext.jsx";
+import { useContext, useEffect, useState } from "react";
+import { ChatRoomContext } from "@/Pages/ChatRoom/ChatRoomContext.jsx";
 import AESEncryptor from "@/Encryption/AESEncryptor.js";
 import ProgressBar from "@/Components/ProgressBar.jsx";
 import Modal from "@/Components/Modal.jsx";
+import CustomAudioPlayer from "@/Components/CustomAudioPlayer";
 
-export default function ChatMessageAttachment({attachment}) {
-    const {chatRoomKey} = useContext(ChatRoomContext);
+export default function ChatMessageAttachment({ attachment, self }) {
+    const { chatRoomKey } = useContext(ChatRoomContext);
 
     const [type, setType] = useState(attachment.mime_type.split('/')[0]);
     const [preloadTypes, setPreloadTypes] = useState(['image', 'audio', 'video']);
@@ -71,7 +72,7 @@ export default function ChatMessageAttachment({attachment}) {
     };
 
     const getAttachmentUrl = (content) => {
-        return URL.createObjectURL(new Blob([content], {type: attachment.type}));
+        return URL.createObjectURL(new Blob([content], { type: attachment.type }));
     }
 
     const prettySize = (bytes, decimals = 2) => {
@@ -92,14 +93,14 @@ export default function ChatMessageAttachment({attachment}) {
 
             <div className={`flex justify-center`}>
                 <img
-                    className={`w-full`}
+                    className={`w-full max-w-full max-h-[80vh] object-contain`}
                     src={attachmentUrl}
                     alt={attachment.name}
                     onClick={() => setShowModal(false)}
                 />
             </div>
 
-            {renderAttachmentInfo()}
+            {renderAttachmentInfo(true, true)}
         </Modal>
     );
 
@@ -115,10 +116,7 @@ export default function ChatMessageAttachment({attachment}) {
     );
 
     const renderAudio = () => (
-        <audio
-            src={attachmentUrl}
-            controls={true}
-        />
+        <CustomAudioPlayer src={attachmentUrl} fileSize={attachment.size} width={170} self={self} />
     );
 
     const renderVideo = () => (
@@ -134,15 +132,16 @@ export default function ChatMessageAttachment({attachment}) {
         downloadAttachment();
     };
 
-    const renderAttachmentInfo = () => (
+    const renderAttachmentInfo = (isModal = false, showSize = true) => {
+        if (!showSize) return null;
 
-        <div className={`mt-2 text-sm text-gray-500`}>
+        return (<div className={`mt-2 text-sm ${isModal ? 'text-gray-800' : 'text-gray-300'}`}>
             <div
-                className={`cursor-pointer text-blue-500 font-bold hover:text-blue-600`}
+                className={`cursor-pointer ${isModal ? 'text-blue-500 hover:text-blue-600' : 'text-gray-200 hover:text-white'} font-bold`}
                 onClick={downloadHandler}>{attachment.name}</div>
-            <div>{prettySize(attachment.size)}</div>
-        </div>
-    );
+            {showSize && (<div>{prettySize(attachment.size)}</div>)}
+        </div>)
+    };
 
     const renderAttachment = () => {
         let jsx;
@@ -159,7 +158,14 @@ export default function ChatMessageAttachment({attachment}) {
                 break;
         }
 
-        return (<>{jsx} {renderAttachmentInfo()}</>);
+        return (
+            <>
+                <div className="rounded-md overflow-hidden">
+                    {jsx}
+                </div>
+                {renderAttachmentInfo(false, (type !== 'audio'))}
+            </>
+        );
     };
 
     useEffect(() => {
@@ -167,7 +173,7 @@ export default function ChatMessageAttachment({attachment}) {
     }, [attachmentContent]);
 
     return (
-        <div className={`m-1 p-2 bg-blue-100 rounded-md`}>
+        <div>
             {type === 'image' && renderImageModal()}
 
             {render}
